@@ -160,6 +160,62 @@ main {
     border-left: 6px solid var(--accent);
 }
 
+.donation-panel {
+    margin: 0.9rem 0;
+    border: 1px solid #dbe8eb;
+    border-radius: 10px;
+    background: #f8fcfd;
+    overflow: hidden;
+}
+
+.donation-panel summary {
+    cursor: pointer;
+    padding: 0.9rem 1rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: #eef6f8;
+}
+
+.cat-options {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.9rem 1rem 1rem;
+}
+
+.cat-options label {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.2rem;
+    border-bottom: 1px dashed #d5e4e9;
+}
+
+.cat-options label:last-child {
+    border-bottom: none;
+}
+
+.cat-options input {
+    width: 18px;
+    height: 18px;
+}
+
+.donation-summary {
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #e0edf0;
+    background: #fff;
+    margin: 1rem 0;
+}
+
+.donation-summary p {
+    margin: 0.35rem 0;
+}
+
+.karma-message {
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
 footer {
     text-align: center;
     color: #fff;
