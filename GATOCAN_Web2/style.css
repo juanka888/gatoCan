@@ -262,6 +262,23 @@ main {
 .karma-message {
     font-weight: 700;
     color: var(--primary-dark);
+
+.donation-card details {
+    background: #fff;
+    border: 1px solid rgba(15, 76, 92, 0.18);
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem;
+    margin-top: 0.75rem;
+}
+
+.donation-card summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.donation-card details p {
+    margin: 0.55rem 0 0;
 }
 
 footer {
