@@ -7,52 +7,81 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <header>
-        <h1>GatoCan Natura Rural</h1>
-        <nav>
+    <header class="site-header" id="inicio">
+        <div class="brand">
+            <img src="./img/logo1.png" alt="Logo de GatoCan Natura Rural" class="brand-logo">
+            <div>
+                <p class="eyebrow">Asociación de protección animal</p>
+                <h1>GatoCan Natura Rural</h1>
+            </div>
+        </div>
+
+        <nav class="main-nav" aria-label="Principal">
             <ul>
                 <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#mision">Misión y Valores</a></li>
-                <li><a href="#colonias">Colonias Felinas</a></li>
-                <li><a href="#ayuda">Cómo Ayudar</a></li>
+                <li><a href="#mision">Misión</a></li>
+                <li><a href="#colonias">Colonias</a></li>
+                <li><a href="#ayuda">Cómo ayudar</a></li>
                 <li><a href="#noticias">Noticias</a></li>
                 <li><a href="#contacto">Contacto</a></li>
+                <li><a href="#donar" class="nav-cta">Donar</a></li>
+                <li><a href="./login.html" class="nav-auth">Iniciar sesión</a></li>
+                <li><a href="./register.html" class="nav-auth">Registrarse</a></li>
             </ul>
         </nav>
+
+        <div class="hero">
+            <h2>Cuidamos colonias felinas con responsabilidad y compromiso</h2>
+            <p>Aplicamos el método CER para mejorar la vida de los gatos comunitarios y fomentar una convivencia respetuosa en el entorno rural.</p>
+            <div class="hero-actions">
+                <a href="#ayuda" class="btn btn-secondary">Hazte voluntario/a</a>
+                <a href="#donar" class="btn btn-primary">Donar ahora</a>
+                <a href="./login.html" class="btn btn-secondary">Acceder</a>
+                <a href="./register.html" class="btn btn-secondary">Crear cuenta</a>
+            </div>
+        </div>
     </header>
-    
-    <section id="inicio">
-        <h2>Bienvenidos a GatoCan Natura Rural</h2>
-        <p>Asociación dedicada a la protección y gestión de colonias felinas.</p>
-    </section>
-    
-    <section id="mision">
-        <h2>Misión y Valores</h2>
-        <p>Trabajamos para mejorar la calidad de vida de los gatos callejeros mediante el método CER (Captura, Esterilización y Retorno).</p>
-    </section>
-    
-    <section id="colonias">
-        <h2>Colonias Felinas</h2>
-        <p>Información sobre nuestras actividades de control y cuidado de las colonias felinas en la zona rural.</p>
-    </section>
-    
-    <section id="ayuda">
-        <h2>Cómo Ayudar</h2>
-        <p>Hazte voluntario, dona o colabora con nuestra asociación para seguir protegiendo a los animales.</p>
-    </section>
-    
-    <section id="noticias">
-        <h2>Noticias y Actualizaciones</h2>
-        <p>Últimas novedades sobre nuestro trabajo y logros.</p>
-    </section>
-    
-    <section id="contacto">
-        <h2>Contacto</h2>
-        <p>Ponte en contacto con nosotros para más información.</p>
-    </section>
-    
+
+    <main>
+        <section id="mision" class="card">
+            <h3>Misión y valores</h3>
+            <p>Trabajamos para proteger, esterilizar y cuidar a los gatos de colonias felinas mediante acciones coordinadas con personas voluntarias, clínicas veterinarias y administraciones locales.</p>
+        </section>
+
+        <section id="colonias" class="card">
+            <h3>Colonias felinas</h3>
+            <p>Realizamos seguimiento sanitario, alimentación controlada y campañas de sensibilización para garantizar colonias estables, saludables y bien gestionadas.</p>
+        </section>
+
+        <section id="ayuda" class="card">
+            <h3>Cómo ayudar</h3>
+            <ul>
+                <li>Únete al equipo de voluntariado.</li>
+                <li>Colabora con material o alimento.</li>
+                <li>Difunde nuestras campañas en tu entorno.</li>
+            </ul>
+        </section>
+
+        <section id="noticias" class="card">
+            <h3>Noticias y actualizaciones</h3>
+            <p>Consulta avances de esterilizaciones, rescates y actividades de concienciación realizadas por la asociación.</p>
+        </section>
+
+        <section id="donar" class="card donation-card">
+            <h3>Apoya nuestro trabajo con una donación</h3>
+            <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
+            <a href="#contacto" class="btn btn-primary">Quiero donar</a>
+        </section>
+
+        <section id="contacto" class="card">
+            <h3>Contacto</h3>
+            <p>Escríbenos para colaborar o recibir más información sobre nuestras actividades.</p>
+            <p><strong>Email:</strong> contacto@gatocannaturarural.org</p>
+        </section>
+    </main>
+
     <footer>
-        <p>&copy; 2025 GatoCan Natura Rural - Todos los derechos reservados.</p>
+        <p>&copy; 2025 GatoCan Natura Rural · Todos los derechos reservados.</p>
     </footer>
 </body>
 </html>

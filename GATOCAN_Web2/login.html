@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión | GatoCan Natura Rural</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-wrapper">
+        <section class="auth-card">
+            <a href="./index.html" class="back-link">← Volver al inicio</a>
+            <h1>Iniciar sesión</h1>
+            <p class="auth-subtitle">Introduce tu usuario y contraseña para acceder.</p>
+
+            <form id="loginForm" class="auth-form" novalidate>
+                <label for="loginUser">Usuario</label>
+                <input id="loginUser" name="usuario" type="text" required>
+
+                <label for="loginPass">Contraseña</label>
+                <input id="loginPass" name="password" type="password" required>
+
+                <button type="submit" class="btn btn-primary auth-submit">Entrar</button>
+            </form>
+
+            <p id="loginMessage" class="auth-message" aria-live="polite"></p>
+            <p class="auth-helper">Usuario demo: <strong>admin</strong> · Contraseña demo: <strong>gatocan123</strong></p>
+            <p class="auth-helper">¿Aún no tienes cuenta? <a href="./register.html">Regístrate aquí</a>.</p>
+        </section>
+    </main>
+
+    <script src="./auth.js"></script>
+</body>
+</html>
