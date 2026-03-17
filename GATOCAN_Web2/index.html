@@ -8,11 +8,17 @@
 </head>
 <body>
     <header class="site-header" id="inicio">
-        <div class="brand">
-            <img src="./img/logo1.png" alt="Logo de GatoCan Natura Rural" class="brand-logo">
-            <div>
-                <p class="eyebrow">Asociación de protección animal</p>
-                <h1>GatoCan Natura Rural</h1>
+        <div class="top-bar">
+            <div class="brand">
+                <img src="./img/logo1.png" alt="Logo de GatoCan Natura Rural" class="brand-logo">
+                <div>
+                    <p class="eyebrow">Asociación de protección animal</p>
+                    <h1>GatoCan Natura Rural</h1>
+                </div>
+            </div>
+            <div class="auth-actions" aria-label="Acceso de usuarios">
+                <a href="#login" class="auth-link">Iniciar sesión</a>
+                <a href="#registro" class="auth-link auth-link-primary">Registrarte</a>
             </div>
         </div>
 
@@ -22,6 +28,7 @@
                 <li><a href="#mision">Misión</a></li>
                 <li><a href="#colonias">Colonias</a></li>
                 <li><a href="#ayuda">Cómo ayudar</a></li>
+                <li><a href="#ranking">Ranking</a></li>
                 <li><a href="#noticias">Noticias</a></li>
                 <li><a href="#contacto">Contacto</a></li>
                 <li><a href="#donar" class="nav-cta">Donar</a></li>
@@ -56,6 +63,16 @@
                 <li>Colabora con material o alimento.</li>
                 <li>Difunde nuestras campañas en tu entorno.</li>
             </ul>
+        </section>
+
+        <section id="ranking" class="card">
+            <h3>Ranking solidario 🏆</h3>
+            <p>Gracias a quienes más han sumado en apoyo a las colonias este mes.</p>
+            <ol class="ranking-list">
+                <li><strong>Equipo MichiPower</strong> — 340 puntos Karma</li>
+                <li><strong>Laura P.</strong> — 290 puntos Karma</li>
+                <li><strong>Peña Gatuna Norte</strong> — 250 puntos Karma</li>
+            </ol>
         </section>
 
         <section id="noticias" class="card">
@@ -112,32 +129,6 @@
                     <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> <span class="option-icon icon-food">🍴</span> Comida mensual — 10 €</label>
                     <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> <span class="option-icon icon-pipette">PP</span> Pipeta antiparasitaria — 12 €</label>
                     <label><input type="checkbox" class="donation-item" data-price="15" data-karma="18"> <span class="option-icon icon-love">♥</span> Apadrina este gato — 15 €/mes</label>
-                <summary>Gatete Luna (pincha para ver opciones)</summary>
-                <div class="cat-options">
-                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> Esterilización macho — 60 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> Esterilización femenina — 100 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> Comida mensual — 10 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> Pipeta antiparasitaria — 12 €</label>
-                </div>
-            </details>
-
-            <details class="donation-panel">
-                <summary>Gatete Misu (pincha para ver opciones)</summary>
-                <div class="cat-options">
-                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> Esterilización macho — 60 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> Esterilización femenina — 100 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> Comida mensual — 10 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> Pipeta antiparasitaria — 12 €</label>
-                </div>
-            </details>
-
-            <details class="donation-panel">
-                <summary>Gatete Bigotes (pincha para ver opciones)</summary>
-                <div class="cat-options">
-                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> Esterilización macho — 60 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> Esterilización femenina — 100 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> Comida mensual — 10 €</label>
-                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> Pipeta antiparasitaria — 12 €</label>
                 </div>
             </details>
 
@@ -148,7 +139,6 @@
             </div>
 
             <a href="#contacto" class="btn btn-primary">Quiero confirmar mi aportación</a>
-
         </section>
 
         <section id="contacto" class="card">
