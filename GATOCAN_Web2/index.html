@@ -64,9 +64,64 @@
         </section>
 
         <section id="donar" class="card donation-card">
-            <h3>Apoya nuestro trabajo con una donación</h3>
-            <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
-            <a href="#contacto" class="btn btn-primary">Quiero donar</a>
+            <h3>Haz tu aporte gatuno 🐾</h3>
+            <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
+
+            <details class="donation-panel" open>
+                <summary>
+                    <span class="cat-summary">
+                        <img src="https://images.pexels.com/photos/320014/pexels-photo-320014.jpeg" alt="Foto del gatete Luna">
+                        <span>Gatete Luna (pincha para ver opciones)</span>
+                    </span>
+                </summary>
+                <div class="cat-options">
+                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> <span class="option-icon icon-med">✚</span> Esterilización macho — 60 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> <span class="option-icon icon-female">♀</span> Esterilización femenina — 100 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> <span class="option-icon icon-food">🍴</span> Comida mensual — 10 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> <span class="option-icon icon-pipette">PP</span> Pipeta antiparasitaria — 12 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="15" data-karma="18"> <span class="option-icon icon-love">♥</span> Apadrina este gato — 15 €/mes</label>
+                </div>
+            </details>
+
+            <details class="donation-panel" open>
+                <summary>
+                    <span class="cat-summary">
+                        <img src="https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg" alt="Foto del gatete Misu">
+                        <span>Gatete Misu (pincha para ver opciones)</span>
+                    </span>
+                </summary>
+                <div class="cat-options">
+                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> <span class="option-icon icon-med">✚</span> Esterilización macho — 60 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> <span class="option-icon icon-female">♀</span> Esterilización femenina — 100 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> <span class="option-icon icon-food">🍴</span> Comida mensual — 10 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> <span class="option-icon icon-pipette">PP</span> Pipeta antiparasitaria — 12 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="15" data-karma="18"> <span class="option-icon icon-love">♥</span> Apadrina este gato — 15 €/mes</label>
+                </div>
+            </details>
+
+            <details class="donation-panel" open>
+                <summary>
+                    <span class="cat-summary">
+                        <img src="https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg" alt="Foto del gatete Bigotes">
+                        <span>Gatete Bigotes (pincha para ver opciones)</span>
+                    </span>
+                </summary>
+                <div class="cat-options">
+                    <label><input type="checkbox" class="donation-item" data-price="60" data-karma="30"> <span class="option-icon icon-med">✚</span> Esterilización macho — 60 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="100" data-karma="50"> <span class="option-icon icon-female">♀</span> Esterilización femenina — 100 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="10" data-karma="10"> <span class="option-icon icon-food">🍴</span> Comida mensual — 10 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="12" data-karma="8"> <span class="option-icon icon-pipette">PP</span> Pipeta antiparasitaria — 12 €</label>
+                    <label><input type="checkbox" class="donation-item" data-price="15" data-karma="18"> <span class="option-icon icon-love">♥</span> Apadrina este gato — 15 €/mes</label>
+                </div>
+            </details>
+
+            <div class="donation-summary" aria-live="polite">
+                <p><strong>Total estimado:</strong> <span id="donation-total">0 €</span></p>
+                <p><strong>Puntos Karma:</strong> <span id="karma-total">0</span></p>
+                <p id="karma-message" class="karma-message">Cada punto ayuda a cambiar vidas felinas 💛</p>
+            </div>
+
+            <a href="#contacto" class="btn btn-primary">Quiero confirmar mi aportación</a>
         </section>
 
         <section id="contacto" class="card">
@@ -79,5 +134,41 @@
     <footer>
         <p>&copy; 2025 GatoCan Natura Rural · Todos los derechos reservados.</p>
     </footer>
+
+    <script>
+        const donationItems = document.querySelectorAll('.donation-item');
+        const donationTotal = document.getElementById('donation-total');
+        const karmaTotal = document.getElementById('karma-total');
+        const karmaMessage = document.getElementById('karma-message');
+
+        function updateDonationSummary() {
+            let totalAmount = 0;
+            let totalKarma = 0;
+
+            donationItems.forEach((item) => {
+                if (item.checked) {
+                    totalAmount += Number(item.dataset.price || 0);
+                    totalKarma += Number(item.dataset.karma || 0);
+                }
+            });
+
+            donationTotal.textContent = `${totalAmount} €`;
+            karmaTotal.textContent = totalKarma;
+
+            if (totalKarma >= 100) {
+                karmaMessage.textContent = '¡Has llegado a 100 puntos Karma! Te llevas un diploma de buena persona gatuna 🏅';
+            } else if (totalKarma >= 60) {
+                karmaMessage.textContent = '¡Vas genial! Ya casi consigues tu regalo karma gatuno.';
+            } else {
+                karmaMessage.textContent = 'Cada punto ayuda a cambiar vidas felinas 💛';
+            }
+        }
+
+        donationItems.forEach((item) => {
+            item.addEventListener('change', updateDonationSummary);
+        });
+
+        updateDonationSummary();
+    </script>
 </body>
 </html>
