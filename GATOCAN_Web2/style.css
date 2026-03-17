@@ -176,6 +176,20 @@ main {
     background: #eef6f8;
 }
 
+.cat-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.cat-summary img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #d3e5eb;
+}
+
 .cat-options {
     display: grid;
     gap: 0.45rem;
@@ -188,6 +202,40 @@ main {
     gap: 0.55rem;
     padding: 0.4rem 0.2rem;
     border-bottom: 1px dashed #d5e4e9;
+}
+
+.option-icon {
+    min-width: 1.7rem;
+    height: 1.7rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.icon-med {
+    background: #3d7dd8;
+}
+
+.icon-female {
+    background: #a955d6;
+}
+
+.icon-food {
+    background: #47a85d;
+}
+
+.icon-pipette {
+    background: #4ca9b7;
+    font-size: 0.7rem;
+}
+
+.icon-love {
+    background: #e0567a;
 }
 
 .cat-options label:last-child {
