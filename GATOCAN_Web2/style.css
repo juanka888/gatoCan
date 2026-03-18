@@ -291,6 +291,8 @@ footer {
 .auth-helper {
     margin: 0.4rem 0 0;
     font-size: 0.9rem;
+}
+
 .donation-panel {
     margin: 0.9rem 0;
     border: 1px solid #dbe8eb;
@@ -314,11 +316,12 @@ footer {
 }
 
 .cat-summary img {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     object-fit: cover;
     border-radius: 50%;
     border: 2px solid #d3e5eb;
+    flex-shrink: 0;
 }
 
 .cat-options {
@@ -414,5 +417,95 @@ footer {
     .auth-actions {
         width: 100%;
         justify-content: flex-end;
+    }
+
+    .cat-summary {
+        align-items: flex-start;
+    }
+
+    .cat-summary img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .cat-options label {
+        align-items: flex-start;
+        line-height: 1.35;
+    }
+}
+
+@media (max-width: 520px) {
+    .main-nav ul {
+        padding: 0.55rem 0.65rem;
+        gap: 0.4rem;
+    }
+
+    .main-nav a {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.86rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .card {
+        padding: 1rem;
+    }
+
+    .donation-panel summary {
+        padding: 0.75rem 0.8rem;
+    }
+
+    .cat-summary {
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .cat-summary span {
+        font-size: 0.92rem;
+    }
+
+    .cat-options {
+        padding: 0.75rem 0.8rem 0.9rem;
+    }
+
+    .cat-options label {
+        font-size: 0.92rem;
+        gap: 0.45rem;
+    }
+
+    .option-icon {
+        min-width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.78rem;
+    }
+
+    .donation-summary {
+        padding: 0.65rem 0.75rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .brand {
+        gap: 0.65rem;
+    }
+
+    .brand-logo {
+        width: 58px;
+        height: 58px;
+    }
+
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    .hero h2 {
+        font-size: 1.35rem;
     }
 }

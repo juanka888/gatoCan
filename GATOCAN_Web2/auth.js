@@ -1,18 +1,7 @@
 (function () {
-    const USERS_KEY = "gatocanUsers";
     const SESSION_KEY = "gatocanSession";
-
-    function getUsers() {
-        try {
-            return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-        } catch {
-            return [];
-        }
-    }
-
-    function saveUsers(users) {
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
+    const DEFAULT_SUPABASE_URL = "https://jjeciqwzepkmeeticihg.supabase.co";
+    const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s";
 
     function showMessage(element, text, type) {
         if (!element) return;
@@ -21,34 +10,116 @@
         element.classList.add(type);
     }
 
-    const loginForm = document.getElementById("loginForm");
-    if (loginForm) {
-        loginForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-            const message = document.getElementById("loginMessage");
-            const username = document.getElementById("loginUser").value.trim();
-            const password = document.getElementById("loginPass").value;
+    function getSupabaseUrl() {
+        return window.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+    }
 
-            const users = getUsers();
-            const foundUser = users.find((user) => user.username === username && user.password === password);
-            const demoAccess = username === "admin" && password === "gatocan123";
+    function getSupabaseAnonKey() {
+        return window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+    }
 
-            if (foundUser || demoAccess) {
-                localStorage.setItem(SESSION_KEY, JSON.stringify({ user: username, loggedAt: new Date().toISOString() }));
-                showMessage(message, "Acceso correcto. Redirigiendo al inicio...", "success");
-                setTimeout(function () {
-                    window.location.href = "./index.html#inicio";
-                }, 1000);
-                return;
-            }
+    function getSupabaseClient() {
+        if (!window.supabase) {
+            return null;
+        }
 
-            showMessage(message, "Usuario o contraseña incorrectos.", "error");
+        const key = getSupabaseAnonKey();
+        if (!key) {
+            return null;
+        }
+
+        return window.supabase.createClient(getSupabaseUrl(), key, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+            },
         });
     }
 
-    const registerForm = document.getElementById("registerForm");
-    if (registerForm) {
-        registerForm.addEventListener("submit", function (event) {
+    async function upsertUserProfile(supabase, user, extraData) {
+        const payload = {
+            id: user.id,
+            email: user.email,
+            full_name: extraData.fullName || null,
+            username: extraData.username || null,
+            updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase.from("profiles").upsert(payload, {
+            onConflict: "id",
+        });
+
+        if (error) throw error;
+    }
+
+    async function saveUserData(supabase, userId, dataType, payload) {
+        const { error } = await supabase.from("user_data").insert({
+            user_id: userId,
+            data_type: dataType,
+            payload,
+        });
+
+        if (error) throw error;
+    }
+
+    async function initLogin() {
+        const loginForm = document.getElementById("loginForm");
+        if (!loginForm) return;
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const message = document.getElementById("loginMessage");
+            const emailOrUser = document.getElementById("loginUser").value.trim();
+            const password = document.getElementById("loginPass").value;
+            const supabase = getSupabaseClient();
+
+            if (!supabase) {
+                showMessage(message, "No se pudo inicializar Supabase.", "error");
+                return;
+            }
+
+            let email = emailOrUser;
+            if (!emailOrUser.includes("@")) {
+                const { data: profile, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("email")
+                    .eq("username", emailOrUser)
+                    .maybeSingle();
+
+                if (profileError || !profile?.email) {
+                    showMessage(message, "No existe un usuario con ese nombre.", "error");
+                    return;
+                }
+                email = profile.email;
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error || !data.user) {
+                showMessage(message, "Usuario o contraseña incorrectos.", "error");
+                return;
+            }
+
+            localStorage.setItem(
+                SESSION_KEY,
+                JSON.stringify({ user: data.user.email, loggedAt: new Date().toISOString() })
+            );
+            showMessage(message, "Acceso correcto. Redirigiendo al inicio...", "success");
+            setTimeout(function () {
+                window.location.href = "./index.html#inicio";
+            }, 900);
+        });
+    }
+
+    async function initRegister() {
+        const registerForm = document.getElementById("registerForm");
+        if (!registerForm) return;
+
+        registerForm.addEventListener("submit", async function (event) {
             event.preventDefault();
             const message = document.getElementById("registerMessage");
 
@@ -73,26 +144,83 @@
                 return;
             }
 
-            const users = getUsers();
-            const exists = users.some((user) => user.username === username || user.email === email);
-            if (exists) {
-                showMessage(message, "El usuario o el correo ya está registrado.", "error");
+            const supabase = getSupabaseClient();
+            if (!supabase) {
+                showMessage(message, "No se pudo inicializar Supabase.", "error");
                 return;
             }
 
-            users.push({ fullName, email, username, password, provider: "local" });
-            saveUsers(users);
-            showMessage(message, "Registro completado. Ahora puedes iniciar sesión.", "success");
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        username,
+                    },
+                },
+            });
+
+            if (error || !data.user) {
+                showMessage(message, error?.message || "No se pudo completar el registro.", "error");
+                return;
+            }
+
+            try {
+                await upsertUserProfile(supabase, data.user, { fullName, username });
+                await saveUserData(supabase, data.user.id, "registro", {
+                    source: "web",
+                    created_at: new Date().toISOString(),
+                });
+            } catch (dbError) {
+                console.error(dbError);
+                showMessage(
+                    message,
+                    "Cuenta creada, pero hubo un problema guardando datos extra en la base de datos.",
+                    "error"
+                );
+                return;
+            }
+
+            showMessage(
+                message,
+                "Registro completado. Revisa tu correo para confirmar la cuenta si Supabase lo requiere.",
+                "success"
+            );
             registerForm.reset();
         });
     }
 
-    const googleButton = document.getElementById("googleRegister");
-    if (googleButton) {
-        googleButton.addEventListener("click", function () {
-            window.open("https://accounts.google.com/signup", "_blank", "noopener,noreferrer");
+    function initGoogleAuth() {
+        const googleButton = document.getElementById("googleRegister");
+        if (!googleButton) return;
+
+        googleButton.addEventListener("click", async function () {
             const message = document.getElementById("registerMessage");
-            showMessage(message, "Se abrió Google para crear tu cuenta. Luego vuelve e inicia sesión o completa el registro local.", "success");
+            const supabase = getSupabaseClient();
+
+            if (!supabase) {
+                showMessage(message, "No se pudo inicializar Supabase.", "error");
+                return;
+            }
+
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname,
+                },
+            });
+
+            if (error) {
+                showMessage(message, "No se pudo iniciar con Google.", "error");
+                return;
+            }
+
+            showMessage(message, "Redirigiendo a Google...", "success");
         });
     }
+
+    initLogin();
+    initRegister();
+    initGoogleAuth();
 })();

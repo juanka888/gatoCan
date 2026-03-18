@@ -1,2 +1,89 @@
 # gatoCan
-Web
+
+Proyecto web de GatoCan con páginas estáticas en `GATOCAN_Web2/`.
+
+## Restauración de la web
+
+La web principal restaurada está en:
+
+- `GATOCAN_Web2/index.html`
+- `GATOCAN_Web2/login.html`
+- `GATOCAN_Web2/register.html`
+
+El `index.html` raíz redirige a esa versión.
+
+## Supabase configurado
+
+Este proyecto ya incluye en frontend:
+
+- URL: `https://jjeciqwzepkmeeticihg.supabase.co`
+- Anon key: configurada para entorno público.
+
+### ¿Es mala idea poner la anon key en un proyecto público?
+
+No, **la anon key de Supabase está diseñada para ser pública**. Lo importante es:
+
+- Tener **RLS (Row Level Security)** activado en tablas.
+- Definir políticas que solo permitan a cada usuario leer/escribir sus propios datos.
+- **Nunca** exponer la `service_role key` en frontend.
+
+## SQL recomendado (profiles + user_data)
+
+En **SQL Editor** de Supabase, ejecuta:
+
+```sql
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text unique,
+  full_name text,
+  username text unique,
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.user_data (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  data_type text not null,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+alter table public.user_data enable row level security;
+
+create policy "profile_select_own"
+  on public.profiles for select
+  using (auth.uid() = id);
+
+create policy "profile_insert_own"
+  on public.profiles for insert
+  with check (auth.uid() = id);
+
+create policy "profile_update_own"
+  on public.profiles for update
+  using (auth.uid() = id);
+
+create policy "user_data_insert_own"
+  on public.user_data for insert
+  with check (auth.uid() = user_id);
+
+create policy "user_data_select_own"
+  on public.user_data for select
+  using (auth.uid() = user_id);
+```
+
+## Flujo implementado
+
+- `register.html`:
+  - Crea usuario en `auth.users` con `signUp`.
+  - Guarda perfil en `profiles`.
+  - Registra evento inicial en `user_data`.
+- `login.html`:
+  - Inicia sesión con email/contraseña (`signInWithPassword`).
+  - También acepta username y lo resuelve con `profiles`.
+- Botón Google:
+  - Inicia OAuth con `signInWithOAuth`.
+
+## Siguiente mejora recomendada
+
+Añadir recuperación de contraseña, cierre de sesión y panel de perfil para editar datos de `profiles` desde la web.
