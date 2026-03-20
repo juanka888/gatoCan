@@ -27,6 +27,7 @@
                 <li><a href="#inicio">Inicio</a></li>
                 <li><a href="#mision">Misión</a></li>
                 <li><a href="#colonias">Colonias</a></li>
+                <li><a href="#galeria">Galería</a></li>
                 <li><a href="#ayuda">Cómo ayudar</a></li>
                 <li><a href="#noticias">Noticias</a></li>
                 <li><a href="#contacto">Contacto</a></li>
@@ -34,6 +35,7 @@
                 <li><a href="./login.html" class="nav-auth">Iniciar sesión</a></li>
                 <li><a href="./register.html" class="nav-auth">Registrarse</a></li>
                 <li><a href="#ranking">Ranking</a></li>
+                <li><a href="#campana">Campaña</a></li>
             </ul>
         </nav>
 
@@ -58,6 +60,54 @@
         <section id="colonias" class="card">
             <h3>Colonias felinas</h3>
             <p>Realizamos seguimiento sanitario, alimentación controlada y campañas de sensibilización para garantizar colonias estables, saludables y bien gestionadas.</p>
+        </section>
+
+
+        <section id="galeria" class="card gallery-card">
+            <h3>Galería de actuaciones</h3>
+            <p>Recorrido visual de colonias, capturas y esterilizaciones. Puedes abrir cualquier miniatura y pasar fotos con los botones o el teclado.</p>
+
+            <div class="gallery-tabs" role="tablist" aria-label="Filtros de galería">
+                <button type="button" class="gallery-tab active" data-filter="all">Todas</button>
+                <button type="button" class="gallery-tab" data-filter="colonias">Colonias</button>
+                <button type="button" class="gallery-tab" data-filter="capturas">Capturas</button>
+                <button type="button" class="gallery-tab" data-filter="esterilizaciones">Esterilizaciones</button>
+                <button type="button" class="gallery-tab" data-filter="actuaciones">Actuaciones</button>
+            </div>
+
+            <div class="gallery-grid" id="gallery-grid">
+                <button type="button" class="gallery-item" data-category="capturas" data-full="./img/galeria/foto-01.jpg" data-caption="Captura segura en jaula humanitaria.">
+                    <img src="./img/galeria/foto-01.jpg" alt="Gato negro en jaula humanitaria">
+                    <span>Capturas</span>
+                </button>
+                <button type="button" class="gallery-item" data-category="capturas" data-full="./img/galeria/foto-02.jpg" data-caption="Preparación y revisión durante el traslado.">
+                    <img src="./img/galeria/foto-02.jpg" alt="Gato en jaula verde de captura">
+                    <span>Capturas</span>
+                </button>
+                <button type="button" class="gallery-item" data-category="capturas" data-full="./img/galeria/foto-03.jpg" data-caption="Zona de espera para minimizar estrés.">
+                    <img src="./img/galeria/foto-03.jpg" alt="Gato en jaula cubierta en clínica">
+                    <span>Capturas</span>
+                </button>
+                <button type="button" class="gallery-item" data-category="esterilizaciones" data-full="./img/galeria/foto-04.jpg" data-caption="Ingreso para revisión previa veterinaria.">
+                    <img src="./img/galeria/foto-04.jpg" alt="Gato en jaula sobre mesa clínica">
+                    <span>Esterilizaciones</span>
+                </button>
+                <button type="button" class="gallery-item" data-category="colonias" data-full="./img/galeria/foto-05.jpg" data-caption="Control individualizado por colonia.">
+                    <img src="./img/galeria/foto-05.jpg" alt="Gato blanco en jaula de observación">
+                    <span>Colonias</span>
+                </button>
+                <button type="button" class="gallery-item" data-category="actuaciones" data-full="./img/galeria/foto-06.jpg" data-caption="Actuación coordinada para caso urgente.">
+                    <img src="./img/galeria/foto-06.jpg" alt="Gata tricolor en transportín de captura">
+                    <span>Actuaciones</span>
+                </button>
+            </div>
+            <p class="gallery-note">Nota: para mostrar tus fotos reales, guarda los archivos en <strong>GATOCAN_Web2/img/galeria/</strong> con nombre <strong>foto-01.jpg</strong> a <strong>foto-06.jpg</strong> (o edita las rutas).</p>
+        </section>
+
+        <section id="campana" class="card campaign-card">
+            <h3>Campaña de firmas (Change.org)</h3>
+            <p>Apoya la petición para una gestión ética de colonias felinas en San Xoán de Río (Ourense).</p>
+            <a class="btn btn-primary" href="https://www.change.org/p/impulsa-el-cambio-en-la-gesti%C3%B3n-de-las-colonias-felinas-en-san-xo%C3%A1n-de-r%C3%ADo-ourense/exp/wa/washarecopy_490375885_es-ES/4/306768009?recruiter=306768009&recruited_by_id=36374024-da0e-4dba-89e6-5f40d5c92574&utm_source=share_petition&utm_campaign=psf_combo_share_initial&utm_medium=whatsapp&utm_content=washarecopy_490375885_es-ES%3A4" target="_blank" rel="noopener noreferrer">Firmar campaña en Change.org</a>
         </section>
 
         <section id="ayuda" class="card">
@@ -165,6 +215,15 @@
         </section>
     </main>
 
+
+    <div id="gallery-modal" class="gallery-modal" aria-hidden="true" role="dialog" aria-label="Visor de imágenes">
+        <button type="button" class="gallery-close" id="gallery-close" aria-label="Cerrar galería">×</button>
+        <button type="button" class="gallery-nav prev" id="gallery-prev" aria-label="Foto anterior">‹</button>
+        <img id="gallery-modal-img" src="" alt="Vista ampliada de la galería">
+        <p id="gallery-modal-caption"></p>
+        <button type="button" class="gallery-nav next" id="gallery-next" aria-label="Foto siguiente">›</button>
+    </div>
+
     <footer>
         <p>&copy; 2025 GatoCan Natura Rural · Todos los derechos reservados.</p>
     </footer>
@@ -203,6 +262,78 @@
         });
 
         updateDonationSummary();
+
+        const galleryTabs = document.querySelectorAll('.gallery-tab');
+        const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));
+        const galleryModal = document.getElementById('gallery-modal');
+        const galleryModalImg = document.getElementById('gallery-modal-img');
+        const galleryModalCaption = document.getElementById('gallery-modal-caption');
+        const galleryClose = document.getElementById('gallery-close');
+        const galleryPrev = document.getElementById('gallery-prev');
+        const galleryNext = document.getElementById('gallery-next');
+        let visibleItems = galleryItems.slice();
+        let currentIndex = 0;
+
+        function setFilter(filter) {
+            galleryTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.filter === filter));
+            visibleItems = galleryItems.filter((item) => filter === 'all' || item.dataset.category === filter);
+            galleryItems.forEach((item) => {
+                const show = filter === 'all' || item.dataset.category === filter;
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        function openGallery(item) {
+            currentIndex = visibleItems.indexOf(item);
+            if (currentIndex < 0) currentIndex = 0;
+            renderGalleryImage();
+            galleryModal.classList.add('open');
+            galleryModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function renderGalleryImage() {
+            const item = visibleItems[currentIndex];
+            if (!item) return;
+            galleryModalImg.src = item.dataset.full;
+            galleryModalImg.alt = item.querySelector('img')?.alt || 'Imagen de la galería';
+            galleryModalCaption.textContent = item.dataset.caption || '';
+        }
+
+        function closeGallery() {
+            galleryModal.classList.remove('open');
+            galleryModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function moveGallery(step) {
+            if (!visibleItems.length) return;
+            currentIndex = (currentIndex + step + visibleItems.length) % visibleItems.length;
+            renderGalleryImage();
+        }
+
+        galleryTabs.forEach((tab) => {
+            tab.addEventListener('click', () => setFilter(tab.dataset.filter));
+        });
+
+        galleryItems.forEach((item) => {
+            item.addEventListener('click', () => openGallery(item));
+        });
+
+        galleryClose.addEventListener('click', closeGallery);
+        galleryPrev.addEventListener('click', () => moveGallery(-1));
+        galleryNext.addEventListener('click', () => moveGallery(1));
+
+        document.addEventListener('keydown', (event) => {
+            if (!galleryModal.classList.contains('open')) return;
+            if (event.key === 'Escape') closeGallery();
+            if (event.key === 'ArrowLeft') moveGallery(-1);
+            if (event.key === 'ArrowRight') moveGallery(1);
+        });
+
+        galleryModal.addEventListener('click', (event) => {
+            if (event.target === galleryModal) closeGallery();
+        });
+
+        setFilter('all');
     </script>
 </body>
 </html>
