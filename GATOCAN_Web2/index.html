@@ -225,6 +225,17 @@
     </div>
 
     <footer>
+        <section class="colaboradores" aria-label="Entidades colaboradoras">
+            <h3>Entidades colaboradoras</h3>
+            <p class="colaboradores-subtitle">El banner rota cada pocos segundos. Si haces clic, sumamos un contador por entidad y te llevamos al panel de métricas.</p>
+            <div class="logos-colaboradores">
+                <a href="./colaboradores-contador.html" class="colaborador-link" id="colaborador-link" aria-label="Abrir contador de colaboradores">
+                    <img id="colaborador-logo" src="" alt="Logo de entidad colaboradora">
+                </a>
+                <p id="colaborador-nombre" class="colaborador-nombre"></p>
+            </div>
+            <a href="./colaboradores-contador.html" class="counter-link">Ver contador desglosado</a>
+        </section>
         <p>&copy; 2025 GatoCan Natura Rural · Todos los derechos reservados.</p>
     </footer>
 
@@ -334,6 +345,61 @@
         });
 
         setFilter('all');
+
+        const colaboradores = [
+            {
+                id: 'zooplus',
+                nombre: 'Zooplus',
+                logo: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Zooplus_logo.svg'
+            },
+            {
+                id: 'xunta',
+                nombre: 'Xunta de Galicia',
+                logo: 'https://upload.wikimedia.org/wikipedia/commons/8/87/Xunta_de_Galicia.svg'
+            },
+            {
+                id: 'kiwoko',
+                nombre: 'Kiwoko',
+                logo: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Kiwoko_logo.svg'
+            },
+            {
+                id: 'tiendanimal',
+                nombre: 'Tiendanimal',
+                logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Tiendanimal_logo.svg'
+            }
+        ];
+
+        const contadorKey = 'gatocanColaboradoresClicks';
+        const logoNode = document.getElementById('colaborador-logo');
+        const nombreNode = document.getElementById('colaborador-nombre');
+        const linkNode = document.getElementById('colaborador-link');
+        let colaboradorActual = colaboradores[0];
+
+        function pintarColaborador(colaborador) {
+            colaboradorActual = colaborador;
+            logoNode.src = colaborador.logo;
+            logoNode.alt = `Logo de ${colaborador.nombre}`;
+            nombreNode.textContent = colaborador.nombre;
+        }
+
+        function siguienteColaborador() {
+            const indiceActual = colaboradores.findIndex((item) => item.id === colaboradorActual.id);
+            const siguienteIndice = (indiceActual + 1) % colaboradores.length;
+            pintarColaborador(colaboradores[siguienteIndice]);
+        }
+
+        function incrementarContador(colaboradorId) {
+            const data = JSON.parse(localStorage.getItem(contadorKey) || '{}');
+            data[colaboradorId] = (data[colaboradorId] || 0) + 1;
+            localStorage.setItem(contadorKey, JSON.stringify(data));
+        }
+
+        linkNode.addEventListener('click', () => {
+            incrementarContador(colaboradorActual.id);
+        });
+
+        pintarColaborador(colaboradores[0]);
+        setInterval(siguienteColaborador, 3500);
     </script>
 </body>
 </html>
