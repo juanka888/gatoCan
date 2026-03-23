@@ -28,6 +28,8 @@
                 <li><a href="#mision">Misión</a></li>
                 <li><a href="#colonias">Colonias</a></li>
                 <li><a href="#galeria">Galería</a></li>
+                <li><a href="#fichas">Fichas</a></li>
+                <li><a href="#minijuego">Minijuego</a></li>
                 <li><a href="#ayuda">Cómo ayudar</a></li>
                 <li><a href="#noticias">Noticias</a></li>
                 <li><a href="#contacto">Contacto</a></li>
@@ -102,6 +104,99 @@
                 </button>
             </div>
             <p class="gallery-note">Nota: para mostrar tus fotos reales, guarda los archivos en <strong>GATOCAN_Web2/img/galeria/</strong> con nombre <strong>foto-01.jpg</strong> a <strong>foto-06.jpg</strong> (o edita las rutas).</p>
+        </section>
+
+
+
+        <section id="fichas" class="card flip-card-section">
+            <h3>Fichas de gatos de colonia</h3>
+            <p>Pincha o toca cada tarjeta para girarla y ver el estado del caso.</p>
+
+            <div class="flip-grid">
+                <label class="flip-card">
+                    <input type="checkbox" class="flip-toggle" aria-label="Girar ficha de Nube">
+                    <span class="flip-card-inner">
+                        <span class="flip-face flip-front">
+                            <img src="https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg" alt="Gato Nube mirando de frente">
+                            <strong>Nube</strong>
+                            <small>Colonia Río Norte</small>
+                            <em>Pincha para ver ficha</em>
+                        </span>
+                        <span class="flip-face flip-back">
+                            <h4>Estado de Nube</h4>
+                            <ul>
+                                <li><strong>Esterilización:</strong> Hecha ✅</li>
+                                <li><strong>Enfermedad:</strong> Gingivitis leve</li>
+                                <li><strong>Tratamiento:</strong> Antiinflamatorio + revisión mensual</li>
+                                <li><strong>Desaparición:</strong> No</li>
+                                <li><strong>Edad aprox.:</strong> 4 años</li>
+                                <li><strong>Carácter:</strong> Sociable y tranquila</li>
+                            </ul>
+                        </span>
+                    </span>
+                </label>
+
+                <label class="flip-card">
+                    <input type="checkbox" class="flip-toggle" aria-label="Girar ficha de Menta">
+                    <span class="flip-card-inner">
+                        <span class="flip-face flip-front">
+                            <img src="https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg" alt="Gata Menta sobre la hierba">
+                            <strong>Menta</strong>
+                            <small>Colonia Mirador</small>
+                            <em>Pincha para ver ficha</em>
+                        </span>
+                        <span class="flip-face flip-back">
+                            <h4>Estado de Menta</h4>
+                            <ul>
+                                <li><strong>Esterilización:</strong> Pendiente ⏳</li>
+                                <li><strong>Enfermedad:</strong> Sin diagnóstico actual</li>
+                                <li><strong>Tratamiento:</strong> Desparasitación preventiva</li>
+                                <li><strong>Desaparición:</strong> No</li>
+                                <li><strong>Edad aprox.:</strong> 2 años</li>
+                                <li><strong>Carácter:</strong> Curiosa y algo tímida</li>
+                            </ul>
+                        </span>
+                    </span>
+                </label>
+
+                <label class="flip-card">
+                    <input type="checkbox" class="flip-toggle" aria-label="Girar ficha de Rayo">
+                    <span class="flip-card-inner">
+                        <span class="flip-face flip-front">
+                            <img src="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg" alt="Gato Rayo tumbado">
+                            <strong>Rayo</strong>
+                            <small>Colonia Fonteboa</small>
+                            <em>Pincha para ver ficha</em>
+                        </span>
+                        <span class="flip-face flip-back">
+                            <h4>Estado de Rayo</h4>
+                            <ul>
+                                <li><strong>Esterilización:</strong> Hecha ✅</li>
+                                <li><strong>Enfermedad:</strong> Lesión ocular antigua</li>
+                                <li><strong>Tratamiento:</strong> Colirio en brotes</li>
+                                <li><strong>Desaparición:</strong> Aviso activo desde febrero 2026</li>
+                                <li><strong>Edad aprox.:</strong> 7 años</li>
+                                <li><strong>Carácter:</strong> Independiente, acepta comida a distancia</li>
+                            </ul>
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </section>
+
+        <section id="minijuego" class="card game-card">
+            <h3>Minijuego: Gatito Runner 🐱</h3>
+            <p>Salta con <strong>espacio</strong>, <strong>flecha arriba</strong> o tocando el botón. Atrapa ratones para sumar puntos y esquiva obstáculos.</p>
+            <div class="game-shell">
+                <canvas id="cat-runner" width="860" height="220" role="img" aria-label="Juego de gatito que salta"></canvas>
+                <div class="game-panel">
+                    <button id="jump-btn" class="btn btn-primary" type="button">Saltar</button>
+                    <button id="restart-btn" class="btn btn-secondary" type="button">Reiniciar</button>
+                    <p class="game-score">Puntos: <span id="score">0</span></p>
+                    <p class="game-score">Récord local: <span id="best-score">0</span></p>
+                    <p id="game-status" class="game-status">¡Listo! Pulsa saltar para empezar.</p>
+                </div>
+            </div>
         </section>
 
         <section id="campana" class="card campaign-card">
@@ -345,6 +440,173 @@
         });
 
         setFilter('all');
+
+        const canvas = document.getElementById('cat-runner');
+        const ctx = canvas?.getContext('2d');
+        const jumpBtn = document.getElementById('jump-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreNode = document.getElementById('score');
+        const bestScoreNode = document.getElementById('best-score');
+        const statusNode = document.getElementById('game-status');
+        const bestScoreKey = 'gatocanBestScore';
+
+        if (canvas && ctx && jumpBtn && restartBtn && scoreNode && bestScoreNode && statusNode) {
+            const game = {
+                running: true,
+                score: 0,
+                best: Number(localStorage.getItem(bestScoreKey) || 0),
+                speed: 4,
+                gravity: 0.7,
+                cat: { x: 65, y: 170, w: 34, h: 28, vy: 0, onGround: true },
+                groundY: 170,
+                obstacles: [],
+                mice: [],
+                obstacleSpawn: 0,
+                mouseSpawn: 0
+            };
+
+            bestScoreNode.textContent = String(game.best);
+
+            function jump() {
+                if (!game.running) return;
+                if (game.cat.onGround) {
+                    game.cat.vy = -11;
+                    game.cat.onGround = false;
+                    statusNode.textContent = '¡Buen salto!';
+                }
+            }
+
+            function resetGame() {
+                game.running = true;
+                game.score = 0;
+                game.speed = 4;
+                game.cat.y = game.groundY;
+                game.cat.vy = 0;
+                game.cat.onGround = true;
+                game.obstacles = [];
+                game.mice = [];
+                game.obstacleSpawn = 0;
+                game.mouseSpawn = 0;
+                scoreNode.textContent = '0';
+                statusNode.textContent = 'Partida reiniciada. ¡Vamos!';
+            }
+
+            function overlap(a, b) {
+                return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+            }
+
+            function gameOver() {
+                game.running = false;
+                statusNode.textContent = 'Fin de partida. Pulsa reiniciar para volver a jugar.';
+                if (game.score > game.best) {
+                    game.best = game.score;
+                    localStorage.setItem(bestScoreKey, String(game.best));
+                    bestScoreNode.textContent = String(game.best);
+                }
+            }
+
+            function update() {
+                if (!game.running) return;
+
+                game.speed += 0.0012;
+                game.cat.vy += game.gravity;
+                game.cat.y += game.cat.vy;
+
+                if (game.cat.y >= game.groundY) {
+                    game.cat.y = game.groundY;
+                    game.cat.vy = 0;
+                    game.cat.onGround = true;
+                }
+
+                game.obstacleSpawn -= 1;
+                game.mouseSpawn -= 1;
+
+                if (game.obstacleSpawn <= 0) {
+                    const h = 24 + Math.random() * 18;
+                    game.obstacles.push({ x: canvas.width, y: game.groundY + game.cat.h - h, w: 16 + Math.random() * 14, h });
+                    game.obstacleSpawn = 80 + Math.random() * 65;
+                }
+
+                if (game.mouseSpawn <= 0) {
+                    game.mice.push({ x: canvas.width, y: 124 + Math.random() * 45, w: 18, h: 14, caught: false });
+                    game.mouseSpawn = 100 + Math.random() * 95;
+                }
+
+                game.obstacles.forEach((item) => { item.x -= game.speed; });
+                game.mice.forEach((item) => { item.x -= game.speed + 1.2; });
+
+                game.obstacles = game.obstacles.filter((item) => item.x + item.w > -20);
+                game.mice = game.mice.filter((item) => item.x + item.w > -20 && !item.caught);
+
+                const catBox = { x: game.cat.x, y: game.cat.y, w: game.cat.w, h: game.cat.h };
+
+                for (const obstacle of game.obstacles) {
+                    if (overlap(catBox, obstacle)) {
+                        gameOver();
+                        break;
+                    }
+                }
+
+                for (const mouse of game.mice) {
+                    if (!mouse.caught && overlap(catBox, mouse)) {
+                        mouse.caught = true;
+                        game.score += 10;
+                        scoreNode.textContent = String(game.score);
+                        statusNode.textContent = '¡Ratón atrapado! +10';
+                    }
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                bg.addColorStop(0, '#f0f9ff');
+                bg.addColorStop(1, '#dbeffd');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#7cb4d5';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, game.groundY + game.cat.h + 1);
+                ctx.lineTo(canvas.width, game.groundY + game.cat.h + 1);
+                ctx.stroke();
+
+                ctx.fillStyle = '#22303c';
+                ctx.font = '700 13px Segoe UI';
+                ctx.fillText('🐾', game.cat.x + 2, game.cat.y + 20);
+
+                game.obstacles.forEach((item) => {
+                    ctx.fillStyle = '#4b5f6b';
+                    ctx.fillRect(item.x, item.y, item.w, item.h);
+                });
+
+                game.mice.forEach((item) => {
+                    ctx.font = '16px Segoe UI';
+                    ctx.fillText('🐭', item.x, item.y + 12);
+                });
+            }
+
+            function tick() {
+                update();
+                draw();
+                requestAnimationFrame(tick);
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (event.code === 'Space' || event.code === 'ArrowUp') {
+                    event.preventDefault();
+                    jump();
+                }
+            });
+
+            jumpBtn.addEventListener('click', jump);
+            restartBtn.addEventListener('click', resetGame);
+
+            tick();
+        }
+
 
         const colaboradores = [
             {
