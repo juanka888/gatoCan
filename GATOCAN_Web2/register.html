@@ -20,14 +20,16 @@
                 <label for="email">Correo electrónico</label>
                 <input id="email" name="email" type="email" required>
 
-                <label for="regUser">Usuario</label>
-                <input id="regUser" name="usuario" type="text" required>
-
                 <label for="regPass">Contraseña</label>
                 <input id="regPass" name="password" type="password" minlength="6" required>
 
                 <label for="confirmPass">Confirmar contraseña</label>
                 <input id="confirmPass" name="confirmar" type="password" minlength="6" required>
+
+                <label class="terms-check" for="acceptTerms">
+                    <input id="acceptTerms" name="acceptTerms" type="checkbox" required>
+                    <span>He leído y acepto la <a href="./privacidad.html" target="_blank" rel="noopener noreferrer">política de privacidad y gestión de datos</a>.</span>
+                </label>
 
                 <button type="submit" class="btn btn-primary auth-submit">Registrarme</button>
             </form>
