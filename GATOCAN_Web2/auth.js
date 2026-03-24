@@ -41,23 +41,12 @@
         const payload = {
             id: user.id,
             email: user.email,
-            full_name: extraData.fullName || null,
-            username: extraData.username || null,
-            updated_at: new Date().toISOString(),
+            nombre_completo: extraData.fullName || user.user_metadata?.full_name || null,
+            avatar_url: user.user_metadata?.avatar_url || null,
         };
 
-        const { error } = await supabase.from("profiles").upsert(payload, {
+        const { error } = await supabase.from("perfiles").upsert(payload, {
             onConflict: "id",
-        });
-
-        if (error) throw error;
-    }
-
-    async function saveUserData(supabase, userId, dataType, payload) {
-        const { error } = await supabase.from("user_data").insert({
-            user_id: userId,
-            data_type: dataType,
-            payload,
         });
 
         if (error) throw error;
@@ -79,23 +68,17 @@
                 return;
             }
 
-            let email = emailOrUser;
             if (!emailOrUser.includes("@")) {
-                const { data: profile, error: profileError } = await supabase
-                    .from("profiles")
-                    .select("email")
-                    .eq("username", emailOrUser)
-                    .maybeSingle();
-
-                if (profileError || !profile?.email) {
-                    showMessage(message, "No existe un usuario con ese nombre.", "error");
-                    return;
-                }
-                email = profile.email;
+                showMessage(
+                    message,
+                    "Introduce tu correo electrónico para iniciar sesión.",
+                    "error"
+                );
+                return;
             }
 
             const { data, error } = await supabase.auth.signInWithPassword({
-                email,
+                email: emailOrUser,
                 password,
             });
 
@@ -125,11 +108,11 @@
 
             const fullName = document.getElementById("fullName").value.trim();
             const email = document.getElementById("email").value.trim().toLowerCase();
-            const username = document.getElementById("regUser").value.trim();
             const password = document.getElementById("regPass").value;
             const confirmPassword = document.getElementById("confirmPass").value;
+            const acceptTerms = document.getElementById("acceptTerms").checked;
 
-            if (!fullName || !email || !username || !password) {
+            if (!fullName || !email || !password) {
                 showMessage(message, "Todos los campos son obligatorios.", "error");
                 return;
             }
@@ -141,6 +124,15 @@
 
             if (password !== confirmPassword) {
                 showMessage(message, "Las contraseñas no coinciden.", "error");
+                return;
+            }
+
+            if (!acceptTerms) {
+                showMessage(
+                    message,
+                    "Debes aceptar la política de privacidad para poder registrarte.",
+                    "error"
+                );
                 return;
             }
 
@@ -156,7 +148,6 @@
                 options: {
                     data: {
                         full_name: fullName,
-                        username,
                     },
                 },
             });
@@ -167,11 +158,7 @@
             }
 
             try {
-                await upsertUserProfile(supabase, data.user, { fullName, username });
-                await saveUserData(supabase, data.user.id, "registro", {
-                    source: "web",
-                    created_at: new Date().toISOString(),
-                });
+                await upsertUserProfile(supabase, data.user, { fullName });
             } catch (dbError) {
                 console.error(dbError);
                 showMessage(
@@ -207,12 +194,24 @@
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
+                    queryParams: {
+                        access_type: "offline",
+                        prompt: "select_account",
+                    },
                     redirectTo: window.location.origin + window.location.pathname,
                 },
             });
 
             if (error) {
-                showMessage(message, "No se pudo iniciar con Google.", "error");
+                if (error.message?.includes("Unsupported provider")) {
+                    showMessage(
+                        message,
+                        "Google no está habilitado en Supabase. Actívalo en Authentication > Providers > Google.",
+                        "error"
+                    );
+                    return;
+                }
+                showMessage(message, error.message || "No se pudo iniciar con Google.", "error");
                 return;
             }
 
