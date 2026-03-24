@@ -196,7 +196,7 @@
                 </div>
                 <div class="game-panel">
                     <button id="jump-btn" class="btn btn-primary" type="button">Saltar</button>
-                    <button id="restart-btn" class="btn btn-secondary" type="button">↻ Reintentar</button>
+                    <button id="restart-btn" class="btn btn-secondary" type="button" hidden>↻ Reintentar</button>
                     <p class="game-score">Puntos: <span id="score">0</span></p>
                     <p class="game-score">Metros recorridos: <span id="distance">0</span> m</p>
                     <p class="game-score">Récord local: <span id="best-score">0</span></p>
@@ -553,6 +553,7 @@
                 distanceNode.textContent = '0';
                 statusNode.textContent = 'Partida reiniciada. ¡Vamos!';
                 gameOverOverlay.hidden = true;
+                restartBtn.hidden = true;
             }
 
             function overlap(a, b) {
@@ -563,6 +564,7 @@
                 game.running = false;
                 statusNode.textContent = `Game over: ${Math.floor(game.distance)} m recorridos. Pulsa reintentar para volver a jugar.`;
                 gameOverOverlay.hidden = false;
+                restartBtn.hidden = false;
                 if (game.score > game.best) {
                     game.best = game.score;
                     localStorage.setItem(bestScoreKey, String(game.best));

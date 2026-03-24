@@ -615,6 +615,10 @@ footer {
     padding: 1rem;
 }
 
+.game-over-overlay[hidden] {
+    display: none !important;
+}
+
 .game-over-title {
     margin: 0;
     color: #fff;
