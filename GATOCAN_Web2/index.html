@@ -18,8 +18,7 @@
             </div>
             <div class="auth-actions" aria-label="Acceso de usuarios">
                 <a href="#contacto" class="auth-link">Contacto</a>
-                <a href="./login.html" class="auth-link">Iniciar sesión</a>
-                <a href="./register.html" class="auth-link auth-link-primary">Registrarte</a>
+                <a id="accountLink" href="./login.html" class="auth-link auth-link-primary">Mi cuenta</a>
             </div>
         </div>
 
@@ -35,8 +34,6 @@
                 <li><a href="#noticias">Noticias</a></li>
                 <li><a href="#contacto">Contacto</a></li>
                 <li><a href="#donar" class="nav-cta">Donar</a></li>
-                <li><a href="./login.html" class="nav-auth">Iniciar sesión</a></li>
-                <li><a href="./register.html" class="nav-auth">Registrarse</a></li>
                 <li><a href="#ranking">Ranking</a></li>
                 <li><a href="#campana">Campaña</a></li>
             </ul>
@@ -373,9 +370,23 @@
 
     <script>
         const donationItems = document.querySelectorAll('.donation-item');
+        const accountLink = document.getElementById('accountLink');
         const donationTotal = document.getElementById('donation-total');
         const karmaTotal = document.getElementById('karma-total');
         const karmaMessage = document.getElementById('karma-message');
+        const sessionKey = 'gatocanSession';
+
+        function updateAccountLink() {
+            if (!accountLink) return;
+            const stored = localStorage.getItem(sessionKey);
+            if (stored) {
+                accountLink.href = './perfil.html';
+                accountLink.textContent = 'Mi perfil';
+                return;
+            }
+            accountLink.href = './login.html';
+            accountLink.textContent = 'Iniciar sesión';
+        }
 
         function updateDonationSummary() {
             let totalAmount = 0;
@@ -405,6 +416,7 @@
         });
 
         updateDonationSummary();
+        updateAccountLink();
 
         const galleryTabs = document.querySelectorAll('.gallery-tab');
         const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));

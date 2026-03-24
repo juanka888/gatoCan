@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi perfil | GatoCan Natura Rural</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-wrapper">
+        <section class="auth-card">
+            <a href="./index.html" class="back-link">← Volver al inicio</a>
+            <h1>Mi perfil</h1>
+            <p class="auth-subtitle">Consulta y edita tus datos personales.</p>
+
+            <form id="profileForm" class="auth-form" novalidate>
+                <label for="profileEmail">Correo electrónico</label>
+                <input id="profileEmail" type="email" disabled>
+
+                <label for="profileFullName">Nombre completo</label>
+                <input id="profileFullName" type="text" data-editable="true" disabled>
+
+                <label for="profilePhone">Teléfono</label>
+                <input id="profilePhone" type="tel" data-editable="true" disabled>
+
+                <label for="profileDniNie">DNI / NIE</label>
+                <input id="profileDniNie" type="text" data-editable="true" disabled>
+
+                <label for="profileAddress">Dirección</label>
+                <input id="profileAddress" type="text" data-editable="true" disabled>
+
+                <label for="profilePostal">Código postal</label>
+                <input id="profilePostal" type="text" data-editable="true" disabled>
+
+                <label for="profileTown">Población</label>
+                <input id="profileTown" type="text" data-editable="true" disabled>
+            </form>
+
+            <div class="profile-actions">
+                <button id="editProfileBtn" type="button" class="btn btn-secondary">Editar</button>
+                <button id="saveProfileBtn" type="button" class="btn btn-primary" disabled>Guardar cambios</button>
+                <button id="logoutBtn" type="button" class="btn btn-secondary">Cerrar sesión</button>
+            </div>
+
+            <p id="profileMessage" class="auth-message" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth.js"></script>
+</body>
+</html>

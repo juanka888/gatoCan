@@ -127,10 +127,6 @@ h1 {
     background: #ffc45e;
 }
 
-.main-nav .nav-auth {
-    border: 1px solid rgba(255, 255, 255, 0.45);
-}
-
 .hero {
     margin-top: 2rem;
     max-width: 780px;
@@ -258,6 +254,25 @@ footer {
     border: 1px solid #c3ccd1;
 }
 
+.auth-form .terms-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    margin-top: 0.35rem;
+}
+
+.auth-form .terms-check input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.2rem;
+}
+
+.auth-form .terms-check a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
 .auth-submit {
     margin-top: 0.45rem;
 }
@@ -291,6 +306,13 @@ footer {
 .auth-helper {
     margin: 0.4rem 0 0;
     font-size: 0.9rem;
+}
+
+.profile-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.9rem;
 }
 
 .donation-panel {
