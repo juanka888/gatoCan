@@ -127,10 +127,6 @@ h1 {
     background: #ffc45e;
 }
 
-.main-nav .nav-auth {
-    border: 1px solid rgba(255, 255, 255, 0.45);
-}
-
 .hero {
     margin-top: 2rem;
     max-width: 780px;
@@ -310,6 +306,13 @@ footer {
 .auth-helper {
     margin: 0.4rem 0 0;
     font-size: 0.9rem;
+}
+
+.profile-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.9rem;
 }
 
 .donation-panel {

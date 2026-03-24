@@ -37,6 +37,14 @@
         });
     }
 
+    function cacheSessionUser(user) {
+        if (!user?.email) return;
+        localStorage.setItem(
+            SESSION_KEY,
+            JSON.stringify({ user: user.email, loggedAt: new Date().toISOString() })
+        );
+    }
+
     async function upsertUserProfile(supabase, user, extraData) {
         const payload = {
             id: user.id,
@@ -87,13 +95,10 @@
                 return;
             }
 
-            localStorage.setItem(
-                SESSION_KEY,
-                JSON.stringify({ user: data.user.email, loggedAt: new Date().toISOString() })
-            );
-            showMessage(message, "Acceso correcto. Redirigiendo al inicio...", "success");
+            cacheSessionUser(data.user);
+            showMessage(message, "Acceso correcto. Redirigiendo a tu perfil...", "success");
             setTimeout(function () {
-                window.location.href = "./index.html#inicio";
+                window.location.href = "./perfil.html";
             }, 900);
         });
     }
@@ -219,7 +224,95 @@
         });
     }
 
+    async function initProfile() {
+        const profileForm = document.getElementById("profileForm");
+        if (!profileForm) return;
+
+        const message = document.getElementById("profileMessage");
+        const editBtn = document.getElementById("editProfileBtn");
+        const saveBtn = document.getElementById("saveProfileBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const supabase = getSupabaseClient();
+
+        if (!supabase) {
+            showMessage(message, "No se pudo inicializar Supabase.", "error");
+            return;
+        }
+
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData?.user) {
+            window.location.href = "./login.html";
+            return;
+        }
+
+        const user = authData.user;
+        cacheSessionUser(user);
+
+        const fullNameInput = document.getElementById("profileFullName");
+        const phoneInput = document.getElementById("profilePhone");
+        const dniInput = document.getElementById("profileDniNie");
+        const addressInput = document.getElementById("profileAddress");
+        const postalInput = document.getElementById("profilePostal");
+        const townInput = document.getElementById("profileTown");
+        const emailInput = document.getElementById("profileEmail");
+
+        emailInput.value = user.email || "";
+
+        const { data: profileData } = await supabase
+            .from("perfiles")
+            .select("nombre_completo, telefono, dni_nie, direccion, codigo_postal, poblacion")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        fullNameInput.value = profileData?.nombre_completo || user.user_metadata?.full_name || "";
+        phoneInput.value = profileData?.telefono || "";
+        dniInput.value = profileData?.dni_nie || "";
+        addressInput.value = profileData?.direccion || "";
+        postalInput.value = profileData?.codigo_postal || "";
+        townInput.value = profileData?.poblacion || "";
+
+        editBtn.addEventListener("click", function () {
+            profileForm.querySelectorAll("input[data-editable='true']").forEach(function (input) {
+                input.disabled = false;
+            });
+            saveBtn.disabled = false;
+            showMessage(message, "Puedes editar tus datos y guardarlos.", "success");
+        });
+
+        saveBtn.addEventListener("click", async function () {
+            const payload = {
+                id: user.id,
+                email: user.email,
+                nombre_completo: fullNameInput.value.trim() || null,
+                telefono: phoneInput.value.trim() || null,
+                dni_nie: dniInput.value.trim() || null,
+                direccion: addressInput.value.trim() || null,
+                codigo_postal: postalInput.value.trim() || null,
+                poblacion: townInput.value.trim() || null,
+            };
+
+            const { error } = await supabase.from("perfiles").upsert(payload, { onConflict: "id" });
+            if (error) {
+                showMessage(message, error.message || "No se pudieron guardar los cambios.", "error");
+                return;
+            }
+
+            profileForm.querySelectorAll("input[data-editable='true']").forEach(function (input) {
+                input.disabled = true;
+            });
+            saveBtn.disabled = true;
+            showMessage(message, "Perfil actualizado correctamente.", "success");
+        });
+
+        logoutBtn.addEventListener("click", async function () {
+            await supabase.auth.signOut();
+            localStorage.removeItem(SESSION_KEY);
+            window.location.href = "./login.html";
+        });
+    }
+
     initLogin();
     initRegister();
     initGoogleAuth();
+    initProfile();
 })();
