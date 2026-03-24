@@ -17,6 +17,7 @@
                 </div>
             </div>
             <div class="auth-actions" aria-label="Acceso de usuarios">
+                <a href="#contacto" class="auth-link">Contacto</a>
                 <a href="./login.html" class="auth-link">Iniciar sesión</a>
                 <a href="./register.html" class="auth-link auth-link-primary">Registrarte</a>
             </div>
@@ -303,10 +304,33 @@
             <a href="#contacto" class="btn btn-primary">Quiero confirmar mi aportación</a>
         </section>
 
-        <section id="contacto" class="card">
-            <h3>Contacto</h3>
-            <p>Escríbenos para colaborar o recibir más información sobre nuestras actividades.</p>
-            <p><strong>Email:</strong> contacto@gatocannaturarural.org</p>
+        <section id="contacto" class="card contact-card">
+            <h3>Contacta con Gatocan Natura Rural</h3>
+            <form action="tu-script-de-envio.php" method="POST" class="contact-form">
+                <label for="nombre">Nombre completo:</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre...">
+
+                <label for="email">Correo electrónico:</label>
+                <input type="email" id="email" name="email" required placeholder="tu@email.com">
+
+                <label for="interes">¿Cómo quieres ayudar?</label>
+                <select id="interes" name="interes">
+                    <option value="consulta">Consulta general</option>
+                    <option value="socio">Quiero hacerme socio colaborador</option>
+                    <option value="voluntario">Quiero ser voluntario</option>
+                    <option value="aviso">Aviso de colonia/gato en riesgo</option>
+                </select>
+
+                <label for="mensaje">Tu mensaje:</label>
+                <textarea id="mensaje" name="mensaje" rows="5" placeholder="Cuéntanos..."></textarea>
+
+                <div class="legal">
+                    <input type="checkbox" id="privacidad" name="privacidad" required>
+                    <label for="privacidad">He leído y acepto la <a href="./privacidad.html" target="_blank" rel="noopener noreferrer">Política de Privacidad</a>.</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-enviar">Enviar mensaje</button>
+            </form>
         </section>
     </main>
 
@@ -323,15 +347,28 @@
         <section class="colaboradores" aria-label="Entidades colaboradoras">
             <h3>Entidades colaboradoras</h3>
             <p class="colaboradores-subtitle">El banner rota cada pocos segundos. Si haces clic, sumamos un contador por entidad y te llevamos al panel de métricas.</p>
-            <div class="logos-colaboradores">
-                <a href="./colaboradores-contador.html" class="colaborador-link" id="colaborador-link" aria-label="Abrir contador de colaboradores">
-                    <img id="colaborador-logo" src="" alt="Logo de entidad colaboradora">
-                </a>
-                <p id="colaborador-nombre" class="colaborador-nombre"></p>
+            <div class="colaboradores-layout">
+                <div class="logos-colaboradores">
+                    <a href="./colaboradores-contador.html" class="colaborador-link" id="colaborador-link" aria-label="Abrir contador de colaboradores">
+                        <img id="colaborador-logo" src="" alt="Logo de entidad colaboradora">
+                    </a>
+                    <p id="colaborador-nombre" class="colaborador-nombre"></p>
+                </div>
+                <div class="teaming-widget" aria-label="Widget de Teaming">
+                    <iframe
+                        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
+                        width="696"
+                        height="315"
+                        frameborder="0"
+                        scrolling="no"
+                        style="overflow: hidden;"
+                        title="Widget Teaming GatoCan"></iframe>
+                </div>
             </div>
             <a href="./colaboradores-contador.html" class="counter-link">Ver contador desglosado</a>
         </section>
         <p>&copy; 2025 GatoCan Natura Rural · Todos los derechos reservados.</p>
+        <p class="footer-privacy-link"><a href="./privacidad.html">Política de privacidad</a></p>
     </footer>
 
     <script>

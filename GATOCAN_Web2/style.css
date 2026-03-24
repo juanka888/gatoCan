@@ -890,3 +890,95 @@ footer {
     flex-wrap: wrap;
     margin-top: 1rem;
 }
+
+.contact-card {
+    border-left: 6px solid #2a8f70;
+}
+
+.contact-form {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+    width: 100%;
+    padding: 0.65rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid #c8d5db;
+    font: inherit;
+}
+
+.contact-form textarea {
+    resize: vertical;
+}
+
+.legal {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    font-size: 0.92rem;
+}
+
+.legal input[type="checkbox"] {
+    margin-top: 0.25rem;
+}
+
+.btn-enviar {
+    justify-self: start;
+}
+
+.colaboradores-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    align-items: center;
+}
+
+.teaming-widget {
+    display: grid;
+    justify-items: center;
+    background: #fff;
+    border: 1px solid #dbe3e7;
+    border-radius: 10px;
+    padding: 0.55rem;
+}
+
+.teaming-widget iframe {
+    width: min(696px, 100%);
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.footer-privacy-link {
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem;
+}
+
+.footer-privacy-link a {
+    color: #fff;
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+.footer-privacy-link a:hover {
+    text-decoration: underline;
+}
+
+.privacy-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.privacy-wrapper {
+    width: 100%;
+    max-width: 940px;
+}
+
+.privacy-card h1 {
+    color: var(--primary-dark);
+    font-size: 1.6rem;
+}
