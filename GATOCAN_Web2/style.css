@@ -591,11 +591,51 @@ footer {
     align-items: start;
 }
 
+.game-canvas-wrap {
+    position: relative;
+}
+
 #cat-runner {
     width: 100%;
     border: 1px solid #d3e1e8;
     border-radius: 10px;
     background: #fff;
+}
+
+.game-over-overlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.55rem;
+    background: rgba(10, 17, 23, 0.68);
+    border-radius: 10px;
+    text-align: center;
+    padding: 1rem;
+}
+
+.game-over-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.45rem;
+    font-weight: 800;
+}
+
+.game-over-text {
+    margin: 0;
+    color: #f4f9fc;
+    font-weight: 600;
+}
+
+.retry-icon-btn {
+    min-width: 52px;
+    min-height: 52px;
+    border-radius: 50%;
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.2rem;
 }
 
 .game-panel {

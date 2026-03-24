@@ -186,11 +186,19 @@
             <h3>Minijuego: Gatito Runner 🐱</h3>
             <p>Salta con <strong>espacio</strong>, <strong>flecha arriba</strong> o tocando el botón. Atrapa ratones para sumar puntos y esquiva obstáculos.</p>
             <div class="game-shell">
-                <canvas id="cat-runner" width="860" height="220" role="img" aria-label="Juego de gatito que salta"></canvas>
+                <div class="game-canvas-wrap">
+                    <canvas id="cat-runner" width="860" height="220" role="img" aria-label="Juego de gatito que salta"></canvas>
+                    <div id="game-over-overlay" class="game-over-overlay" aria-live="polite" hidden>
+                        <p class="game-over-title">💥 Game Over</p>
+                        <p class="game-over-text">Te chocaste. ¿Reintentar?</p>
+                        <button id="retry-overlay-btn" class="btn btn-primary retry-icon-btn" type="button" aria-label="Reintentar partida">↻</button>
+                    </div>
+                </div>
                 <div class="game-panel">
                     <button id="jump-btn" class="btn btn-primary" type="button">Saltar</button>
-                    <button id="restart-btn" class="btn btn-secondary" type="button">Reiniciar</button>
+                    <button id="restart-btn" class="btn btn-secondary" type="button">↻ Reintentar</button>
                     <p class="game-score">Puntos: <span id="score">0</span></p>
+                    <p class="game-score">Metros recorridos: <span id="distance">0</span> m</p>
                     <p class="game-score">Récord local: <span id="best-score">0</span></p>
                     <p id="game-status" class="game-status">¡Listo! Pulsa saltar para empezar.</p>
                 </div>
@@ -494,15 +502,19 @@
         const ctx = canvas?.getContext('2d');
         const jumpBtn = document.getElementById('jump-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const retryOverlayBtn = document.getElementById('retry-overlay-btn');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
         const scoreNode = document.getElementById('score');
+        const distanceNode = document.getElementById('distance');
         const bestScoreNode = document.getElementById('best-score');
         const statusNode = document.getElementById('game-status');
         const bestScoreKey = 'gatocanBestScore';
 
-        if (canvas && ctx && jumpBtn && restartBtn && scoreNode && bestScoreNode && statusNode) {
+        if (canvas && ctx && jumpBtn && restartBtn && retryOverlayBtn && gameOverOverlay && scoreNode && distanceNode && bestScoreNode && statusNode) {
             const game = {
                 running: true,
                 score: 0,
+                distance: 0,
                 best: Number(localStorage.getItem(bestScoreKey) || 0),
                 speed: 4,
                 gravity: 0.7,
@@ -528,6 +540,7 @@
             function resetGame() {
                 game.running = true;
                 game.score = 0;
+                game.distance = 0;
                 game.speed = 4;
                 game.cat.y = game.groundY;
                 game.cat.vy = 0;
@@ -537,7 +550,9 @@
                 game.obstacleSpawn = 0;
                 game.mouseSpawn = 0;
                 scoreNode.textContent = '0';
+                distanceNode.textContent = '0';
                 statusNode.textContent = 'Partida reiniciada. ¡Vamos!';
+                gameOverOverlay.hidden = true;
             }
 
             function overlap(a, b) {
@@ -546,7 +561,8 @@
 
             function gameOver() {
                 game.running = false;
-                statusNode.textContent = 'Fin de partida. Pulsa reiniciar para volver a jugar.';
+                statusNode.textContent = `Game over: ${Math.floor(game.distance)} m recorridos. Pulsa reintentar para volver a jugar.`;
+                gameOverOverlay.hidden = false;
                 if (game.score > game.best) {
                     game.best = game.score;
                     localStorage.setItem(bestScoreKey, String(game.best));
@@ -558,6 +574,7 @@
                 if (!game.running) return;
 
                 game.speed += 0.0012;
+                game.distance += game.speed * 0.12;
                 game.cat.vy += game.gravity;
                 game.cat.y += game.cat.vy;
 
@@ -601,9 +618,11 @@
                         mouse.caught = true;
                         game.score += 10;
                         scoreNode.textContent = String(game.score);
-                        statusNode.textContent = '¡Ratón atrapado! +10';
+                        statusNode.textContent = `¡Ratón atrapado! +10 | Distancia: ${Math.floor(game.distance)} m`;
                     }
                 }
+
+                distanceNode.textContent = String(Math.floor(game.distance));
             }
 
             function draw() {
@@ -652,6 +671,7 @@
 
             jumpBtn.addEventListener('click', jump);
             restartBtn.addEventListener('click', resetGame);
+            retryOverlayBtn.addEventListener('click', resetGame);
 
             tick();
         }
