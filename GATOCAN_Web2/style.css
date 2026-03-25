@@ -226,6 +226,12 @@ footer {
     max-width: 460px;
 }
 
+.profile-wrapper {
+    max-width: 760px;
+    display: grid;
+    gap: 1rem;
+}
+
 .auth-card {
     background: var(--surface);
     border-radius: 14px;
@@ -313,6 +319,64 @@ footer {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
     margin-top: 0.9rem;
+}
+
+.profile-page {
+    display: block;
+    min-height: 100vh;
+}
+
+.profile-header {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 1rem 1rem 0.25rem;
+}
+
+.profile-nav {
+    margin-top: 0;
+}
+
+.quick-menu-label {
+    display: block;
+    margin: 0.8rem 0 0.3rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.quick-menu-select {
+    width: 100%;
+    max-width: 340px;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.profile-metrics {
+    margin-top: 1rem;
+    padding: 0.95rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #d9e6ea;
+    background: #f7fcfd;
+}
+
+.profile-metrics h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+}
+
+.profile-metrics p {
+    margin: 0.3rem 0;
+}
+
+.profile-saved {
+    border: 2px solid #79bb8a;
+    box-shadow: 0 12px 28px rgba(44, 121, 61, 0.18);
+}
+
+.member-card h2 {
+    margin-top: 0;
 }
 
 .donation-panel {
@@ -788,6 +852,10 @@ footer {
     .hero-actions .btn {
         width: 100%;
         text-align: center;
+    }
+
+    .profile-actions {
+        grid-template-columns: 1fr;
     }
 
     .card {
