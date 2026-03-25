@@ -203,7 +203,7 @@
                         access_type: "offline",
                         prompt: "select_account",
                     },
-                    redirectTo: window.location.origin + window.location.pathname,
+                    redirectTo: new URL("./perfil.html", window.location.href).href,
                 },
             });
 
