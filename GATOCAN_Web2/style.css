@@ -1111,3 +1111,14 @@ footer {
     color: var(--primary-dark);
     font-size: 1.6rem;
 }
+
+
+.profile-actions-wide {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 720px) {
+    .profile-actions-wide {
+        grid-template-columns: 1fr 1fr;
+    }
+}

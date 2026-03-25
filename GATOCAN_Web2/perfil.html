@@ -13,25 +13,18 @@
                 <li><a href="./index.html#inicio">Inicio</a></li>
                 <li><a href="./index.html#donar">Donar</a></li>
                 <li><a href="./index.html#ranking">Ranking</a></li>
+                <li><a href="./foro.html">Foro</a></li>
                 <li><a href="./index.html#contacto">Contacto</a></li>
                 <li><a href="./perfil.html" class="nav-cta">Mi perfil</a></li>
             </ul>
         </nav>
-        <label for="quickMenu" class="quick-menu-label">Ir rápido a:</label>
-        <select id="quickMenu" class="quick-menu-select" aria-label="Seleccionar menú">
-            <option value="">Selecciona una opción</option>
-            <option value="./index.html#inicio">Inicio</option>
-            <option value="./index.html#ayuda">Cómo ayudar</option>
-            <option value="./index.html#donar">Donar</option>
-            <option value="./index.html#ranking">Ranking</option>
-            <option value="./perfil.html#socioPanel">Hazte socio</option>
-        </select>
     </header>
 
     <main class="auth-wrapper profile-wrapper">
         <section id="profileCard" class="auth-card">
             <h1>Mi perfil</h1>
-            <p class="auth-subtitle">Consulta tus datos, tu impacto solidario y tu estado de socio.</p>
+            <p class="auth-subtitle">Consulta tus datos y actualízalos cuando quieras.</p>
+            <p class="auth-helper"><strong>Rol actual:</strong> <span id="userRole">Usuario</span></p>
 
             <div id="profileView" class="auth-form" hidden>
                 <p><strong>Nombre completo:</strong> <span id="viewFullName"></span></p>
@@ -58,41 +51,14 @@
                 <input id="profileAddress" type="text" required>
             </form>
 
-            <section class="profile-metrics" aria-label="Resumen de donaciones y ranking">
-                <h2>Resumen solidario</h2>
-                <p><strong>Donaciones realizadas:</strong> <span id="donationCount">0</span></p>
-                <p><strong>Puesto en ranking:</strong> <span id="rankingPosition">Sin datos</span></p>
-                <p><strong>Estado de medalla:</strong> <span id="medalStatus">Sin medalla todavía</span></p>
-                <p><strong>Número de socio:</strong> <span id="memberNumber">No eres socio todavía</span></p>
-                <p id="memberCtaWrap"><a id="memberCtaLink" href="#socioPanel">Hazte socio aquí</a></p>
-            </section>
-
-            <div class="profile-actions">
-                <button id="editProfileBtn" type="button" class="btn btn-secondary" hidden>Editar datos</button>
+            <div class="profile-actions profile-actions-wide">
+                <button id="editProfileBtn" type="button" class="btn btn-secondary" hidden>Modificar</button>
                 <button id="saveProfileBtn" type="button" class="btn btn-primary" hidden>Guardar</button>
                 <button id="goHomeBtn" type="button" class="btn btn-secondary">Ir a Inicio</button>
+                <button id="logoutBtn" type="button" class="btn btn-secondary">Cerrar sesión</button>
             </div>
 
             <p id="profileMessage" class="auth-message" aria-live="polite"></p>
-        </section>
-
-        <section id="socioPanel" class="auth-card member-card">
-            <h2>Hazte socio</h2>
-            <p>Si todavía no eres socio, puedes solicitarlo aquí y revisar la documentación antes de autorizar.</p>
-            <form class="auth-form" id="memberForm">
-                <label for="memberName">Nombre y apellidos</label>
-                <input id="memberName" type="text" required>
-
-                <label for="memberIban">IBAN o tarjeta bancaria</label>
-                <input id="memberIban" type="text" placeholder="ES00 0000 0000 0000 0000 0000" required>
-
-                <label for="memberQuota">Cuota mensual (€)</label>
-                <input id="memberQuota" type="number" min="1" step="1" value="10" required>
-
-                <button type="submit" class="btn btn-primary">Enviar solicitud de socio</button>
-            </form>
-            <p class="auth-helper">Puedes consultar el reglamento y los documentos a firmar aquí: <a href="./reglamento-socios.html">Reglamento y autorizaciones</a>.</p>
-            <p id="memberFormMessage" class="auth-message" aria-live="polite"></p>
         </section>
     </main>
 
@@ -101,6 +67,8 @@
         (function () {
             const DEFAULT_SUPABASE_URL = "https://jjeciqwzepkmeeticihg.supabase.co";
             const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s";
+            const SESSION_KEY = "gatocanSession";
+            const ADMIN_EMAILS = ["admin@gatocan.org", "equipo@gatocan.org"];
 
             const profileCard = document.getElementById("profileCard");
             const profileView = document.getElementById("profileView");
@@ -108,10 +76,9 @@
             const editBtn = document.getElementById("editProfileBtn");
             const saveBtn = document.getElementById("saveProfileBtn");
             const goHomeBtn = document.getElementById("goHomeBtn");
+            const logoutBtn = document.getElementById("logoutBtn");
             const message = document.getElementById("profileMessage");
-            const quickMenu = document.getElementById("quickMenu");
-            const memberForm = document.getElementById("memberForm");
-            const memberFormMessage = document.getElementById("memberFormMessage");
+            const userRole = document.getElementById("userRole");
 
             const fullNameInput = document.getElementById("profileFullName");
             const emailInput = document.getElementById("profileEmail");
@@ -124,18 +91,11 @@
             const viewPhone = document.getElementById("viewPhone");
             const viewDniNie = document.getElementById("viewDniNie");
             const viewAddress = document.getElementById("viewAddress");
-            const donationCount = document.getElementById("donationCount");
-            const rankingPosition = document.getElementById("rankingPosition");
-            const medalStatus = document.getElementById("medalStatus");
-            const memberNumber = document.getElementById("memberNumber");
-            const memberCtaWrap = document.getElementById("memberCtaWrap");
 
             function showMessage(text, type) {
                 message.textContent = text;
                 message.classList.remove("success", "error");
-                if (type) {
-                    message.classList.add(type);
-                }
+                if (type) message.classList.add(type);
             }
 
             function setInputsDisabled(disabled) {
@@ -161,47 +121,11 @@
                 viewAddress.textContent = addressInput.value || "No indicado";
             }
 
-            function getMedalByDonations(totalDonations) {
-                if (totalDonations >= 25) return "🥇 Medalla de oro";
-                if (totalDonations >= 10) return "🥈 Medalla de plata";
-                if (totalDonations >= 3) return "🥉 Medalla de bronce";
-                return "Sin medalla todavía";
-            }
-
-            function calculateRanking(totalDonations) {
-                if (totalDonations <= 0) return "Sin posición todavía";
-                return "#" + Math.max(1, 50 - totalDonations);
-            }
-
-            async function loadDonationData(supabase, userId) {
-                const { count, error } = await supabase
-                    .from("donaciones")
-                    .select("id", { count: "exact", head: true })
-                    .eq("user_id", userId);
-
-                if (error) {
-                    donationCount.textContent = "0";
-                    rankingPosition.textContent = "Sin datos";
-                    medalStatus.textContent = "Sin medalla todavía";
-                    return;
-                }
-
-                const totalDonations = count || 0;
-                donationCount.textContent = String(totalDonations);
-                rankingPosition.textContent = calculateRanking(totalDonations);
-                medalStatus.textContent = getMedalByDonations(totalDonations);
-            }
-
-            function loadMemberData(user) {
-                const possibleMemberNumber = user.user_metadata?.numero_socio || user.user_metadata?.member_number;
-                if (possibleMemberNumber) {
-                    memberNumber.textContent = String(possibleMemberNumber);
-                    memberCtaWrap.hidden = true;
-                    return;
-                }
-
-                memberNumber.textContent = "No eres socio todavía";
-                memberCtaWrap.hidden = false;
+            function resolveRole(user) {
+                const roleFromSupabase = user?.app_metadata?.role || user?.user_metadata?.role;
+                if (roleFromSupabase) return roleFromSupabase;
+                if (ADMIN_EMAILS.includes((user?.email || "").toLowerCase())) return "admin_habilitado_desde_codigo";
+                return "usuario";
             }
 
             async function initProfile() {
@@ -213,13 +137,7 @@
                 const supabase = window.supabase.createClient(
                     window.SUPABASE_URL || DEFAULT_SUPABASE_URL,
                     window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY,
-                    {
-                        auth: {
-                            persistSession: true,
-                            autoRefreshToken: true,
-                            detectSessionInUrl: true,
-                        },
-                    }
+                    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
                 );
 
                 const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -229,6 +147,9 @@
                 }
 
                 const user = authData.user;
+                localStorage.setItem(SESSION_KEY, JSON.stringify({ user: user.email, loggedAt: new Date().toISOString() }));
+                userRole.textContent = resolveRole(user);
+
                 const { data: profileData, error: profileError } = await supabase
                     .from("perfiles")
                     .select("id, nombre_completo, email, dni_nie, telefono, direccion")
@@ -242,11 +163,8 @@
 
                 fillForm(profileData, user);
                 fillView();
-                loadMemberData(user);
-                await loadDonationData(supabase, user.id);
 
                 const missingRequiredData = !dniInput.value.trim() || !addressInput.value.trim();
-
                 if (missingRequiredData) {
                     profileForm.hidden = false;
                     saveBtn.hidden = false;
@@ -265,14 +183,12 @@
                     profileForm.hidden = false;
                     saveBtn.hidden = false;
                     setInputsDisabled(false);
-                    profileCard.classList.remove("profile-saved");
                     showMessage("Ahora puedes modificar tus datos.", "success");
                 });
 
                 saveBtn.addEventListener("click", async function () {
                     const dniValue = dniInput.value.trim();
                     const addressValue = addressInput.value.trim();
-
                     if (!dniValue || !addressValue) {
                         showMessage("DNI/NIE y dirección son obligatorios.", "error");
                         return;
@@ -287,11 +203,7 @@
                         direccion: addressValue,
                     };
 
-                    const { error: updateError } = await supabase
-                        .from("perfiles")
-                        .update(payload)
-                        .eq("id", user.id);
-
+                    const { error: updateError } = await supabase.from("perfiles").upsert(payload, { onConflict: "id" });
                     if (updateError) {
                         showMessage(updateError.message || "No se pudieron guardar los cambios.", "error");
                         return;
@@ -303,24 +215,15 @@
                     editBtn.hidden = false;
                     saveBtn.hidden = true;
                     setInputsDisabled(true);
-                    profileCard.classList.add("profile-saved");
-                    showMessage("Perfil actualizado correctamente. Puedes volver a editar cuando quieras.", "success");
+                    showMessage("Perfil actualizado correctamente.", "success");
+                });
+
+                logoutBtn.addEventListener("click", async function () {
+                    await supabase.auth.signOut();
+                    localStorage.removeItem(SESSION_KEY);
+                    window.location.href = "./login.html";
                 });
             }
-
-            quickMenu.addEventListener("change", function () {
-                if (quickMenu.value) {
-                    window.location.href = quickMenu.value;
-                }
-            });
-
-            memberForm.addEventListener("submit", function (event) {
-                event.preventDefault();
-                memberFormMessage.textContent = "Solicitud enviada. Te contactaremos para validar datos y firma de autorizaciones.";
-                memberFormMessage.classList.remove("error");
-                memberFormMessage.classList.add("success");
-                memberForm.reset();
-            });
 
             goHomeBtn.addEventListener("click", function () {
                 window.location.href = "./index.html";

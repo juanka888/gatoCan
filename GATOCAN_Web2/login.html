@@ -11,7 +11,7 @@
         <section class="auth-card">
             <a href="./index.html" class="back-link">← Volver al inicio</a>
             <h1>Iniciar sesión</h1>
-            <p class="auth-subtitle">Introduce tu correo y contraseña para acceder.</p>
+            <p class="auth-subtitle">Accede con correo/contraseña o usando tu cuenta de Google.</p>
 
             <form id="loginForm" class="auth-form" novalidate>
                 <label for="loginUser">Correo electrónico</label>
@@ -22,6 +22,8 @@
 
                 <button type="submit" class="btn btn-primary auth-submit">Entrar</button>
             </form>
+
+            <button id="googleLogin" type="button" class="btn google-btn">Iniciar sesión con Google</button>
 
             <p id="loginMessage" class="auth-message" aria-live="polite"></p>
             <p class="auth-helper">Acceso conectado a Supabase (usa tu correo electrónico).</p>
