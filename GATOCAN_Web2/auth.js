@@ -179,16 +179,30 @@
                 "Registro completado. Revisa tu correo para confirmar la cuenta si Supabase lo requiere.",
                 "success"
             );
+
+            if (data.session) {
+                cacheSessionUser(data.user);
+                window.location.href = "./perfil.html";
+                return;
+            }
+
             registerForm.reset();
         });
     }
 
     function initGoogleAuth() {
-        const googleButton = document.getElementById("googleRegister");
-        if (!googleButton) return;
+        const googleButtons = [
+            { button: document.getElementById("googleRegister"), message: document.getElementById("registerMessage") },
+            { button: document.getElementById("googleLogin"), message: document.getElementById("loginMessage") },
+        ].filter(function (entry) {
+            return entry.button;
+        });
 
-        googleButton.addEventListener("click", async function () {
-            const message = document.getElementById("registerMessage");
+        if (!googleButtons.length) return;
+
+        googleButtons.forEach(function (entry) {
+            entry.button.addEventListener("click", async function () {
+            const message = entry.message;
             const supabase = getSupabaseClient();
 
             if (!supabase) {
@@ -221,6 +235,7 @@
             }
 
             showMessage(message, "Redirigiendo a Google...", "success");
+        });
         });
     }
 
