@@ -9,37 +9,38 @@
 <body class="auth-page">
     <main class="auth-wrapper">
         <section class="auth-card">
-            <a href="./index.html" class="back-link">← Volver al inicio</a>
             <h1>Mi perfil</h1>
             <p class="auth-subtitle">Consulta y edita tus datos personales.</p>
 
-            <form id="profileForm" class="auth-form" novalidate>
+            <div id="profileView" class="auth-form" hidden>
+                <p><strong>Nombre completo:</strong> <span id="viewFullName"></span></p>
+                <p><strong>Correo electrónico:</strong> <span id="viewEmail"></span></p>
+                <p><strong>Teléfono:</strong> <span id="viewPhone"></span></p>
+                <p><strong>DNI / NIE:</strong> <span id="viewDniNie"></span></p>
+                <p><strong>Dirección:</strong> <span id="viewAddress"></span></p>
+            </div>
+
+            <form id="profileForm" class="auth-form" novalidate hidden>
+                <label for="profileFullName">Nombre completo</label>
+                <input id="profileFullName" type="text">
+
                 <label for="profileEmail">Correo electrónico</label>
                 <input id="profileEmail" type="email" disabled>
 
-                <label for="profileFullName">Nombre completo</label>
-                <input id="profileFullName" type="text" data-editable="true" disabled>
-
                 <label for="profilePhone">Teléfono</label>
-                <input id="profilePhone" type="tel" data-editable="true" disabled>
+                <input id="profilePhone" type="tel">
 
                 <label for="profileDniNie">DNI / NIE</label>
-                <input id="profileDniNie" type="text" data-editable="true" disabled>
+                <input id="profileDniNie" type="text" required>
 
                 <label for="profileAddress">Dirección</label>
-                <input id="profileAddress" type="text" data-editable="true" disabled>
-
-                <label for="profilePostal">Código postal</label>
-                <input id="profilePostal" type="text" data-editable="true" disabled>
-
-                <label for="profileTown">Población</label>
-                <input id="profileTown" type="text" data-editable="true" disabled>
+                <input id="profileAddress" type="text" required>
             </form>
 
             <div class="profile-actions">
-                <button id="editProfileBtn" type="button" class="btn btn-secondary">Editar</button>
-                <button id="saveProfileBtn" type="button" class="btn btn-primary" disabled>Guardar cambios</button>
-                <button id="logoutBtn" type="button" class="btn btn-secondary">Cerrar sesión</button>
+                <button id="editProfileBtn" type="button" class="btn btn-secondary" hidden>Modificar</button>
+                <button id="saveProfileBtn" type="button" class="btn btn-primary" hidden>Guardar</button>
+                <button id="goHomeBtn" type="button" class="btn btn-secondary">Ir a Inicio</button>
             </div>
 
             <p id="profileMessage" class="auth-message" aria-live="polite"></p>
@@ -47,6 +48,164 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./auth.js"></script>
+    <script>
+        (function () {
+            const DEFAULT_SUPABASE_URL = "https://jjeciqwzepkmeeticihg.supabase.co";
+            const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s";
+
+            const profileView = document.getElementById("profileView");
+            const profileForm = document.getElementById("profileForm");
+            const editBtn = document.getElementById("editProfileBtn");
+            const saveBtn = document.getElementById("saveProfileBtn");
+            const goHomeBtn = document.getElementById("goHomeBtn");
+            const message = document.getElementById("profileMessage");
+
+            const fullNameInput = document.getElementById("profileFullName");
+            const emailInput = document.getElementById("profileEmail");
+            const phoneInput = document.getElementById("profilePhone");
+            const dniInput = document.getElementById("profileDniNie");
+            const addressInput = document.getElementById("profileAddress");
+
+            const viewFullName = document.getElementById("viewFullName");
+            const viewEmail = document.getElementById("viewEmail");
+            const viewPhone = document.getElementById("viewPhone");
+            const viewDniNie = document.getElementById("viewDniNie");
+            const viewAddress = document.getElementById("viewAddress");
+
+            function showMessage(text, type) {
+                message.textContent = text;
+                message.classList.remove("success", "error");
+                if (type) {
+                    message.classList.add(type);
+                }
+            }
+
+            function setInputsDisabled(disabled) {
+                fullNameInput.disabled = disabled;
+                phoneInput.disabled = disabled;
+                dniInput.disabled = disabled;
+                addressInput.disabled = disabled;
+            }
+
+            function fillForm(profile, user) {
+                fullNameInput.value = profile?.nombre_completo || user.user_metadata?.full_name || "";
+                emailInput.value = profile?.email || user.email || "";
+                phoneInput.value = profile?.telefono || "";
+                dniInput.value = profile?.dni_nie || "";
+                addressInput.value = profile?.direccion || "";
+            }
+
+            function fillView() {
+                viewFullName.textContent = fullNameInput.value || "No indicado";
+                viewEmail.textContent = emailInput.value || "No indicado";
+                viewPhone.textContent = phoneInput.value || "No indicado";
+                viewDniNie.textContent = dniInput.value || "No indicado";
+                viewAddress.textContent = addressInput.value || "No indicado";
+            }
+
+            async function initProfile() {
+                if (!window.supabase) {
+                    showMessage("No se pudo cargar Supabase.", "error");
+                    return;
+                }
+
+                const supabase = window.supabase.createClient(
+                    window.SUPABASE_URL || DEFAULT_SUPABASE_URL,
+                    window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY,
+                    {
+                        auth: {
+                            persistSession: true,
+                            autoRefreshToken: true,
+                            detectSessionInUrl: true,
+                        },
+                    }
+                );
+
+                const { data: authData, error: authError } = await supabase.auth.getUser();
+                if (authError || !authData?.user) {
+                    window.location.href = "./login.html";
+                    return;
+                }
+
+                const user = authData.user;
+                const { data: profileData, error: profileError } = await supabase
+                    .from("perfiles")
+                    .select("id, nombre_completo, email, dni_nie, telefono, direccion")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (profileError) {
+                    showMessage(profileError.message || "No se pudo cargar tu perfil.", "error");
+                    return;
+                }
+
+                fillForm(profileData, user);
+                const missingRequiredData = !dniInput.value.trim() || !addressInput.value.trim();
+
+                if (missingRequiredData) {
+                    profileForm.hidden = false;
+                    saveBtn.hidden = false;
+                    setInputsDisabled(false);
+                    showMessage("Completa DNI/NIE y dirección para terminar tu perfil.", "error");
+                } else {
+                    fillView();
+                    profileView.hidden = false;
+                    editBtn.hidden = false;
+                    showMessage("Perfil cargado correctamente.", "success");
+                }
+
+                editBtn.addEventListener("click", function () {
+                    profileView.hidden = true;
+                    profileForm.hidden = false;
+                    saveBtn.hidden = false;
+                    setInputsDisabled(false);
+                    showMessage("Ahora puedes modificar tus datos.", "success");
+                });
+
+                saveBtn.addEventListener("click", async function () {
+                    const dniValue = dniInput.value.trim();
+                    const addressValue = addressInput.value.trim();
+
+                    if (!dniValue || !addressValue) {
+                        showMessage("DNI/NIE y dirección son obligatorios.", "error");
+                        return;
+                    }
+
+                    const payload = {
+                        id: user.id,
+                        nombre_completo: fullNameInput.value.trim() || null,
+                        email: user.email || null,
+                        telefono: phoneInput.value.trim() || null,
+                        dni_nie: dniValue,
+                        direccion: addressValue,
+                    };
+
+                    const { error: updateError } = await supabase
+                        .from("perfiles")
+                        .update(payload)
+                        .eq("id", user.id);
+
+                    if (updateError) {
+                        showMessage(updateError.message || "No se pudieron guardar los cambios.", "error");
+                        return;
+                    }
+
+                    fillView();
+                    profileForm.hidden = true;
+                    profileView.hidden = false;
+                    editBtn.hidden = false;
+                    saveBtn.hidden = true;
+                    setInputsDisabled(true);
+                    showMessage("Perfil actualizado correctamente.", "success");
+                });
+            }
+
+            goHomeBtn.addEventListener("click", function () {
+                window.location.href = "./index.html";
+            });
+
+            initProfile();
+        })();
+    </script>
 </body>
 </html>
