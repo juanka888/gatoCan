@@ -44,8 +44,6 @@
                 <ul>
                     <li><strong>Donaciones hechas:</strong> <span id="profileDonations">0</span></li>
                     <li><strong>Puesto en el ranking:</strong> <span id="profileRanking">Sin asignar</span></li>
-                    <li><strong>Mejor puntuación Gatito Runner:</strong> <span id="profileRunnerBest">0</span></li>
-                    <li><strong>Puesto ranking Gatito Runner:</strong> <span id="profileRunnerRanking">Sin asignar</span></li>
                 </ul>
                 <p class="auth-helper">Nota: por ahora se muestran valores base. La lógica del ranking por donaciones se conectará más adelante.</p>
             </section>
@@ -108,10 +106,6 @@
             const viewDniNie = document.getElementById("viewDniNie");
             const viewAddress = document.getElementById("viewAddress");
             const profileAvatar = document.getElementById("profileAvatar");
-            const profileRunnerBest = document.getElementById("profileRunnerBest");
-            const profileRunnerRanking = document.getElementById("profileRunnerRanking");
-            const leaderboardKey = "gatocanRunnerLeaderboard";
-            const globalBestKey = "gatocanBestScore";
 
             function resolveAvatar(user) {
                 return (
@@ -197,7 +191,6 @@
                 userRole.textContent = resolveRole(user);
                 profileAvatar.src = resolveAvatar(user);
                 profileAvatar.alt = `Avatar de ${user.user_metadata?.full_name || user.email || "usuario"}`;
-                setRunnerStats(user.email);
 
                 const { data: profileData, error: profileError } = await supabase
                     .from("perfiles")

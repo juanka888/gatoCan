@@ -364,7 +364,6 @@
 
         if (guestActions) guestActions.hidden = true;
         if (userMenuWrap) userMenuWrap.hidden = false;
-        cacheSessionUser(user);
         if (userAvatar) {
             userAvatar.src = resolveAvatar(user);
             userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");

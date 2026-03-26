@@ -112,10 +112,6 @@ h1 {
     z-index: 40;
 }
 
-.user-menu[hidden] {
-    display: none !important;
-}
-
 .user-menu a,
 .user-menu button {
     width: 100%;
