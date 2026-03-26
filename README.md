@@ -37,6 +37,11 @@ create table if not exists public.profiles (
   email text unique,
   full_name text,
   username text unique,
+  karma_points integer not null default 0,
+  karma_rank integer,
+  total_donaciones numeric not null default 0,
+  runner_best_score integer not null default 0,
+  runner_global_rank integer,
   updated_at timestamptz default now()
 );
 
@@ -62,6 +67,13 @@ create policy "profile_insert_own"
 create policy "profile_update_own"
   on public.profiles for update
   using (auth.uid() = id);
+
+-- Si ya tenías la tabla creada, usa alter table:
+-- alter table public.perfiles add column if not exists karma_points integer not null default 0;
+-- alter table public.perfiles add column if not exists karma_rank integer;
+-- alter table public.perfiles add column if not exists total_donaciones numeric not null default 0;
+-- alter table public.perfiles add column if not exists runner_best_score integer not null default 0;
+-- alter table public.perfiles add column if not exists runner_global_rank integer;
 
 create policy "user_data_insert_own"
   on public.user_data for insert

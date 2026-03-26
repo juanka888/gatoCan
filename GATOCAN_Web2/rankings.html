@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rankings | GatoCan Natura Rural</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-wrapper">
+        <section class="auth-card">
+            <a href="./index.html" class="back-link">← Volver al inicio</a>
+            <h1>Rankings de la comunidad</h1>
+            <p class="auth-subtitle">Ranking de Zarpa Karma por donaciones y ranking global de Gatito Runner.</p>
+
+            <h3>Top donaciones (Zarpa Karma)</h3>
+            <ol id="donationRankingList" class="ranking-list">
+                <li>Cargando ranking...</li>
+            </ol>
+
+            <h3>Top Gatito Runner</h3>
+            <ol id="runnerRankingList" class="ranking-list">
+                <li>Cargando ranking...</li>
+            </ol>
+
+            <p id="rankingsMessage" class="auth-message" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        (function () {
+            const DEFAULT_SUPABASE_URL = "https://jjeciqwzepkmeeticihg.supabase.co";
+            const DEFAULT_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s";
+
+            const donationRankingList = document.getElementById("donationRankingList");
+            const runnerRankingList = document.getElementById("runnerRankingList");
+            const rankingsMessage = document.getElementById("rankingsMessage");
+
+            function showMessage(text, type) {
+                rankingsMessage.textContent = text;
+                rankingsMessage.classList.remove("success", "error");
+                if (type) rankingsMessage.classList.add(type);
+            }
+
+            function createListItem(row, valueKey, suffix) {
+                const li = document.createElement("li");
+                const label = row.nombre_completo || row.email || "Usuario";
+                li.innerHTML = `<strong>${label}</strong> — ${Number(row[valueKey] || 0)} ${suffix}`;
+                return li;
+            }
+
+            async function init() {
+                if (!window.supabase) {
+                    showMessage("No se pudo cargar Supabase.", "error");
+                    return;
+                }
+
+                const supabase = window.supabase.createClient(
+                    window.SUPABASE_URL || DEFAULT_SUPABASE_URL,
+                    window.SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY,
+                    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+                );
+
+                const { data: donationRows, error: donationError } = await supabase
+                    .from("perfiles")
+                    .select("nombre_completo, email, karma_points")
+                    .order("karma_points", { ascending: false })
+                    .limit(20);
+
+                const { data: runnerRows, error: runnerError } = await supabase
+                    .from("perfiles")
+                    .select("nombre_completo, email, runner_best_score")
+                    .order("runner_best_score", { ascending: false })
+                    .limit(20);
+
+                if (donationError || runnerError) {
+                    showMessage(donationError?.message || runnerError?.message || "No se pudo cargar el ranking.", "error");
+                    return;
+                }
+
+                donationRankingList.innerHTML = "";
+                runnerRankingList.innerHTML = "";
+
+                if (!donationRows?.length) {
+                    donationRankingList.innerHTML = "<li>Sin puntuaciones todavía.</li>";
+                } else {
+                    donationRows.forEach((row) => donationRankingList.appendChild(createListItem(row, "karma_points", "puntos Zarpa Karma")));
+                }
+
+                if (!runnerRows?.length) {
+                    runnerRankingList.innerHTML = "<li>Sin puntuaciones todavía.</li>";
+                } else {
+                    runnerRows.forEach((row) => runnerRankingList.appendChild(createListItem(row, "runner_best_score", "puntos runner")));
+                }
+
+                showMessage("Rankings actualizados.", "success");
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>

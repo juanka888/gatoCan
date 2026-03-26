@@ -48,7 +48,7 @@
                 <li><a href="./foro.html">Foro</a></li>
                 <li><a href="#contacto">Contacto</a></li>
                 <li><a href="#donar" class="nav-cta">Donar</a></li>
-                <li><a href="#ranking">Ranking</a></li>
+                <li><a href="./rankings.html">Rankings</a></li>
                 <li><a href="#campana">Campaña</a></li>
             </ul>
         </nav>
@@ -236,13 +236,15 @@
         </section>
 
         <section id="ranking" class="card">
-            <h3>Ranking solidario 🏆</h3>
-            <p>Gracias a quienes más han sumado en apoyo a las colonias este mes.</p>
-            <ol class="ranking-list">
-                <li><strong>Equipo MichiPower</strong> — 340 puntos Karma</li>
-                <li><strong>Laura P.</strong> — 290 puntos Karma</li>
-                <li><strong>Peña Gatuna Norte</strong> — 250 puntos Karma</li>
+            <h3>Rankings solidarios 🏆</h3>
+            <p>Consulta los dos rankings completos (donaciones y minijuego) o mira aquí el top rápido.</p>
+            <ol id="homeDonationRanking" class="ranking-list">
+                <li><strong>Sin datos todavía</strong> — 0 puntos Zarpa Karma</li>
             </ol>
+            <ol id="homeRunnerRanking" class="ranking-list">
+                <li><strong>Sin datos todavía</strong> — 0 puntos runner</li>
+            </ol>
+            <a href="./rankings.html" class="btn btn-secondary">Ver página completa de rankings</a>
         </section>
 
         <section id="noticias" class="card">
@@ -319,6 +321,8 @@
                 <p><strong>Total estimado:</strong> <span id="donation-total">0 €</span></p>
                 <p><strong>Puntos Karma:</strong> <span id="karma-total">0</span></p>
                 <p id="karma-message" class="karma-message">Cada punto ayuda a cambiar vidas felinas 💛</p>
+                <button id="saveDonationScoreBtn" type="button" class="btn btn-secondary">Guardar puntos en mi perfil</button>
+                <p id="saveDonationScoreMsg" class="auth-message" aria-live="polite"></p>
             </div>
 
             <a href="#contacto" class="btn btn-primary">Quiero confirmar mi aportación</a>
@@ -397,6 +401,12 @@
         const karmaTotal = document.getElementById('karma-total');
         const karmaMessage = document.getElementById('karma-message');
         const sessionKey = 'gatocanSession';
+        const saveDonationScoreBtn = document.getElementById('saveDonationScoreBtn');
+        const saveDonationScoreMsg = document.getElementById('saveDonationScoreMsg');
+        const homeDonationRanking = document.getElementById('homeDonationRanking');
+        const homeRunnerRanking = document.getElementById('homeRunnerRanking');
+        const defaultSupabaseUrl = 'https://jjeciqwzepkmeeticihg.supabase.co';
+        const defaultSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s';
 
         function updateDonationSummary() {
             let totalAmount = 0;
@@ -426,6 +436,74 @@
         });
 
         updateDonationSummary();
+
+        function getSupabaseClient() {
+            if (!window.supabase) return null;
+            const url = window.SUPABASE_URL || defaultSupabaseUrl;
+            const key = window.SUPABASE_ANON_KEY || defaultSupabaseAnonKey;
+            if (!url || !key) return null;
+            return window.supabase.createClient(url, key, {
+                auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            });
+        }
+
+        function showInlineMessage(node, text, type) {
+            if (!node) return;
+            node.textContent = text;
+            node.classList.remove('success', 'error');
+            if (type) node.classList.add(type);
+        }
+
+        async function saveKarmaToProfile() {
+            const supabase = getSupabaseClient();
+            if (!supabase) {
+                showInlineMessage(saveDonationScoreMsg, 'No se pudo conectar con Supabase.', 'error');
+                return;
+            }
+
+            const { data: authData, error: authError } = await supabase.auth.getUser();
+            if (authError || !authData?.user) {
+                showInlineMessage(saveDonationScoreMsg, 'Inicia sesión para guardar tus puntos.', 'error');
+                return;
+            }
+
+            const user = authData.user;
+            const currentKarma = Number(karmaTotal.textContent || 0);
+            let totalAmount = 0;
+            donationItems.forEach((item) => {
+                if (item.checked) totalAmount += Number(item.dataset.price || 0);
+            });
+
+            const { data: currentProfile, error: getProfileError } = await supabase
+                .from('perfiles')
+                .select('id, email, karma_points, total_donaciones')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (getProfileError) {
+                showInlineMessage(saveDonationScoreMsg, getProfileError.message || 'No se pudo leer tu perfil.', 'error');
+                return;
+            }
+
+            const payload = {
+                id: user.id,
+                email: user.email || null,
+                karma_points: Number(currentProfile?.karma_points || 0) + currentKarma,
+                total_donaciones: Number(currentProfile?.total_donaciones || 0) + totalAmount
+            };
+
+            const { error: upsertError } = await supabase.from('perfiles').upsert(payload, { onConflict: 'id' });
+            if (upsertError) {
+                showInlineMessage(saveDonationScoreMsg, upsertError.message || 'No se pudo guardar tu puntuación.', 'error');
+                return;
+            }
+
+            showInlineMessage(saveDonationScoreMsg, 'Puntos Zarpa Karma guardados en tu perfil.', 'success');
+        }
+
+        if (saveDonationScoreBtn) {
+            saveDonationScoreBtn.addEventListener('click', saveKarmaToProfile);
+        }
 
         const galleryTabs = document.querySelectorAll('.gallery-tab');
         const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));
@@ -548,6 +626,27 @@
                 localStorage.setItem(leaderboardKey, JSON.stringify(board));
             }
 
+            async function persistRunnerBestScore(bestScore) {
+                const supabase = getSupabaseClient();
+                if (!supabase) return;
+                const { data: authData } = await supabase.auth.getUser();
+                if (!authData?.user) return;
+                const user = authData.user;
+
+                const { data: profileData } = await supabase
+                    .from('perfiles')
+                    .select('runner_best_score')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                const nextBest = Math.max(Number(profileData?.runner_best_score || 0), Number(bestScore || 0));
+                await supabase.from('perfiles').upsert({
+                    id: user.id,
+                    email: user.email || null,
+                    runner_best_score: nextBest
+                }, { onConflict: 'id' });
+            }
+
             function resizeGameCanvas() {
                 const rect = canvas.getBoundingClientRect();
                 const dpr = Math.max(window.devicePixelRatio || 1, 1);
@@ -616,6 +715,7 @@
                     localStorage.setItem(bestScoreKey, String(game.best));
                     bestScoreNode.textContent = String(game.best);
                     updateRunnerLeaderboard(game.best);
+                    persistRunnerBestScore(game.best);
                 }
             }
 
@@ -780,8 +880,41 @@
             incrementarContador(colaboradorActual.id);
         });
 
+        async function fillHomeRankingLists() {
+            if (!homeDonationRanking || !homeRunnerRanking) return;
+            const supabase = getSupabaseClient();
+            if (!supabase) return;
+
+            const { data: donationRows } = await supabase
+                .from('perfiles')
+                .select('email, nombre_completo, karma_points')
+                .order('karma_points', { ascending: false })
+                .limit(3);
+
+            const { data: runnerRows } = await supabase
+                .from('perfiles')
+                .select('email, nombre_completo, runner_best_score')
+                .order('runner_best_score', { ascending: false })
+                .limit(3);
+
+            if (Array.isArray(donationRows) && donationRows.length) {
+                homeDonationRanking.innerHTML = donationRows.map((row) => {
+                    const label = row.nombre_completo || row.email || 'Usuario';
+                    return `<li><strong>${label}</strong> — ${Number(row.karma_points || 0)} puntos Zarpa Karma</li>`;
+                }).join('');
+            }
+
+            if (Array.isArray(runnerRows) && runnerRows.length) {
+                homeRunnerRanking.innerHTML = runnerRows.map((row) => {
+                    const label = row.nombre_completo || row.email || 'Usuario';
+                    return `<li><strong>${label}</strong> — ${Number(row.runner_best_score || 0)} puntos runner</li>`;
+                }).join('');
+            }
+        }
+
         pintarColaborador(colaboradores[0]);
         setInterval(siguienteColaborador, 3500);
+        fillHomeRankingLists();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth.js"></script>
