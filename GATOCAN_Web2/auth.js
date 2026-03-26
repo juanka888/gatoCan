@@ -350,8 +350,12 @@
         const userMenuToggle = document.getElementById("userMenuToggle");
         const userMenu = document.getElementById("userMenu");
         const userAvatar = document.getElementById("userAvatar");
-        const switchAccountBtn = document.getElementById("switchAccountBtn");
         const logoutFromHeaderBtn = document.getElementById("logoutFromHeaderBtn");
+
+        if (userMenu && userMenuToggle) {
+            userMenu.hidden = true;
+            userMenuToggle.setAttribute("aria-expanded", "false");
+        }
 
         const { data: authData } = await supabase.auth.getUser();
         const user = authData?.user;
@@ -382,20 +386,11 @@
                 userMenu.hidden = true;
                 userMenuToggle.setAttribute("aria-expanded", "false");
             });
-        }
 
-        if (switchAccountBtn) {
-            switchAccountBtn.addEventListener("click", async function () {
-                await supabase.auth.signOut();
-                localStorage.removeItem(SESSION_KEY);
-                const redirectTo = new URL("./perfil.html", window.location.href).href;
-                await supabase.auth.signInWithOAuth({
-                    provider: "google",
-                    options: {
-                        queryParams: { prompt: "select_account" },
-                        redirectTo,
-                    },
-                });
+            document.addEventListener("keydown", function (event) {
+                if (event.key !== "Escape") return;
+                userMenu.hidden = true;
+                userMenuToggle.setAttribute("aria-expanded", "false");
             });
         }
 

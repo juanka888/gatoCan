@@ -22,6 +22,7 @@ body {
 }
 
 .site-header {
+    position: relative;
     padding: 1rem 2rem 2.5rem;
     color: #fff;
 }
@@ -70,6 +71,13 @@ h1 {
     display: flex;
     gap: 0.6rem;
     align-items: center;
+}
+
+.account-corner {
+    position: absolute;
+    top: 1rem;
+    right: 2rem;
+    z-index: 80;
 }
 
 .account-shell {
@@ -907,7 +915,12 @@ footer {
 
     .auth-actions {
         width: 100%;
-        justify-content: flex-end;
+        justify-content: flex-start;
+    }
+
+    .account-corner {
+        top: 0.8rem;
+        right: 1rem;
     }
 
     .cat-summary {
