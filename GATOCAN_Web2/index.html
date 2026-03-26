@@ -18,7 +18,20 @@
             </div>
             <div class="auth-actions" aria-label="Acceso de usuarios">
                 <a href="#contacto" class="auth-link">Contacto</a>
-                <a id="accountLink" href="./login.html" class="auth-link auth-link-primary">Mi cuenta</a>
+                <div id="guestActions" class="account-shell" hidden>
+                    <a href="./login.html" class="auth-link">Iniciar sesión</a>
+                    <a href="./register.html" class="auth-link auth-link-primary">Registrarse</a>
+                </div>
+                <div id="userMenuWrap" class="user-menu-wrap" hidden>
+                    <button id="userMenuToggle" type="button" class="user-menu-toggle" aria-haspopup="menu" aria-expanded="false">
+                        <img id="userAvatar" class="user-avatar" alt="Avatar del usuario" src="">
+                    </button>
+                    <div id="userMenu" class="user-menu" role="menu" hidden>
+                        <a href="./perfil.html" role="menuitem">Ir al perfil</a>
+                        <button id="switchAccountBtn" type="button" role="menuitem">Cambiar de usuario</button>
+                        <button id="logoutFromHeaderBtn" type="button" role="menuitem">Cerrar sesión</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -736,5 +749,7 @@
         pintarColaborador(colaboradores[0]);
         setInterval(siguienteColaborador, 3500);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth.js"></script>
 </body>
 </html>
