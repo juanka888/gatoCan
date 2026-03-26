@@ -151,6 +151,23 @@
                 return "usuario";
             }
 
+            function setRunnerStats(userEmail) {
+                const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "{}");
+                const bestFromLegacyKey = Number(localStorage.getItem(globalBestKey) || 0);
+                const userKey = userEmail || "invitado";
+                const userBest = Math.max(Number(leaderboard[userKey] || 0), bestFromLegacyKey);
+                leaderboard[userKey] = userBest;
+                localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+
+                const ranking = Object.entries(leaderboard)
+                    .map(([player, best]) => ({ player, best: Number(best || 0) }))
+                    .sort((a, b) => b.best - a.best);
+
+                const rankIndex = ranking.findIndex((entry) => entry.player === userKey);
+                profileRunnerBest.textContent = String(userBest);
+                profileRunnerRanking.textContent = rankIndex >= 0 ? `#${rankIndex + 1}` : "Sin asignar";
+            }
+
             async function initProfile() {
                 if (!window.supabase) {
                     showMessage("No se pudo cargar Supabase.", "error");

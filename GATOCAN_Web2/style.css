@@ -750,6 +750,8 @@ footer {
 
 #cat-runner {
     width: 100%;
+    height: clamp(240px, 36vh, 320px);
+    display: block;
     border: 1px solid #d3e1e8;
     border-radius: 10px;
     background: #fff;
@@ -765,7 +767,7 @@ footer {
     background: rgba(10, 17, 23, 0.68);
     border-radius: 10px;
     text-align: center;
-    padding: 1rem;
+    padding: 1.25rem;
 }
 
 .game-over-overlay[hidden] {
@@ -993,6 +995,10 @@ footer {
 
     .game-shell {
         grid-template-columns: 1fr;
+    }
+
+    #cat-runner {
+        height: clamp(250px, 44vh, 360px);
     }
 
     .gallery-nav {
