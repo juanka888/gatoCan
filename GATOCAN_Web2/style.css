@@ -34,6 +34,12 @@ body {
     flex-wrap: wrap;
 }
 
+.forum-top-bar {
+    width: min(980px, 100%);
+    margin: 0 auto 1rem;
+    color: #fff;
+}
+
 .brand {
     display: flex;
     align-items: center;
