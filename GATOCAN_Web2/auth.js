@@ -339,6 +339,7 @@
     async function initHeaderUserMenu() {
         const guestActions = document.getElementById("guestActions");
         const userMenuWrap = document.getElementById("userMenuWrap");
+        const heroGuestActions = document.getElementById("heroGuestActions");
         if (!guestActions && !userMenuWrap) return;
 
         const supabase = getSupabaseClient();
@@ -363,11 +364,13 @@
         if (!user) {
             if (guestActions) guestActions.hidden = false;
             if (userMenuWrap) userMenuWrap.hidden = true;
+            if (heroGuestActions) heroGuestActions.hidden = false;
             return;
         }
 
         if (guestActions) guestActions.hidden = true;
         if (userMenuWrap) userMenuWrap.hidden = false;
+        if (heroGuestActions) heroGuestActions.hidden = true;
         if (userAvatar) {
             userAvatar.src = resolveAvatar(user);
             userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
