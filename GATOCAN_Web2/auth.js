@@ -45,6 +45,16 @@
         );
     }
 
+    function resolveAvatar(user) {
+        return (
+            user?.user_metadata?.avatar_url ||
+            user?.identities?.find(function (identity) {
+                return identity.provider === "google";
+            })?.identity_data?.avatar_url ||
+            "https://ui-avatars.com/api/?name=GatoCan&background=0f4c5c&color=fff"
+        );
+    }
+
     async function upsertUserProfile(supabase, user, extraData) {
         const payload = {
             id: user.id,
@@ -326,8 +336,81 @@
         });
     }
 
+    async function initHeaderUserMenu() {
+        const guestActions = document.getElementById("guestActions");
+        const userMenuWrap = document.getElementById("userMenuWrap");
+        if (!guestActions && !userMenuWrap) return;
+
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            if (guestActions) guestActions.hidden = false;
+            return;
+        }
+
+        const userMenuToggle = document.getElementById("userMenuToggle");
+        const userMenu = document.getElementById("userMenu");
+        const userAvatar = document.getElementById("userAvatar");
+        const switchAccountBtn = document.getElementById("switchAccountBtn");
+        const logoutFromHeaderBtn = document.getElementById("logoutFromHeaderBtn");
+
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+
+        if (!user) {
+            if (guestActions) guestActions.hidden = false;
+            if (userMenuWrap) userMenuWrap.hidden = true;
+            return;
+        }
+
+        if (guestActions) guestActions.hidden = true;
+        if (userMenuWrap) userMenuWrap.hidden = false;
+        if (userAvatar) {
+            userAvatar.src = resolveAvatar(user);
+            userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
+        }
+
+        if (userMenuToggle && userMenu) {
+            userMenuToggle.addEventListener("click", function () {
+                const isOpen = !userMenu.hidden;
+                userMenu.hidden = isOpen;
+                userMenuToggle.setAttribute("aria-expanded", String(!isOpen));
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!userMenuWrap || userMenu.hidden) return;
+                if (userMenuWrap.contains(event.target)) return;
+                userMenu.hidden = true;
+                userMenuToggle.setAttribute("aria-expanded", "false");
+            });
+        }
+
+        if (switchAccountBtn) {
+            switchAccountBtn.addEventListener("click", async function () {
+                await supabase.auth.signOut();
+                localStorage.removeItem(SESSION_KEY);
+                const redirectTo = new URL("./perfil.html", window.location.href).href;
+                await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: {
+                        queryParams: { prompt: "select_account" },
+                        redirectTo,
+                    },
+                });
+            });
+        }
+
+        if (logoutFromHeaderBtn) {
+            logoutFromHeaderBtn.addEventListener("click", async function () {
+                await supabase.auth.signOut();
+                localStorage.removeItem(SESSION_KEY);
+                window.location.href = "./index.html";
+            });
+        }
+    }
+
     initLogin();
     initRegister();
     initGoogleAuth();
     initProfile();
+    initHeaderUserMenu();
 })();

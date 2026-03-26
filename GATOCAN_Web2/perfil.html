@@ -22,8 +22,13 @@
 
     <main class="auth-wrapper profile-wrapper">
         <section id="profileCard" class="auth-card">
-            <h1>Mi perfil</h1>
-            <p class="auth-subtitle">Consulta tus datos y actualízalos cuando quieras.</p>
+            <div class="profile-main-header">
+                <img id="profileAvatar" class="profile-main-avatar" src="" alt="Avatar de usuario">
+                <div>
+                    <h1>Mi perfil</h1>
+                    <p class="auth-subtitle">Consulta tus datos y actualízalos cuando quieras.</p>
+                </div>
+            </div>
             <p class="auth-helper"><strong>Rol actual:</strong> <span id="userRole">Usuario</span></p>
 
             <div id="profileView" class="auth-form" hidden>
@@ -33,6 +38,15 @@
                 <p><strong>DNI / NIE:</strong> <span id="viewDniNie"></span></p>
                 <p><strong>Dirección:</strong> <span id="viewAddress"></span></p>
             </div>
+
+            <section class="profile-stats" aria-label="Resumen solidario">
+                <h3>Mi actividad solidaria</h3>
+                <ul>
+                    <li><strong>Donaciones hechas:</strong> <span id="profileDonations">0</span></li>
+                    <li><strong>Puesto en el ranking:</strong> <span id="profileRanking">Sin asignar</span></li>
+                </ul>
+                <p class="auth-helper">Nota: por ahora se muestran valores base. La lógica del ranking por donaciones se conectará más adelante.</p>
+            </section>
 
             <form id="profileForm" class="auth-form" novalidate hidden>
                 <label for="profileFullName">Nombre completo</label>
@@ -91,6 +105,15 @@
             const viewPhone = document.getElementById("viewPhone");
             const viewDniNie = document.getElementById("viewDniNie");
             const viewAddress = document.getElementById("viewAddress");
+            const profileAvatar = document.getElementById("profileAvatar");
+
+            function resolveAvatar(user) {
+                return (
+                    user?.user_metadata?.avatar_url ||
+                    user?.identities?.find((identity) => identity.provider === "google")?.identity_data?.avatar_url ||
+                    "https://ui-avatars.com/api/?name=GatoCan&background=0f4c5c&color=fff"
+                );
+            }
 
             function showMessage(text, type) {
                 message.textContent = text;
@@ -149,6 +172,8 @@
                 const user = authData.user;
                 localStorage.setItem(SESSION_KEY, JSON.stringify({ user: user.email, loggedAt: new Date().toISOString() }));
                 userRole.textContent = resolveRole(user);
+                profileAvatar.src = resolveAvatar(user);
+                profileAvatar.alt = `Avatar de ${user.user_metadata?.full_name || user.email || "usuario"}`;
 
                 const { data: profileData, error: profileError } = await supabase
                     .from("perfiles")
