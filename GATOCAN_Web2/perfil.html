@@ -12,7 +12,7 @@
             <ul>
                 <li><a href="./index.html#inicio">Inicio</a></li>
                 <li><a href="./index.html#donar">Donar</a></li>
-                <li><a href="./index.html#ranking">Ranking</a></li>
+                <li><a href="./rankings.html">Rankings</a></li>
                 <li><a href="./foro.html">Foro</a></li>
                 <li><a href="./index.html#contacto">Contacto</a></li>
                 <li><a href="./perfil.html" class="nav-cta">Mi perfil</a></li>
@@ -42,10 +42,13 @@
             <section class="profile-stats" aria-label="Resumen solidario">
                 <h3>Mi actividad solidaria</h3>
                 <ul>
-                    <li><strong>Donaciones hechas:</strong> <span id="profileDonations">0</span></li>
-                    <li><strong>Puesto en el ranking:</strong> <span id="profileRanking">Sin asignar</span></li>
+                    <li><strong>Total donaciones acumuladas:</strong> <span id="profileDonations">0 €</span></li>
+                    <li><strong>Zarpa Karma acumulado:</strong> <span id="profileKarmaPoints">0</span></li>
+                    <li><strong>Puesto ranking donaciones:</strong> <span id="profileRanking">Sin asignar</span></li>
+                    <li><strong>Puntuación máxima Gatito Runner:</strong> <span id="profileRunnerBest">0</span></li>
+                    <li><strong>Puesto global Gatito Runner:</strong> <span id="profileRunnerRanking">Sin asignar</span></li>
                 </ul>
-                <p class="auth-helper">Nota: por ahora se muestran valores base. La lógica del ranking por donaciones se conectará más adelante.</p>
+                <p class="auth-helper"><a href="./rankings.html">Ver página completa de rankings</a></p>
             </section>
 
             <form id="profileForm" class="auth-form" novalidate hidden>
@@ -106,6 +109,11 @@
             const viewDniNie = document.getElementById("viewDniNie");
             const viewAddress = document.getElementById("viewAddress");
             const profileAvatar = document.getElementById("profileAvatar");
+            const profileDonations = document.getElementById("profileDonations");
+            const profileRanking = document.getElementById("profileRanking");
+            const profileKarmaPoints = document.getElementById("profileKarmaPoints");
+            const profileRunnerBest = document.getElementById("profileRunnerBest");
+            const profileRunnerRanking = document.getElementById("profileRunnerRanking");
 
             function resolveAvatar(user) {
                 return (
@@ -151,21 +159,36 @@
                 return "usuario";
             }
 
-            function setRunnerStats(userEmail) {
-                const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "{}");
-                const bestFromLegacyKey = Number(localStorage.getItem(globalBestKey) || 0);
-                const userKey = userEmail || "invitado";
-                const userBest = Math.max(Number(leaderboard[userKey] || 0), bestFromLegacyKey);
-                leaderboard[userKey] = userBest;
-                localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+            async function setRankingStats(supabase, user) {
+                const { data: profileRows, error: rankingError } = await supabase
+                    .from("perfiles")
+                    .select("id, karma_points, runner_best_score, total_donaciones")
+                    .order("karma_points", { ascending: false })
+                    .limit(200);
 
-                const ranking = Object.entries(leaderboard)
-                    .map(([player, best]) => ({ player, best: Number(best || 0) }))
-                    .sort((a, b) => b.best - a.best);
+                if (rankingError || !Array.isArray(profileRows)) return;
 
-                const rankIndex = ranking.findIndex((entry) => entry.player === userKey);
-                profileRunnerBest.textContent = String(userBest);
-                profileRunnerRanking.textContent = rankIndex >= 0 ? `#${rankIndex + 1}` : "Sin asignar";
+                const donationRanking = [...profileRows]
+                    .sort((a, b) => Number(b.karma_points || 0) - Number(a.karma_points || 0));
+                const runnerRanking = [...profileRows]
+                    .sort((a, b) => Number(b.runner_best_score || 0) - Number(a.runner_best_score || 0));
+
+                const donationIndex = donationRanking.findIndex((entry) => entry.id === user.id);
+                const runnerIndex = runnerRanking.findIndex((entry) => entry.id === user.id);
+                const current = profileRows.find((entry) => entry.id === user.id) || {};
+
+                profileDonations.textContent = `${Number(current.total_donaciones || 0)} €`;
+                profileKarmaPoints.textContent = String(Number(current.karma_points || 0));
+                profileRunnerBest.textContent = String(Number(current.runner_best_score || 0));
+                profileRanking.textContent = donationIndex >= 0 ? `#${donationIndex + 1}` : "Sin asignar";
+                profileRunnerRanking.textContent = runnerIndex >= 0 ? `#${runnerIndex + 1}` : "Sin asignar";
+
+                await supabase.from("perfiles").upsert({
+                    id: user.id,
+                    email: user.email || null,
+                    karma_rank: donationIndex >= 0 ? donationIndex + 1 : null,
+                    runner_global_rank: runnerIndex >= 0 ? runnerIndex + 1 : null
+                }, { onConflict: "id" });
             }
 
             async function initProfile() {
@@ -205,6 +228,7 @@
 
                 fillForm(profileData, user);
                 fillView();
+                setRankingStats(supabase, user);
 
                 const missingRequiredData = !dniInput.value.trim() || !addressInput.value.trim();
                 if (missingRequiredData) {
