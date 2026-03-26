@@ -18,7 +18,20 @@
             </div>
             <div class="auth-actions" aria-label="Acceso de usuarios">
                 <a href="#contacto" class="auth-link">Contacto</a>
-                <a id="accountLink" href="./login.html" class="auth-link auth-link-primary">Mi cuenta</a>
+                <div id="guestActions" class="account-shell" hidden>
+                    <a href="./login.html" class="auth-link">Iniciar sesión</a>
+                    <a href="./register.html" class="auth-link auth-link-primary">Registrarse</a>
+                </div>
+                <div id="userMenuWrap" class="user-menu-wrap" hidden>
+                    <button id="userMenuToggle" type="button" class="user-menu-toggle" aria-haspopup="menu" aria-expanded="false">
+                        <img id="userAvatar" class="user-avatar" alt="Avatar del usuario" src="">
+                    </button>
+                    <div id="userMenu" class="user-menu" role="menu" hidden>
+                        <a href="./perfil.html" role="menuitem">Ir al perfil</a>
+                        <button id="switchAccountBtn" type="button" role="menuitem">Cambiar de usuario</button>
+                        <button id="logoutFromHeaderBtn" type="button" role="menuitem">Cerrar sesión</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -189,7 +202,7 @@
             <p>Salta con <strong>espacio</strong>, <strong>flecha arriba</strong> o tocando el botón. Atrapa ratones para sumar puntos y esquiva obstáculos.</p>
             <div class="game-shell">
                 <div class="game-canvas-wrap">
-                    <canvas id="cat-runner" width="860" height="220" role="img" aria-label="Juego de gatito que salta"></canvas>
+                    <canvas id="cat-runner" width="860" height="260" role="img" aria-label="Juego de gatito que salta"></canvas>
                     <div id="game-over-overlay" class="game-over-overlay" aria-live="polite" hidden>
                         <p class="game-over-title">💥 Game Over</p>
                         <p class="game-over-text">Te chocaste. ¿Reintentar?</p>
@@ -380,23 +393,10 @@
 
     <script>
         const donationItems = document.querySelectorAll('.donation-item');
-        const accountLink = document.getElementById('accountLink');
         const donationTotal = document.getElementById('donation-total');
         const karmaTotal = document.getElementById('karma-total');
         const karmaMessage = document.getElementById('karma-message');
         const sessionKey = 'gatocanSession';
-
-        function updateAccountLink() {
-            if (!accountLink) return;
-            const stored = localStorage.getItem(sessionKey);
-            if (stored) {
-                accountLink.href = './perfil.html';
-                accountLink.textContent = 'Mi perfil';
-                return;
-            }
-            accountLink.href = './login.html';
-            accountLink.textContent = 'Iniciar sesión';
-        }
 
         function updateDonationSummary() {
             let totalAmount = 0;
@@ -426,7 +426,6 @@
         });
 
         updateDonationSummary();
-        updateAccountLink();
 
         const galleryTabs = document.querySelectorAll('.gallery-tab');
         const galleryItems = Array.from(document.querySelectorAll('.gallery-item'));
@@ -511,6 +510,7 @@
         const bestScoreNode = document.getElementById('best-score');
         const statusNode = document.getElementById('game-status');
         const bestScoreKey = 'gatocanBestScore';
+        const leaderboardKey = 'gatocanRunnerLeaderboard';
 
         if (canvas && ctx && jumpBtn && restartBtn && retryOverlayBtn && gameOverOverlay && scoreNode && distanceNode && bestScoreNode && statusNode) {
             const game = {
@@ -522,13 +522,57 @@
                 gravity: 0.7,
                 cat: { x: 65, y: 170, w: 34, h: 28, vy: 0, onGround: true },
                 groundY: 170,
+                width: 860,
+                height: 260,
                 obstacles: [],
                 mice: [],
                 obstacleSpawn: 0,
                 mouseSpawn: 0
             };
 
+            function getCurrentPlayerLabel() {
+                const stored = localStorage.getItem(sessionKey);
+                if (!stored) return 'invitado';
+                try {
+                    const parsed = JSON.parse(stored);
+                    return parsed?.user || 'invitado';
+                } catch (error) {
+                    return 'invitado';
+                }
+            }
+
+            function updateRunnerLeaderboard(bestScore) {
+                const player = getCurrentPlayerLabel();
+                const board = JSON.parse(localStorage.getItem(leaderboardKey) || '{}');
+                board[player] = Math.max(Number(board[player] || 0), Number(bestScore || 0));
+                localStorage.setItem(leaderboardKey, JSON.stringify(board));
+            }
+
+            function resizeGameCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = Math.max(window.devicePixelRatio || 1, 1);
+                const cssWidth = Math.max(320, Math.floor(rect.width || 860));
+                const cssHeight = Math.max(240, Math.floor(rect.height || 260));
+
+                canvas.width = Math.floor(cssWidth * dpr);
+                canvas.height = Math.floor(cssHeight * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                game.width = cssWidth;
+                game.height = cssHeight;
+                game.groundY = Math.max(150, game.height - 60);
+
+                if (game.cat.onGround || game.cat.y > game.groundY) {
+                    game.cat.y = game.groundY;
+                    game.cat.vy = 0;
+                    game.cat.onGround = true;
+                }
+            }
+
             bestScoreNode.textContent = String(game.best);
+            updateRunnerLeaderboard(game.best);
+            resizeGameCanvas();
+            window.addEventListener('resize', resizeGameCanvas);
 
             function jump() {
                 if (!game.running) return;
@@ -571,6 +615,7 @@
                     game.best = game.score;
                     localStorage.setItem(bestScoreKey, String(game.best));
                     bestScoreNode.textContent = String(game.best);
+                    updateRunnerLeaderboard(game.best);
                 }
             }
 
@@ -593,12 +638,14 @@
 
                 if (game.obstacleSpawn <= 0) {
                     const h = 24 + Math.random() * 18;
-                    game.obstacles.push({ x: canvas.width, y: game.groundY + game.cat.h - h, w: 16 + Math.random() * 14, h });
+                    game.obstacles.push({ x: game.width, y: game.groundY + game.cat.h - h, w: 16 + Math.random() * 14, h });
                     game.obstacleSpawn = 80 + Math.random() * 65;
                 }
 
                 if (game.mouseSpawn <= 0) {
-                    game.mice.push({ x: canvas.width, y: 124 + Math.random() * 45, w: 18, h: 14, caught: false });
+                    const miceMinY = Math.max(96, game.groundY - 85);
+                    const miceMaxY = Math.max(miceMinY + 10, game.groundY - 28);
+                    game.mice.push({ x: game.width, y: miceMinY + Math.random() * (miceMaxY - miceMinY), w: 18, h: 14, caught: false });
                     game.mouseSpawn = 100 + Math.random() * 95;
                 }
 
@@ -630,19 +677,19 @@
             }
 
             function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.clearRect(0, 0, game.width, game.height);
 
-                const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                const bg = ctx.createLinearGradient(0, 0, 0, game.height);
                 bg.addColorStop(0, '#f0f9ff');
                 bg.addColorStop(1, '#dbeffd');
                 ctx.fillStyle = bg;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillRect(0, 0, game.width, game.height);
 
                 ctx.strokeStyle = '#7cb4d5';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(0, game.groundY + game.cat.h + 1);
-                ctx.lineTo(canvas.width, game.groundY + game.cat.h + 1);
+                ctx.lineTo(game.width, game.groundY + game.cat.h + 1);
                 ctx.stroke();
 
                 ctx.fillStyle = '#22303c';
@@ -736,5 +783,7 @@
         pintarColaborador(colaboradores[0]);
         setInterval(siguienteColaborador, 3500);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./auth.js"></script>
 </body>
 </html>
