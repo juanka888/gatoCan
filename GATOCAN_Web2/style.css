@@ -10,6 +10,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -246,6 +250,20 @@ h1 {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.profile-page .btn-secondary {
+    background: #e7f0f5;
+    color: #123947;
+    border: 1px solid #bed0da;
+}
+
+.profile-page .btn-secondary:hover {
+    background: #d8e8f0;
+}
+
+.profile-page .btn-primary {
+    color: #1f1f1f;
 }
 
 main {
