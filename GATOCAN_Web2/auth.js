@@ -353,46 +353,72 @@
         const userAvatar = document.getElementById("userAvatar");
         const logoutFromHeaderBtn = document.getElementById("logoutFromHeaderBtn");
 
+        function setNodeVisible(node, visible, displayValue) {
+            if (!node) return;
+            node.hidden = !visible;
+            node.style.display = visible ? (displayValue || "") : "none";
+        }
+
         if (userMenu && userMenuToggle) {
             userMenu.hidden = true;
+            userMenu.style.display = "none";
             userMenuToggle.setAttribute("aria-expanded", "false");
         }
 
-        const { data: authData } = await supabase.auth.getUser();
-        const user = authData?.user;
+        function renderHeaderForUser(user) {
+            if (!user) {
+                setNodeVisible(guestActions, true, "flex");
+                setNodeVisible(userMenuWrap, false);
+                setNodeVisible(heroGuestActions, true, "contents");
+                if (userMenu) {
+                    userMenu.hidden = true;
+                    userMenu.style.display = "none";
+                }
+                if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+                return;
+            }
 
-        if (!user) {
-            if (guestActions) guestActions.hidden = false;
-            if (userMenuWrap) userMenuWrap.hidden = true;
-            if (heroGuestActions) heroGuestActions.hidden = false;
-            return;
+            setNodeVisible(guestActions, false);
+            setNodeVisible(userMenuWrap, true, "block");
+            setNodeVisible(heroGuestActions, false);
+            if (userMenu) {
+                userMenu.hidden = true;
+                userMenu.style.display = "none";
+            }
+            if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+            if (userAvatar) {
+                userAvatar.src = resolveAvatar(user);
+                userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
+            }
         }
 
-        if (guestActions) guestActions.hidden = true;
-        if (userMenuWrap) userMenuWrap.hidden = false;
-        if (heroGuestActions) heroGuestActions.hidden = true;
-        if (userAvatar) {
-            userAvatar.src = resolveAvatar(user);
-            userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
-        }
+        const { data: authSessionData } = await supabase.auth.getSession();
+        renderHeaderForUser(authSessionData?.session?.user || null);
+
+        supabase.auth.onAuthStateChange(function (_event, session) {
+            renderHeaderForUser(session?.user || null);
+        });
 
         if (userMenuToggle && userMenu) {
             userMenuToggle.addEventListener("click", function () {
-                const isOpen = !userMenu.hidden;
-                userMenu.hidden = isOpen;
-                userMenuToggle.setAttribute("aria-expanded", String(!isOpen));
+                const willOpen = userMenu.hidden;
+                userMenu.hidden = !willOpen;
+                userMenu.style.display = willOpen ? "grid" : "none";
+                userMenuToggle.setAttribute("aria-expanded", String(willOpen));
             });
 
             document.addEventListener("click", function (event) {
                 if (!userMenuWrap || userMenu.hidden) return;
                 if (userMenuWrap.contains(event.target)) return;
                 userMenu.hidden = true;
+                userMenu.style.display = "none";
                 userMenuToggle.setAttribute("aria-expanded", "false");
             });
 
             document.addEventListener("keydown", function (event) {
                 if (event.key !== "Escape") return;
                 userMenu.hidden = true;
+                userMenu.style.display = "none";
                 userMenuToggle.setAttribute("aria-expanded", "false");
             });
         }

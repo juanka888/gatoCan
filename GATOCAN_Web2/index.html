@@ -19,7 +19,7 @@
         </div>
         <div class="account-corner" aria-label="Cuenta de usuario">
             <div id="guestActions" class="account-shell" hidden>
-                <a href="./login.html" class="auth-link auth-link-primary">Iniciar sesión o registrarse</a>
+                <a href="./login.html" class="auth-link auth-link-primary">Acceder</a>
             </div>
             <div id="userMenuWrap" class="user-menu-wrap" hidden>
                 <button id="userMenuToggle" type="button" class="user-menu-toggle" aria-haspopup="menu" aria-expanded="false">
@@ -199,6 +199,7 @@
         <section id="minijuego" class="card game-card">
             <h3>Minijuego: Gatito Runner 🐱</h3>
             <p>Salta con <strong>espacio</strong>, <strong>flecha arriba</strong> o tocando el botón. Atrapa ratones para sumar puntos y esquiva obstáculos.</p>
+            <p class="auth-helper">Tip visual: si guardas el sprite en <strong>GATOCAN_Web2/img/pixel_cat_sprites.png</strong> el gato y obstáculos se verán animados en pixel-art.</p>
             <div class="game-shell">
                 <div class="game-canvas-wrap">
                     <canvas id="cat-runner" width="860" height="260" role="img" aria-label="Juego de gatito que salta"></canvas>
@@ -607,6 +608,27 @@
                 mouseSpawn: 0
             };
 
+            const spriteSheet = new Image();
+            let spriteReady = false;
+            let frameTicker = 0;
+            let currentRunFrame = 0;
+
+            const spriteMap = {
+                run: { x: 40, y: 165, w: 178, h: 182, frames: 6, gap: 28 },
+                jump: { x: 39, y: 441, w: 178, h: 182, frames: 4, gap: 28 },
+                fall: { x: 40, y: 719, w: 178, h: 182, frames: 2, gap: 28 },
+                yarn: { x: 1058, y: 443, w: 228, h: 183 },
+                mouse: { x: 1308, y: 481, w: 206, h: 126 }
+            };
+
+            spriteSheet.src = './img/pixel_cat_sprites.png';
+            spriteSheet.onload = function () {
+                spriteReady = true;
+            };
+            spriteSheet.onerror = function () {
+                spriteReady = false;
+            };
+
             function getCurrentPlayerLabel() {
                 const stored = localStorage.getItem(sessionKey);
                 if (!stored) return 'invitado';
@@ -736,8 +758,16 @@
                 game.mouseSpawn -= 1;
 
                 if (game.obstacleSpawn <= 0) {
-                    const h = 24 + Math.random() * 18;
-                    game.obstacles.push({ x: game.width, y: game.groundY + game.cat.h - h, w: 16 + Math.random() * 14, h });
+                    const isYarn = Math.random() < 0.7;
+                    const h = isYarn ? 30 : 22;
+                    const w = isYarn ? 30 : 26;
+                    game.obstacles.push({
+                        x: game.width,
+                        y: game.groundY + game.cat.h - h,
+                        w,
+                        h,
+                        type: isYarn ? 'yarn' : 'mouseObstacle'
+                    });
                     game.obstacleSpawn = 80 + Math.random() * 65;
                 }
 
@@ -773,6 +803,23 @@
                 }
 
                 distanceNode.textContent = String(Math.floor(game.distance));
+                frameTicker += 1;
+                if (frameTicker % 7 === 0) {
+                    currentRunFrame = (currentRunFrame + 1) % spriteMap.run.frames;
+                }
+            }
+
+            function drawSprite(name, dx, dy, dw, dh, frameIndex) {
+                const sprite = spriteMap[name];
+                if (!spriteReady || !sprite) return false;
+                const frameX = sprite.x + ((frameIndex || 0) * (sprite.w + (sprite.gap || 0)));
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(
+                    spriteSheet,
+                    frameX, sprite.y, sprite.w, sprite.h,
+                    dx, dy, dw, dh
+                );
+                return true;
             }
 
             function draw() {
@@ -791,13 +838,27 @@
                 ctx.lineTo(game.width, game.groundY + game.cat.h + 1);
                 ctx.stroke();
 
-                ctx.fillStyle = '#22303c';
-                ctx.font = '700 13px Segoe UI';
-                ctx.fillText('🐾', game.cat.x + 2, game.cat.y + 20);
+                const catFrame = !game.running
+                    ? (frameTicker % 20 < 10 ? 0 : 1)
+                    : game.cat.onGround
+                        ? currentRunFrame
+                        : Math.min(3, Math.floor(Math.abs(game.cat.vy) / 3));
+
+                const catSpriteName = !game.running ? 'fall' : (game.cat.onGround ? 'run' : 'jump');
+                const catDrawn = drawSprite(catSpriteName, game.cat.x - 10, game.cat.y - 20, 60, 60, catFrame);
+
+                if (!catDrawn) {
+                    ctx.fillStyle = '#22303c';
+                    ctx.font = '700 13px Segoe UI';
+                    ctx.fillText('🐾', game.cat.x + 2, game.cat.y + 20);
+                }
 
                 game.obstacles.forEach((item) => {
-                    ctx.fillStyle = '#4b5f6b';
-                    ctx.fillRect(item.x, item.y, item.w, item.h);
+                    const obstacleDrawn = drawSprite(item.type === 'yarn' ? 'yarn' : 'mouse', item.x - 6, item.y - 8, item.w + 12, item.h + 12, 0);
+                    if (!obstacleDrawn) {
+                        ctx.fillStyle = '#4b5f6b';
+                        ctx.fillRect(item.x, item.y, item.w, item.h);
+                    }
                 });
 
                 game.mice.forEach((item) => {
