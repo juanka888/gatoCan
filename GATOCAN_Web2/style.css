@@ -10,6 +10,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -77,6 +81,7 @@ h1 {
 .account-shell {
     display: flex;
     gap: 0.55rem;
+    align-items: center;
 }
 
 .user-menu-wrap {
@@ -142,6 +147,7 @@ h1 {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.1);
     font-size: 0.88rem;
+    white-space: nowrap;
 }
 
 .auth-link-primary {
@@ -244,6 +250,20 @@ h1 {
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.profile-page .btn-secondary {
+    background: #e7f0f5;
+    color: #123947;
+    border: 1px solid #bed0da;
+}
+
+.profile-page .btn-secondary:hover {
+    background: #d8e8f0;
+}
+
+.profile-page .btn-primary {
+    color: #1f1f1f;
 }
 
 main {
@@ -913,8 +933,10 @@ footer {
     }
 
     .account-corner {
-        top: 0.55rem;
-        right: 0.8rem;
+        position: static;
+        margin-top: 0.65rem;
+        display: flex;
+        justify-content: flex-end;
     }
 
     .cat-summary {
@@ -953,13 +975,25 @@ footer {
     }
 
     .account-shell .auth-link {
-        font-size: 0.82rem;
-        padding: 0.24rem 0.6rem;
+        font-size: 0.74rem;
+        padding: 0.2rem 0.48rem;
+        line-height: 1.2;
     }
 
     .user-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .user-menu {
+        min-width: 172px;
+        right: -0.25rem;
+    }
+
+    .user-menu a,
+    .user-menu button {
+        font-size: 0.86rem;
+        padding: 0.48rem 0.55rem;
     }
 
     .profile-actions {

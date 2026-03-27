@@ -69,8 +69,8 @@
             </form>
 
             <div class="profile-actions profile-actions-wide">
-                <button id="editProfileBtn" type="button" class="btn btn-secondary" hidden>Modificar</button>
-                <button id="saveProfileBtn" type="button" class="btn btn-primary" hidden>Guardar</button>
+                <button id="editProfileBtn" type="button" class="btn btn-secondary">Modificar</button>
+                <button id="saveProfileBtn" type="button" class="btn btn-primary" disabled>Guardar</button>
                 <button id="goHomeBtn" type="button" class="btn btn-secondary">Ir a Inicio</button>
                 <button id="logoutBtn" type="button" class="btn btn-secondary">Cerrar sesión</button>
             </div>
@@ -134,6 +134,16 @@
                 phoneInput.disabled = disabled;
                 dniInput.disabled = disabled;
                 addressInput.disabled = disabled;
+            }
+
+            function setEditMode(enabled) {
+                profileView.hidden = enabled;
+                profileForm.hidden = !enabled;
+                editBtn.hidden = false;
+                saveBtn.hidden = false;
+                saveBtn.disabled = !enabled;
+                setInputsDisabled(!enabled);
+                editBtn.textContent = enabled ? "Cancelar edición" : "Modificar";
             }
 
             function fillForm(profile, user) {
@@ -232,24 +242,23 @@
 
                 const missingRequiredData = !dniInput.value.trim() || !addressInput.value.trim();
                 if (missingRequiredData) {
-                    profileForm.hidden = false;
-                    saveBtn.hidden = false;
-                    setInputsDisabled(false);
+                    setEditMode(true);
                     showMessage("Completa DNI/NIE y dirección para terminar tu perfil.", "error");
                 } else {
-                    profileView.hidden = false;
-                    editBtn.hidden = false;
-                    setInputsDisabled(true);
+                    setEditMode(false);
                     profileCard.classList.add("profile-saved");
                     showMessage("Perfil cargado correctamente.", "success");
                 }
 
                 editBtn.addEventListener("click", function () {
-                    profileView.hidden = true;
-                    profileForm.hidden = false;
-                    saveBtn.hidden = false;
-                    setInputsDisabled(false);
-                    showMessage("Ahora puedes modificar tus datos.", "success");
+                    const nowEditing = saveBtn.disabled;
+                    setEditMode(nowEditing);
+                    showMessage(
+                        nowEditing
+                            ? "Ahora puedes modificar tus datos."
+                            : "Edición cancelada. Datos sin cambios guardados.",
+                        "success"
+                    );
                 });
 
                 saveBtn.addEventListener("click", async function () {
@@ -276,11 +285,7 @@
                     }
 
                     fillView();
-                    profileForm.hidden = true;
-                    profileView.hidden = false;
-                    editBtn.hidden = false;
-                    saveBtn.hidden = true;
-                    setInputsDisabled(true);
+                    setEditMode(false);
                     showMessage("Perfil actualizado correctamente.", "success");
                 });
 
