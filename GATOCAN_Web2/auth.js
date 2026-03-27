@@ -358,23 +358,33 @@
             userMenuToggle.setAttribute("aria-expanded", "false");
         }
 
-        const { data: authData } = await supabase.auth.getUser();
-        const user = authData?.user;
+        function renderHeaderForUser(user) {
+            if (!user) {
+                if (guestActions) guestActions.hidden = false;
+                if (userMenuWrap) userMenuWrap.hidden = true;
+                if (heroGuestActions) heroGuestActions.hidden = false;
+                if (userMenu) userMenu.hidden = true;
+                if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+                return;
+            }
 
-        if (!user) {
-            if (guestActions) guestActions.hidden = false;
-            if (userMenuWrap) userMenuWrap.hidden = true;
-            if (heroGuestActions) heroGuestActions.hidden = false;
-            return;
+            if (guestActions) guestActions.hidden = true;
+            if (userMenuWrap) userMenuWrap.hidden = false;
+            if (heroGuestActions) heroGuestActions.hidden = true;
+            if (userMenu) userMenu.hidden = true;
+            if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+            if (userAvatar) {
+                userAvatar.src = resolveAvatar(user);
+                userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
+            }
         }
 
-        if (guestActions) guestActions.hidden = true;
-        if (userMenuWrap) userMenuWrap.hidden = false;
-        if (heroGuestActions) heroGuestActions.hidden = true;
-        if (userAvatar) {
-            userAvatar.src = resolveAvatar(user);
-            userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
-        }
+        const { data: authSessionData } = await supabase.auth.getSession();
+        renderHeaderForUser(authSessionData?.session?.user || null);
+
+        supabase.auth.onAuthStateChange(function (_event, session) {
+            renderHeaderForUser(session?.user || null);
+        });
 
         if (userMenuToggle && userMenu) {
             userMenuToggle.addEventListener("click", function () {
