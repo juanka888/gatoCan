@@ -367,25 +367,17 @@
 
         function renderHeaderForUser(user) {
             if (!user) {
-                setNodeVisible(guestActions, true, "flex");
-                setNodeVisible(userMenuWrap, false);
-                setNodeVisible(heroGuestActions, true, "contents");
-                if (userMenu) {
-                    userMenu.hidden = true;
-                    userMenu.style.display = "none";
-                }
+                if (guestActions) guestActions.hidden = false;
+                if (userMenuWrap) userMenuWrap.hidden = true;
+                if (heroGuestActions) heroGuestActions.hidden = false;
+                if (userMenu) userMenu.hidden = true;
                 if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
                 return;
             }
 
-            setNodeVisible(guestActions, false);
-            setNodeVisible(userMenuWrap, true, "block");
-            setNodeVisible(heroGuestActions, false);
-            if (userMenu) {
-                userMenu.hidden = true;
-                userMenu.style.display = "none";
-            }
-            if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
+            if (guestActions) guestActions.hidden = true;
+            if (userMenuWrap) userMenuWrap.hidden = false;
+            if (heroGuestActions) heroGuestActions.hidden = true;
             if (userAvatar) {
                 userAvatar.src = resolveAvatar(user);
                 userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
