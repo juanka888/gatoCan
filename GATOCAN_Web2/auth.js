@@ -353,8 +353,15 @@
         const userAvatar = document.getElementById("userAvatar");
         const logoutFromHeaderBtn = document.getElementById("logoutFromHeaderBtn");
 
+        function setNodeVisible(node, visible, displayValue) {
+            if (!node) return;
+            node.hidden = !visible;
+            node.style.display = visible ? (displayValue || "") : "none";
+        }
+
         if (userMenu && userMenuToggle) {
             userMenu.hidden = true;
+            userMenu.style.display = "none";
             userMenuToggle.setAttribute("aria-expanded", "false");
         }
 
@@ -386,21 +393,24 @@
 
         if (userMenuToggle && userMenu) {
             userMenuToggle.addEventListener("click", function () {
-                const isOpen = !userMenu.hidden;
-                userMenu.hidden = isOpen;
-                userMenuToggle.setAttribute("aria-expanded", String(!isOpen));
+                const willOpen = userMenu.hidden;
+                userMenu.hidden = !willOpen;
+                userMenu.style.display = willOpen ? "grid" : "none";
+                userMenuToggle.setAttribute("aria-expanded", String(willOpen));
             });
 
             document.addEventListener("click", function (event) {
                 if (!userMenuWrap || userMenu.hidden) return;
                 if (userMenuWrap.contains(event.target)) return;
                 userMenu.hidden = true;
+                userMenu.style.display = "none";
                 userMenuToggle.setAttribute("aria-expanded", "false");
             });
 
             document.addEventListener("keydown", function (event) {
                 if (event.key !== "Escape") return;
                 userMenu.hidden = true;
+                userMenu.style.display = "none";
                 userMenuToggle.setAttribute("aria-expanded", "false");
             });
         }
