@@ -371,8 +371,6 @@
             if (guestActions) guestActions.hidden = true;
             if (userMenuWrap) userMenuWrap.hidden = false;
             if (heroGuestActions) heroGuestActions.hidden = true;
-            if (userMenu) userMenu.hidden = true;
-            if (userMenuToggle) userMenuToggle.setAttribute("aria-expanded", "false");
             if (userAvatar) {
                 userAvatar.src = resolveAvatar(user);
                 userAvatar.alt = "Avatar de " + (user.user_metadata?.full_name || user.email || "usuario");
