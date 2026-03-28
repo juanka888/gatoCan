@@ -710,8 +710,11 @@
 
             const spriteSheet = new Image();
             let spriteReady = false;
+            let spriteScaleX = 1;
+            let spriteScaleY = 1;
             let frameTicker = 0;
             let currentRunFrame = 0;
+            const spriteReferenceSize = { w: 1536, h: 1024 };
 
             const spriteMap = {
                 run: { x: 40, y: 165, w: 178, h: 182, frames: 6, gap: 28 },
@@ -724,6 +727,8 @@
             spriteSheet.src = './img/pixel_cat_sprites.png';
             spriteSheet.onload = function () {
                 spriteReady = true;
+                spriteScaleX = spriteSheet.naturalWidth / spriteReferenceSize.w;
+                spriteScaleY = spriteSheet.naturalHeight / spriteReferenceSize.h;
             };
             spriteSheet.onerror = function () {
                 spriteReady = false;
@@ -912,11 +917,14 @@
             function drawSprite(name, dx, dy, dw, dh, frameIndex) {
                 const sprite = spriteMap[name];
                 if (!spriteReady || !sprite) return false;
-                const frameX = sprite.x + ((frameIndex || 0) * (sprite.w + (sprite.gap || 0)));
+                const frameX = (sprite.x + ((frameIndex || 0) * (sprite.w + (sprite.gap || 0)))) * spriteScaleX;
+                const frameY = sprite.y * spriteScaleY;
+                const frameW = sprite.w * spriteScaleX;
+                const frameH = sprite.h * spriteScaleY;
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(
                     spriteSheet,
-                    frameX, sprite.y, sprite.w, sprite.h,
+                    frameX, frameY, frameW, frameH,
                     dx, dy, dw, dh
                 );
                 return true;
