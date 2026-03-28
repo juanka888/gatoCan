@@ -249,7 +249,10 @@
 
         <section id="noticias" class="card">
             <h3>Noticias y actualizaciones</h3>
-            <p>Consulta avances de esterilizaciones, rescates y actividades de concienciación realizadas por la asociación.</p>
+            <p>Seguimiento automático de cambios legales y noticias de protección animal relevantes para la campaña de GatoCan.</p>
+            <p class="news-widget-intro">Fuentes: BOE Protección Animal, Animal's Health (Legislación) y Europa Press (Medio Ambiente/Animales).</p>
+            <div id="newsStatus" class="news-status" aria-live="polite">Cargando noticias...</div>
+            <div id="newsGrid" class="news-grid" aria-live="polite"></div>
         </section>
 
         <section id="login" class="card">
@@ -402,8 +405,108 @@
         const saveDonationScoreMsg = document.getElementById('saveDonationScoreMsg');
         const homeDonationRanking = document.getElementById('homeDonationRanking');
         const homeRunnerRanking = document.getElementById('homeRunnerRanking');
+        const newsStatusNode = document.getElementById('newsStatus');
+        const newsGridNode = document.getElementById('newsGrid');
         const defaultSupabaseUrl = 'https://jjeciqwzepkmeeticihg.supabase.co';
         const defaultSupabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZWNpcXd6ZXBrbWVldGljaWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDUwODksImV4cCI6MjA4OTQyMTA4OX0.GvaF1Q1-V1z4ND3saKn9ruMPqnfzlXWQT6GXOanxG_s';
+        const rss2jsonEndpoint = 'https://api.rss2json.com/v1/api.json';
+        const newsFeeds = [
+            { source: 'BOE · Protección Animal', url: 'https://www.boe.es/rss/canal.php?c=ADA' },
+            { source: "Animal's Health · Legislación", url: 'https://www.animalshealth.es/rss/legislacion' },
+            { source: 'Europa Press · Medio Ambiente/Animales', url: 'https://www.europapress.es/rss/rss.aspx?ch=00612' }
+        ];
+        const impactKeywords = [
+            'ley 7/2023',
+            'gestión ética colonias',
+            'método cer ayuntamientos',
+            'multas abandono animal'
+        ];
+
+        function escapeHtml(value) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return String(value || '').replace(/[&<>"']/g, (char) => map[char]);
+        }
+
+        function extractImageUrl(item) {
+            if (!item) return '';
+            if (item.thumbnail) return item.thumbnail;
+            if (Array.isArray(item.enclosure) && item.enclosure[0]?.link) return item.enclosure[0].link;
+            if (item.enclosure?.link) return item.enclosure.link;
+            const content = item.content || item.description || '';
+            const imageMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+            return imageMatch?.[1] || '';
+        }
+
+        function includesImpactKeyword(text) {
+            const normalizedText = String(text || '').toLowerCase();
+            return impactKeywords.some((keyword) => normalizedText.includes(keyword));
+        }
+
+        function renderNewsCards(newsItems) {
+            if (!newsGridNode || !newsStatusNode) return;
+            if (!newsItems.length) {
+                newsGridNode.innerHTML = '';
+                newsStatusNode.textContent = 'No se han encontrado noticias recientes que coincidan con las palabras clave de impacto.';
+                return;
+            }
+
+            newsStatusNode.textContent = `${newsItems.length} noticia(s) destacadas encontradas.`;
+            newsGridNode.innerHTML = newsItems.map((item) => {
+                const imageUrl = extractImageUrl(item);
+                const title = escapeHtml(item.title || 'Noticia sin título');
+                const source = escapeHtml(item.source || 'Fuente');
+                const link = item.link || '#';
+                const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString('es-ES') : 'Fecha no disponible';
+                const cardImage = imageUrl
+                    ? `<img class="news-card-image" src="${escapeHtml(imageUrl)}" alt="Imagen de la noticia: ${title}" loading="lazy">`
+                    : '<div class="news-card-placeholder" aria-hidden="true">🐾</div>';
+
+                return `
+                    <article class="news-card">
+                        ${cardImage}
+                        <div class="news-card-body">
+                            <p class="news-card-source">${source}</p>
+                            <h4>${title}</h4>
+                            <p class="news-card-date">${escapeHtml(date)}</p>
+                            <a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Leer noticia original</a>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function loadImpactNews() {
+            if (!newsGridNode || !newsStatusNode) return;
+            newsStatusNode.textContent = 'Cargando noticias...';
+
+            try {
+                const allItems = [];
+                for (const feed of newsFeeds) {
+                    const requestUrl = `${rss2jsonEndpoint}?rss_url=${encodeURIComponent(feed.url)}&count=20`;
+                    const response = await fetch(requestUrl);
+                    if (!response.ok) continue;
+                    const payload = await response.json();
+                    const feedItems = Array.isArray(payload.items) ? payload.items : [];
+                    feedItems.forEach((item) => {
+                        allItems.push({
+                            ...item,
+                            source: feed.source
+                        });
+                    });
+                }
+
+                const filteredItems = allItems
+                    .filter((item) => includesImpactKeyword(`${item.title || ''} ${item.description || ''} ${item.content || ''}`))
+                    .sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0))
+                    .slice(0, 12);
+
+                renderNewsCards(filteredItems);
+            } catch (error) {
+                newsGridNode.innerHTML = '';
+                newsStatusNode.textContent = 'No se pudo cargar el widget de noticias en este momento.';
+                console.error('Error al cargar noticias RSS:', error);
+            }
+        }
 
         function updateDonationSummary() {
             let totalAmount = 0;
@@ -972,6 +1075,7 @@
         pintarColaborador(colaboradores[0]);
         setInterval(siguienteColaborador, 3500);
         fillHomeRankingLists();
+        loadImpactNews();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./auth.js"></script>
