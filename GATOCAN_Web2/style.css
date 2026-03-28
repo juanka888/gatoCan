@@ -1196,17 +1196,22 @@ footer {
 
 .legal {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.55rem;
     font-size: 0.92rem;
 }
 
 .legal input[type="checkbox"] {
-    margin-top: 0.25rem;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.legal label {
+    line-height: 1.35;
 }
 
 .btn-enviar {
-    justify-self: start;
+    justify-self: end;
 }
 
 .colaboradores-layout {
@@ -1223,7 +1228,19 @@ footer {
 
 .teaming-widget iframe {
     width: min(696px, 100%);
+    height: clamp(420px, 62vw, 560px);
+    border: 0;
     border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+    .btn-enviar {
+        justify-self: center;
+    }
+
+    .teaming-widget iframe {
+        height: min(78vh, 620px);
+    }
 }
 
 .footer-privacy-link {
