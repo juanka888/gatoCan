@@ -99,3 +99,25 @@ create policy "user_data_select_own"
 ## Siguiente mejora recomendada
 
 Añadir recuperación de contraseña, cierre de sesión y panel de perfil para editar datos de `profiles` desde la web.
+
+## Foro simple en Next.js + Supabase
+
+Se añadió una página de foro en `app/foro/page.tsx` con:
+
+- Formulario React para crear posts (`title`, `content`).
+- Carga inicial de publicaciones desde `posts`.
+- `useEffect` con suscripción realtime de Supabase para refrescar listado.
+
+### Variables de entorno requeridas
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=tu_url_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+```
+
+### SQL para Supabase
+
+Ejecuta `supabase/posts.sql` en el SQL Editor para crear la tabla `posts` con RLS:
+
+- `select`: público (todos leen).
+- `insert`: solo usuarios autenticados.
