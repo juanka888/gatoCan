@@ -1197,17 +1197,24 @@ footer {
 .legal {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    font-size: 0.92rem;
+    justify-content: center;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    flex-wrap: nowrap;
+    text-align: center;
 }
 
 .legal input[type="checkbox"] {
     margin: 0;
     flex-shrink: 0;
+    width: 18px;
+    height: 18px;
 }
 
 .legal label {
-    line-height: 1.35;
+    line-height: 1.2;
+    margin: 0;
+    white-space: nowrap;
 }
 
 .btn-enviar {
@@ -1224,13 +1231,16 @@ footer {
 .teaming-widget {
     display: grid;
     justify-content: center;
+    overflow: visible;
 }
 
 .teaming-widget iframe {
-    width: min(696px, 100%);
-    height: clamp(420px, 62vw, 560px);
+    width: min(700px, 100%);
+    min-height: 700px;
+    height: 700px;
     border: 0;
     border-radius: 8px;
+    display: block;
 }
 
 @media (max-width: 640px) {
@@ -1238,8 +1248,14 @@ footer {
         justify-self: center;
     }
 
+    .legal {
+        gap: 0.4rem;
+        font-size: 0.85rem;
+    }
+
     .teaming-widget iframe {
-        height: min(78vh, 620px);
+        min-height: 760px;
+        height: 760px;
     }
 }
 
