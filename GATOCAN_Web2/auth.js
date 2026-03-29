@@ -63,7 +63,7 @@
             avatar_url: user.user_metadata?.avatar_url || null,
         };
 
-        const { error } = await supabase.from("perfiles").upsert(payload, {
+        const { error } = await supabase.from("profiles").upsert(payload, {
             onConflict: "id",
         });
 
@@ -284,7 +284,7 @@
         emailInput.value = user.email || "";
 
         const { data: profileData } = await supabase
-            .from("perfiles")
+            .from("profiles")
             .select("nombre_completo, telefono, dni_nie, direccion, codigo_postal, poblacion")
             .eq("id", user.id)
             .maybeSingle();
@@ -316,7 +316,7 @@
                 poblacion: townInput.value.trim() || null,
             };
 
-            const { error } = await supabase.from("perfiles").upsert(payload, { onConflict: "id" });
+            const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
             if (error) {
                 showMessage(message, error.message || "No se pudieron guardar los cambios.", "error");
                 return;

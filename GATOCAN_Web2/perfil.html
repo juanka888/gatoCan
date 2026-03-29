@@ -173,7 +173,7 @@
 
             async function setRankingStats(supabase, user) {
                 const { data: profileRows, error: rankingError } = await supabase
-                    .from("perfiles")
+                    .from("profiles")
                     .select("id, karma_points, runner_best_score, runner_best_distance_m, total_donaciones")
                     .order("karma_points", { ascending: false })
                     .limit(200);
@@ -196,7 +196,7 @@
                 profileRanking.textContent = donationIndex >= 0 ? `#${donationIndex + 1}` : "Sin asignar";
                 profileRunnerRanking.textContent = runnerIndex >= 0 ? `#${runnerIndex + 1}` : "Sin asignar";
 
-                await supabase.from("perfiles").upsert({
+                await supabase.from("profiles").upsert({
                     id: user.id,
                     email: user.email || null,
                     karma_rank: donationIndex >= 0 ? donationIndex + 1 : null,
@@ -229,7 +229,7 @@
                 profileAvatar.alt = `Avatar de ${user.user_metadata?.full_name || user.email || "usuario"}`;
 
                 const { data: profileData, error: profileError } = await supabase
-                    .from("perfiles")
+                    .from("profiles")
                     .select("id, nombre_completo, email, dni_nie, telefono, direccion")
                     .eq("id", user.id)
                     .maybeSingle();
@@ -281,7 +281,7 @@
                         direccion: addressValue,
                     };
 
-                    const { error: updateError } = await supabase.from("perfiles").upsert(payload, { onConflict: "id" });
+                    const { error: updateError } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
                     if (updateError) {
                         showMessage(updateError.message || "No se pudieron guardar los cambios.", "error");
                         return;

@@ -8,6 +8,7 @@ type Post = {
   title: string;
   content: string;
   author: string;
+  author_id?: string | null;
   created_at: string;
 };
 
@@ -98,6 +99,7 @@ export default function ForoPage() {
       title,
       content,
       author: user.email ?? user.id,
+      author_id: user.id,
     });
 
     setLoading(false);
