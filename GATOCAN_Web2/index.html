@@ -720,15 +720,25 @@
                 jump: new Image(),
                 fall: new Image()
             };
+            const spriteMeta = {
+                run: { frames: 7, frameDuration: 90, loop: true },
+                jump: { frames: 4, frameDuration: 110, loop: false },
+                fall: { frames: 8, frameDuration: 120, loop: true }
+            };
             const spriteReady = {
                 run: false,
                 jump: false,
                 fall: false
             };
+            const catAnimation = {
+                current: 'run',
+                frame: 0,
+                lastFrameAt: 0
+            };
 
-            catSprites.run.src = './img/walk.gif';
-            catSprites.jump.src = './img/jump.gif';
-            catSprites.fall.src = './img/idle.gif';
+            catSprites.run.src = './img/walk_sprite.png';
+            catSprites.jump.src = './img/jump_sprite.png';
+            catSprites.fall.src = './img/idle_sprite.png';
 
             Object.entries(catSprites).forEach(([name, image]) => {
                 image.onload = function () {
@@ -942,15 +952,43 @@
                 distanceNode.textContent = String(Math.floor(game.distance));
             }
 
-            function drawCatSprite(name, dx, dy, dw, dh) {
+            function updateCatAnimation(name, now) {
+                const meta = spriteMeta[name];
+                if (!meta) return;
+
+                if (catAnimation.current !== name) {
+                    catAnimation.current = name;
+                    catAnimation.frame = 0;
+                    catAnimation.lastFrameAt = now;
+                    return;
+                }
+
+                if (now - catAnimation.lastFrameAt < meta.frameDuration) return;
+                catAnimation.lastFrameAt = now;
+
+                if (meta.loop) {
+                    catAnimation.frame = (catAnimation.frame + 1) % meta.frames;
+                } else {
+                    catAnimation.frame = Math.min(catAnimation.frame + 1, meta.frames - 1);
+                }
+            }
+
+            function drawCatSprite(name, dx, dy, dw, dh, now) {
                 const sprite = catSprites[name];
-                if (!sprite || !spriteReady[name]) return false;
+                const meta = spriteMeta[name];
+                if (!sprite || !meta || !spriteReady[name]) return false;
+
+                updateCatAnimation(name, now);
+                const frameWidth = Math.floor(sprite.width / meta.frames);
+                const frameHeight = sprite.height;
+                const sourceX = catAnimation.frame * frameWidth;
+
                 ctx.imageSmoothingEnabled = false;
-                ctx.drawImage(sprite, dx, dy, dw, dh);
+                ctx.drawImage(sprite, sourceX, 0, frameWidth, frameHeight, dx, dy, dw, dh);
                 return true;
             }
 
-            function draw() {
+            function draw(now) {
                 ctx.clearRect(0, 0, game.width, game.height);
 
                 const bg = ctx.createLinearGradient(0, 0, 0, game.height);
@@ -967,7 +1005,7 @@
                 ctx.stroke();
 
                 const catSpriteName = !game.running ? 'fall' : (game.cat.onGround ? 'run' : 'jump');
-                const catDrawn = drawCatSprite(catSpriteName, game.cat.x - 10, game.cat.y - 20, 60, 60);
+                const catDrawn = drawCatSprite(catSpriteName, game.cat.x - 10, game.cat.y - 20, 60, 60, now);
 
                 if (!catDrawn) {
                     ctx.fillStyle = '#22303c';
@@ -1010,9 +1048,9 @@
                 }
             }
 
-            function tick() {
+            function tick(now) {
                 update();
-                draw();
+                draw(now || performance.now());
                 requestAnimationFrame(tick);
             }
 
