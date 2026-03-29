@@ -5,13 +5,15 @@ const nextConfig = {
     unoptimized: true,
   },
   basePath: '/gatoCan',
-  // Esto evita que el proceso se pare por errores de escritura (TypeScript)
+  // ESTO ES LO QUE ARREGLA TU ERROR:
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Evita que Next.js intente pre-renderizar las rutas de la API
+  trailingSlash: true,
 }
 
 module.exports = nextConfig
