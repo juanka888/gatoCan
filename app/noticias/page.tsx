@@ -81,7 +81,7 @@ export default function NoticiasPage() {
           throw new Error("Formato de datos incorrecto");
         }
 
-        const parsedNews = payload.items.slice(0, 12).map((item) => ({
+        const parsedNews = payload.items.map((item) => ({
           title: item.title?.trim() || "Sin titular",
           link: item.link?.trim() || "#",
           dateLabel: item.pubDate
