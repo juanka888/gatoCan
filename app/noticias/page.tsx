@@ -57,7 +57,8 @@ export default function NoticiasPage() {
       setError("");
 
       try {
-        const response = await fetch(`${FEED_URL}&_=${Date.now()}`, {
+        const response = await fetch(FEED_URL, {
+          mode: "cors",
           signal: controller.signal,
           cache: "no-store",
           headers: {
@@ -76,7 +77,11 @@ export default function NoticiasPage() {
           throw new Error(payload.message || "No se pudo convertir el RSS a JSON.");
         }
 
-        const parsedNews = (payload.items ?? []).slice(0, 12).map((item) => ({
+        if (!payload.items) {
+          throw new Error("Formato de datos incorrecto");
+        }
+
+        const parsedNews = payload.items.slice(0, 12).map((item) => ({
           title: item.title?.trim() || "Sin titular",
           link: item.link?.trim() || "#",
           dateLabel: item.pubDate
