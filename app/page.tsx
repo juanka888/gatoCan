@@ -3,8 +3,8 @@ import type { CSSProperties } from "react";
 import EuropaPressNews from "./components/EuropaPressNews";
 
 const galleryImages = [
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-01.jpg", alt: "Gato negro en jaula humanitaria", tag: "Capturas" },
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-02.jpg", alt: "Gato en jaula verde de captura", tag: "Capturas" },
+  { src: "/img/foto-01.jpg", alt: "Gato negro en jaula humanitaria", tag: "Capturas" },
+  { src: "/img/foto-02.jpg", alt: "Gato en jaula verde de captura", tag: "Capturas" },
   { src: "/gatoCan/GATOCAN_Web2/img/foto-03.jpg", alt: "Gato en jaula cubierta en clínica", tag: "Capturas" },
   { src: "/gatoCan/GATOCAN_Web2/img/foto-04.jpg", alt: "Gato en jaula sobre mesa clínica", tag: "Esterilizaciones" },
   { src: "/gatoCan/GATOCAN_Web2/img/foto-05.jpg", alt: "Gato blanco en jaula de observación", tag: "Colonias" },
