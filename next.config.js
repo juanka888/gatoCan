@@ -3,7 +3,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: '/gatoCan',
   // Con esto le decimos: "Pasa de los errores, yo sé lo que hago"
   typescript: {
     ignoreBuildErrors: true,
