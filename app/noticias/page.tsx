@@ -1,19 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type RssItem = {
   title?: string;
   link?: string;
   pubDate?: string;
   thumbnail?: string;
-  enclosure?: {
-    link?: string;
-  };
 };
 
 type RssResponse = {
-  status: "ok" | "error";
+  status?: string;
   message?: string;
   items?: RssItem[];
 };
@@ -48,10 +45,9 @@ export default function NoticiasPage() {
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [debugPayload, setDebugPayload] = useState<RssResponse | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const loadNews = async () => {
       setLoading(true);
       setError("");
@@ -59,12 +55,7 @@ export default function NoticiasPage() {
       try {
         const response = await fetch(FEED_URL, {
           mode: "cors",
-          signal: controller.signal,
           cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
         });
 
         if (!response.ok) {
@@ -72,31 +63,24 @@ export default function NoticiasPage() {
         }
 
         const payload = (await response.json()) as RssResponse;
+        setDebugPayload(payload);
 
-        if (payload.status !== "ok") {
-          throw new Error(payload.message || "No se pudo convertir el RSS a JSON.");
-        }
+        const items = Array.isArray(payload.items) ? payload.items : [];
 
-        if (!payload.items) {
-          throw new Error("Formato de datos incorrecto");
-        }
-
-        const parsedNews = payload.items.slice(0, 12).map((item) => ({
-          title: item.title?.trim() || "Sin titular",
-          link: item.link?.trim() || "#",
-          dateLabel: item.pubDate
-            ? new Date(item.pubDate).toLocaleString("es-ES", {
+        const parsedNews = items.map((newsItem) => ({
+          title: newsItem.title || "Titular no disponible",
+          link: newsItem.link || "#",
+          dateLabel: newsItem.pubDate
+            ? new Date(newsItem.pubDate).toLocaleString("es-ES", {
                 dateStyle: "medium",
                 timeStyle: "short",
               })
             : "Fecha no disponible",
-          image: item.thumbnail?.trim() || item.enclosure?.link?.trim() || DEFAULT_IMAGE,
+          image: newsItem.thumbnail || DEFAULT_IMAGE,
         }));
 
         setNews(parsedNews);
       } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-
         console.error("Error cargando noticias:", err);
         setError(
           "No pudimos cargar las noticias ahora mismo. Revisa tu conexión e inténtalo de nuevo en unos minutos.",
@@ -108,75 +92,69 @@ export default function NoticiasPage() {
     };
 
     loadNews();
-
-    return () => {
-      controller.abort();
-    };
   }, []);
-
-  const content = useMemo(() => {
-    if (loading) {
-      return <p>Cargando noticias de bienestar animal...</p>;
-    }
-
-    if (error) {
-      return (
-        <p role="alert" style={{ color: "#9d1c1c", fontWeight: 600 }}>
-          {error}
-        </p>
-      );
-    }
-
-    if (!news.length) {
-      return <p>No hay noticias disponibles ahora mismo.</p>;
-    }
-
-    return (
-      <div style={{ display: "grid", gap: 14 }}>
-        {news.map((item) => (
-          <article
-            key={`${item.link}-${item.dateLabel}`}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 12,
-              overflow: "hidden",
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            }}
-          >
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(140px, 220px) 1fr",
-                color: "inherit",
-                textDecoration: "none",
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.image}
-                alt={item.title}
-                style={{ width: "100%", height: "100%", minHeight: 140, objectFit: "cover" }}
-              />
-              <div style={{ padding: 14 }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: "1rem", lineHeight: 1.45 }}>{item.title}</h3>
-                <p style={{ margin: 0, color: "#555", fontSize: ".9rem" }}>{item.dateLabel}</p>
-              </div>
-            </a>
-          </article>
-        ))}
-      </div>
-    );
-  }, [error, loading, news]);
 
   return (
     <main style={{ maxWidth: 980, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Noticias de bienestar animal</h1>
       <p>Actualizadas desde Europa Press vía rss2json.</p>
-      {content}
+
+      {loading && <p>Cargando noticias de bienestar animal...</p>}
+
+      {!loading && error && (
+        <p role="alert" style={{ color: "#9d1c1c", fontWeight: 600 }}>
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && !news.length && (
+        <>
+          <p>No hay noticias disponibles ahora mismo.</p>
+          <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#f5f5f5", padding: 12, borderRadius: 8 }}>
+            {JSON.stringify(debugPayload)}
+          </pre>
+        </>
+      )}
+
+      {!loading && !error && news.length > 0 && (
+        <div style={{ display: "grid", gap: 14 }}>
+          {news.map((item, index) => (
+            <article
+              key={`${item.link}-${index}`}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: 12,
+                overflow: "hidden",
+                background: "#fff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              }}
+            >
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(140px, 220px) 1fr",
+                  color: "inherit",
+                  textDecoration: "none",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  style={{ width: "100%", height: "100%", minHeight: 140, objectFit: "cover" }}
+                />
+                <div style={{ padding: 14 }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: "1rem", lineHeight: 1.45 }}>{item.title}</h3>
+                  <p style={{ margin: 0, color: "#555", fontSize: ".9rem" }}>{item.dateLabel}</p>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
