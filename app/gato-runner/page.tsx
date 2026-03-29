@@ -125,12 +125,8 @@ export default function GatoRunnerPage() {
     };
 
     const updateAnimationFrame = (time: number) => {
-      const isMovingOnGround = game.cat.onGround && Math.abs(game.cat.velocityX) > 0.1;
-
-      if (!isMovingOnGround) {
-        game.animation.frame = 0;
+      if (game.animation.lastFrameAt === 0) {
         game.animation.lastFrameAt = time;
-        return;
       }
 
       if (time - game.animation.lastFrameAt >= ANIMATION_SPEED_MS) {
