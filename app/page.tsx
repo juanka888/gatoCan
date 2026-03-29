@@ -17,7 +17,7 @@ export default function HomePage() {
       <header id="inicio" style={card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <img src="/gatoCan/GATOCAN_Web2/img/logo1.png" alt="Logo de GatoCan Natura Rural" style={{ width: 72, height: 72, objectFit: "contain" }} />
+            <img src="/img/logo1.png" alt="Logo de GatoCan Natura Rural" style={{ width: 72, height: 72, objectFit: "contain" }} />
             <div>
               <p style={{ margin: 0 }}>Asociación de protección animal</p>
               <h1 style={{ margin: 0 }}>GatoCan Natura Rural</h1>
