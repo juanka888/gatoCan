@@ -45,7 +45,7 @@
 
             function createListItem(row, valueKey, suffix) {
                 const li = document.createElement("li");
-                const label = row.nombre_completo || row.email || "Usuario";
+                const label = row.nombre_completo || row.full_name || row.email || "Usuario";
                 li.innerHTML = `<strong>${label}</strong> — ${Number(row[valueKey] || 0)} ${suffix}`;
                 return li;
             }
@@ -63,14 +63,14 @@
                 );
 
                 const { data: donationRows, error: donationError } = await supabase
-                    .from("perfiles")
-                    .select("nombre_completo, email, karma_points")
+                    .from("profiles")
+                    .select("nombre_completo, full_name, email, karma_points")
                     .order("karma_points", { ascending: false })
                     .limit(20);
 
                 const { data: runnerRows, error: runnerError } = await supabase
-                    .from("perfiles")
-                    .select("nombre_completo, email, runner_best_score")
+                    .from("profiles")
+                    .select("nombre_completo, full_name, email, runner_best_score")
                     .order("runner_best_score", { ascending: false })
                     .limit(20);
 

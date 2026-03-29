@@ -577,7 +577,7 @@
             });
 
             const { data: currentProfile, error: getProfileError } = await supabase
-                .from('perfiles')
+                .from('profiles')
                 .select('id, email, karma_points, total_donaciones')
                 .eq('id', user.id)
                 .maybeSingle();
@@ -594,7 +594,7 @@
                 total_donaciones: Number(currentProfile?.total_donaciones || 0) + totalAmount
             };
 
-            const { error: upsertError } = await supabase.from('perfiles').upsert(payload, { onConflict: 'id' });
+            const { error: upsertError } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' });
             if (upsertError) {
                 showInlineMessage(saveDonationScoreMsg, upsertError.message || 'No se pudo guardar tu puntuación.', 'error');
                 return;
@@ -775,14 +775,14 @@
                 const user = authData.user;
 
                 const { data: profileData } = await supabase
-                    .from('perfiles')
+                    .from('profiles')
                     .select('runner_best_score, runner_best_distance_m')
                     .eq('id', user.id)
                     .maybeSingle();
 
                 const nextBest = Math.max(Number(profileData?.runner_best_score || 0), Number(bestScore || 0));
                 const nextBestDistance = Math.max(Number(profileData?.runner_best_distance_m || 0), Number(bestDistance || 0));
-                await supabase.from('perfiles').upsert({
+                await supabase.from('profiles').upsert({
                     id: user.id,
                     email: user.email || null,
                     runner_best_score: nextBest,
@@ -1135,27 +1135,27 @@
             if (!supabase) return;
 
             const { data: donationRows } = await supabase
-                .from('perfiles')
-                .select('email, nombre_completo, karma_points')
+                .from('profiles')
+                .select('email, nombre_completo, full_name, karma_points')
                 .order('karma_points', { ascending: false })
                 .limit(3);
 
             const { data: runnerRows } = await supabase
-                .from('perfiles')
-                .select('email, nombre_completo, runner_best_score')
+                .from('profiles')
+                .select('email, nombre_completo, full_name, runner_best_score')
                 .order('runner_best_score', { ascending: false })
                 .limit(3);
 
             if (Array.isArray(donationRows) && donationRows.length) {
                 homeDonationRanking.innerHTML = donationRows.map((row) => {
-                    const label = row.nombre_completo || row.email || 'Usuario';
+                    const label = row.nombre_completo || row.full_name || row.email || 'Usuario';
                     return `<li><strong>${label}</strong> — ${Number(row.karma_points || 0)} puntos Zarpa Karma</li>`;
                 }).join('');
             }
 
             if (Array.isArray(runnerRows) && runnerRows.length) {
                 homeRunnerRanking.innerHTML = runnerRows.map((row) => {
-                    const label = row.nombre_completo || row.email || 'Usuario';
+                    const label = row.nombre_completo || row.full_name || row.email || 'Usuario';
                     return `<li><strong>${label}</strong> — ${Number(row.runner_best_score || 0)} puntos runner</li>`;
                 }).join('');
             }
