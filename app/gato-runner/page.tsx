@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Leaderboard from "./Leaderboard";
+import { supabase } from "../../lib/supabaseClient";
 
 type SpriteMetrics = {
   frameWidth: number;
@@ -14,6 +16,12 @@ const HORIZONTAL_SPEED = 4.2;
 export default function GatoRunnerPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState(0);
+  const [distance, setDistance] = useState(0);
+  const scoreRef = useRef(0);
+  const distanceRef = useRef(0);
+  const savingRunRef = useRef(false);
 
   const jumpRequestedRef = useRef(false);
   const movementRef = useRef({
@@ -47,6 +55,10 @@ export default function GatoRunnerPage() {
       gravity: 0.85,
       jumpStrength: -13,
       floorY: 230,
+      speed: 4.3,
+      score: 0,
+      distance: 0,
+      isGameOver: false,
       cat: {
         x: 130,
         y: 230,
@@ -54,11 +66,89 @@ export default function GatoRunnerPage() {
         velocityX: 0,
         onGround: true,
       },
+      obstacle: {
+        x: 960,
+        y: 205,
+        width: 22,
+        height: 40,
+      },
       animation: {
         frame: 0,
         lastFrameAt: 0,
       },
       cloudOffset: 0,
+      scoreTimer: 0,
+    };
+
+    const persistBestRun = async (runScore: number, runDistance: number) => {
+      if (savingRunRef.current) return;
+      savingRunRef.current = true;
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) return;
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("runner_best_score, runner_best_distance_m")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("No se pudo leer el perfil del runner:", profileError);
+          return;
+        }
+
+        const savedBestScore = Number(profileData?.runner_best_score || 0);
+        if (runScore <= savedBestScore) {
+          return;
+        }
+
+        const savedBestDistance = Number(profileData?.runner_best_distance_m || 0);
+        const { error: upsertError } = await supabase.from("profiles").upsert(
+          {
+            id: user.id,
+            runner_best_score: runScore,
+            runner_best_distance_m: Math.max(savedBestDistance, runDistance),
+          },
+          { onConflict: "id" },
+        );
+
+        if (upsertError) {
+          console.error("No se pudo guardar el récord del runner:", upsertError);
+        }
+      } finally {
+        savingRunRef.current = false;
+      }
+    };
+
+    const onGameOver = () => {
+      if (game.isGameOver) return;
+      game.isGameOver = true;
+      setGameOver(true);
+      persistBestRun(game.score, Math.floor(game.distance));
+    };
+
+    const resetGame = () => {
+      game.isGameOver = false;
+      game.score = 0;
+      game.distance = 0;
+      game.scoreTimer = 0;
+      game.cat.x = 130;
+      game.cat.y = game.floorY;
+      game.cat.velocityY = 0;
+      game.cat.velocityX = 0;
+      game.cat.onGround = true;
+      game.obstacle.x = 960;
+      jumpRequestedRef.current = false;
+      setGameOver(false);
+      setScore(0);
+      setDistance(0);
+      scoreRef.current = 0;
+      distanceRef.current = 0;
     };
 
     const resize = () => {
@@ -96,7 +186,19 @@ export default function GatoRunnerPage() {
       }
     };
 
+    const drawObstacle = () => {
+      context.fillStyle = "#8f5a2d";
+      context.fillRect(
+        game.obstacle.x,
+        game.obstacle.y,
+        game.obstacle.width,
+        game.obstacle.height,
+      );
+    };
+
     const updatePhysics = () => {
+      if (game.isGameOver) return;
+
       const horizontalInput =
         Number(movementRef.current.right) - Number(movementRef.current.left);
       game.cat.velocityX = horizontalInput * HORIZONTAL_SPEED;
@@ -122,9 +224,44 @@ export default function GatoRunnerPage() {
       }
 
       game.cloudOffset += 1.2;
+      game.obstacle.x -= game.speed;
+
+      if (game.obstacle.x + game.obstacle.width < 0) {
+        game.obstacle.x = 960 + Math.random() * 240;
+      }
+
+      const catWidth = 68;
+      const catHeight = 62;
+      const catLeft = game.cat.x - catWidth / 2;
+      const catTop = game.cat.y - catHeight;
+
+      const isColliding =
+        catLeft < game.obstacle.x + game.obstacle.width &&
+        catLeft + catWidth > game.obstacle.x &&
+        catTop < game.obstacle.y + game.obstacle.height &&
+        catTop + catHeight > game.obstacle.y;
+
+      if (isColliding) {
+        onGameOver();
+        return;
+      }
+
+      game.scoreTimer += 1;
+      if (game.scoreTimer % 8 === 0) {
+        game.score += 1;
+        setScore(game.score);
+        scoreRef.current = game.score;
+      }
+
+      game.distance += game.speed * 0.12;
+      const roundedDistance = Math.floor(game.distance);
+      setDistance(roundedDistance);
+      distanceRef.current = roundedDistance;
     };
 
     const updateAnimationFrame = (time: number) => {
+      if (game.isGameOver) return;
+
       if (game.animation.lastFrameAt === 0) {
         game.animation.lastFrameAt = time;
       }
@@ -145,7 +282,6 @@ export default function GatoRunnerPage() {
       const drawWidth = spriteMetrics.frameWidth * renderScale;
       const drawHeight = spriteMetrics.frameHeight * renderScale;
 
-      // Centrado exacto: el punto lógico del gato es su centro horizontal y su base en el suelo.
       const drawX = game.cat.x - drawWidth / 2;
       const drawY = game.cat.y - drawHeight;
 
@@ -162,6 +298,23 @@ export default function GatoRunnerPage() {
       );
     };
 
+    const drawHud = () => {
+      context.fillStyle = "#583210";
+      context.font = "700 18px Arial";
+      context.fillText(`Puntos: ${scoreRef.current}`, 16, 30);
+      context.fillText(`Distancia: ${distanceRef.current} m`, 16, 54);
+
+      if (game.isGameOver) {
+        context.fillStyle = "rgba(0, 0, 0, 0.45)";
+        context.fillRect(0, 0, 960, 300);
+        context.fillStyle = "#fff";
+        context.font = "700 34px Arial";
+        context.fillText("GAME OVER", 365, 130);
+        context.font = "600 18px Arial";
+        context.fillText("Pulsa R para reiniciar", 372, 165);
+      }
+    };
+
     const render = (time: number) => {
       if (isDisposed) return;
 
@@ -170,12 +323,19 @@ export default function GatoRunnerPage() {
 
       context.clearRect(0, 0, 960, 300);
       drawBackground();
+      drawObstacle();
       drawCat();
+      drawHud();
 
       rafId = window.requestAnimationFrame(render);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "KeyR" && game.isGameOver) {
+        resetGame();
+        return;
+      }
+
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
         requestJump();
@@ -202,11 +362,15 @@ export default function GatoRunnerPage() {
     };
 
     const onPointerDown = () => {
+      if (game.isGameOver) {
+        resetGame();
+        return;
+      }
+
       requestJump();
     };
 
     sprite.onload = () => {
-      // Cálculo dinámico obligatorio para una tira horizontal de 7 frames.
       spriteMetrics.frameWidth = sprite.width / TOTAL_RUN_FRAMES;
       spriteMetrics.frameHeight = sprite.height;
 
@@ -251,6 +415,14 @@ export default function GatoRunnerPage() {
         Muévete con <strong>← →</strong> / <strong>A D</strong> y salta con{" "}
         <strong>Espacio</strong> o <strong>↑</strong>.
       </p>
+      <p style={{ margin: 0 }}>
+        Puntos: <strong>{score}</strong> · Distancia: <strong>{distance} m</strong>
+      </p>
+      {gameOver && (
+        <p style={{ margin: 0, color: "#7a2e00", fontWeight: 700 }}>
+          Has perdido. Se guarda récord solo si superaste tu mejor puntuación.
+        </p>
+      )}
 
       <canvas
         ref={canvasRef}
@@ -274,6 +446,8 @@ export default function GatoRunnerPage() {
           Cargando sprite en /assets/gato_runner_new.png...
         </p>
       )}
+
+      <Leaderboard />
     </main>
   );
 }
