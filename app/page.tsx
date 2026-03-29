@@ -5,10 +5,10 @@ import EuropaPressNews from "./components/EuropaPressNews";
 const galleryImages = [
   { src: "/img/foto-01.jpg", alt: "Gato negro en jaula humanitaria", tag: "Capturas" },
   { src: "/img/foto-02.jpg", alt: "Gato en jaula verde de captura", tag: "Capturas" },
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-03.jpg", alt: "Gato en jaula cubierta en clínica", tag: "Capturas" },
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-04.jpg", alt: "Gato en jaula sobre mesa clínica", tag: "Esterilizaciones" },
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-05.jpg", alt: "Gato blanco en jaula de observación", tag: "Colonias" },
-  { src: "/gatoCan/GATOCAN_Web2/img/foto-06.jpg", alt: "Gata tricolor en transportín de captura", tag: "Actuaciones" },
+  { src: "/img/foto-03.jpg", alt: "Gato en jaula cubierta en clínica", tag: "Capturas" },
+  { src: "/img/foto-04.jpg", alt: "Gato en jaula sobre mesa clínica", tag: "Esterilizaciones" },
+  { src: "/img/foto-05.jpg", alt: "Gato blanco en jaula de observación", tag: "Colonias" },
+  { src: "/img/foto-06.jpg", alt: "Gata tricolor en transportín de captura", tag: "Actuaciones" },
 ];
 
 export default function HomePage() {
@@ -17,6 +17,7 @@ export default function HomePage() {
       <header id="inicio" style={card}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            {/* Ruta del logo corregida */}
             <img src="/img/logo1.png" alt="Logo de GatoCan Natura Rural" style={{ width: 72, height: 72, objectFit: "contain" }} />
             <div>
               <p style={{ margin: 0 }}>Asociación de protección animal</p>
@@ -24,8 +25,8 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap" }}>
-            <a href="/gatoCan/login">Acceder</a>
-            <a href="/gatoCan/register">Crear cuenta</a>
+            <a href="/login">Acceder</a>
+            <a href="/register">Crear cuenta</a>
           </div>
         </div>
 
@@ -39,12 +40,12 @@ export default function HomePage() {
             <li><a href="#minijuego">Minijuego</a></li>
             <li><a href="#ayuda">Cómo ayudar</a></li>
             <li><a href="#noticias">Noticias</a></li>
-            <li><a href="/gatoCan/foro">Foro</a></li>
+            <li><a href="/foro">Foro</a></li>
             <li><a href="#contacto">Contacto</a></li>
             <li><a href="#donar">Donar</a></li>
-            <li><a href="/gatoCan/rankings">Rankings</a></li>
+            <li><a href="/rankings">Rankings</a></li>
             <li><a href="#campana">Campaña</a></li>
-            <li><a href="/gatoCan/perfil">Perfil</a></li>
+            <li><a href="/perfil">Perfil</a></li>
           </ul>
         </nav>
 
@@ -55,11 +56,11 @@ export default function HomePage() {
             respetuosa en el entorno rural.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <a href="/gatoCan/login">Acceder</a>
-            <a href="/gatoCan/register">Crear cuenta</a>
+            <a href="/login">Acceder</a>
+            <a href="/register">Crear cuenta</a>
             <a href="#ayuda">Hazte voluntario/a</a>
             <a href="#donar">Donar ahora</a>
-            <a href="/gatoCan/foro">Entrar al foro</a>
+            <a href="/foro">Entrar al foro</a>
           </div>
         </section>
       </header>
@@ -84,7 +85,7 @@ export default function HomePage() {
       <section id="minijuego" style={card}><h3>Minijuego: Gatito Runner 🐱</h3><p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p><Link href="/gato-runner">Ir al minijuego</Link></section>
       <section id="campana" style={card}><h3>Campaña de firmas (Change.org)</h3><p>Apoya la petición para una gestión ética de colonias felinas en San Xoán de Río (Ourense).</p></section>
       <section id="ayuda" style={card}><h3>Cómo ayudar</h3><ul><li>Únete al equipo de voluntariado.</li><li>Colabora con material o alimento.</li><li>Difunde nuestras campañas en tu entorno.</li></ul></section>
-      <section id="ranking" style={card}><h3>Rankings solidarios 🏆</h3><p>Consulta los dos rankings completos (donaciones y minijuego).</p><a href="/gatoCan/rankings">Ver página completa de rankings</a></section>
+      <section id="ranking" style={card}><h3>Rankings solidarios 🏆</h3><p>Consulta los dos rankings completos (donaciones y minijuego).</p><a href="/rankings">Ver página completa de rankings</a></section>
 
       <section id="noticias" style={card}>
         <h3>Noticias y actualizaciones</h3>
@@ -92,8 +93,8 @@ export default function HomePage() {
         <EuropaPressNews />
       </section>
 
-      <section id="login" style={card}><h3>Iniciar sesión</h3><p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p><a href="/gatoCan/login">Ir a login</a></section>
-      <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/gatoCan/register">Ir a registro</a></section>
+      <section id="login" style={card}><h3>Iniciar sesión</h3><p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p><a href="/login">Ir a login</a></section>
+      <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/register">Ir a registro</a></section>
       <section id="donar" style={card}><h3>Apoya nuestro trabajo con una donación</h3><p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p></section>
       <section id="contacto" style={card}><h3>Contacta con Gatocan Natura Rural</h3><p>Para voluntariado, avisos o colaboración, usa los formularios de la web.</p></section>
     </main>
