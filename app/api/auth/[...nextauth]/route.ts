@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+// ... el resto de tus imports (next-auth, prisma, etc)
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
