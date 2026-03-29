@@ -11,7 +11,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Esto ayuda a que las rutas no den error 404
-  trailingSlash: true,
 }
 
 module.exports = nextConfig
