@@ -1,7 +1,8 @@
-export const metadata = {
-  title: 'GatoCan',
-  description: 'Web de GatoCan',
-}
+import './globals.css' // <--- ¡ESTA ES LA CLAVE!
+import { Inter } from 'next/font/google'
+import { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
@@ -10,7 +11,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
