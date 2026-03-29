@@ -22,6 +22,8 @@ export default function GatoRunnerPage() {
   const scoreRef = useRef(0);
   const distanceRef = useRef(0);
   const savingRunRef = useRef(false);
+  const [runMessage, setRunMessage] = useState("");
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
   const jumpRequestedRef = useRef(false);
   const movementRef = useRef({
@@ -89,7 +91,10 @@ export default function GatoRunnerPage() {
           data: { user },
         } = await supabase.auth.getUser();
 
-        if (!user) return;
+        if (!user) {
+          setRunMessage("Inicia sesión para guardar tu récord.");
+          return;
+        }
 
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
@@ -99,11 +104,13 @@ export default function GatoRunnerPage() {
 
         if (profileError) {
           console.error("No se pudo leer el perfil del runner:", profileError);
+          setRunMessage("No se pudo verificar tu récord actual.");
           return;
         }
 
         const savedBestScore = Number(profileData?.runner_best_score || 0);
         if (runScore <= savedBestScore) {
+          setRunMessage("No superaste tu mejor puntuación. ¡Inténtalo de nuevo!");
           return;
         }
 
@@ -119,7 +126,12 @@ export default function GatoRunnerPage() {
 
         if (upsertError) {
           console.error("No se pudo guardar el récord del runner:", upsertError);
+          setRunMessage("No se pudo guardar tu nuevo récord.");
+          return;
         }
+
+        setRunMessage("¡Nuevo récord guardado en el ranking!");
+        setLeaderboardRefreshKey((previous) => previous + 1);
       } finally {
         savingRunRef.current = false;
       }
@@ -149,6 +161,7 @@ export default function GatoRunnerPage() {
       setDistance(0);
       scoreRef.current = 0;
       distanceRef.current = 0;
+      setRunMessage("");
     };
 
     const resize = () => {
@@ -420,7 +433,7 @@ export default function GatoRunnerPage() {
       </p>
       {gameOver && (
         <p style={{ margin: 0, color: "#7a2e00", fontWeight: 700 }}>
-          Has perdido. Se guarda récord solo si superaste tu mejor puntuación.
+          {runMessage || "Has perdido. Se guarda récord solo si superaste tu mejor puntuación."}
         </p>
       )}
 
@@ -447,7 +460,7 @@ export default function GatoRunnerPage() {
         </p>
       )}
 
-      <Leaderboard />
+      <Leaderboard refreshKey={leaderboardRefreshKey} />
     </main>
   );
 }

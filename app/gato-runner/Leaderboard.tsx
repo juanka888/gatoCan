@@ -5,12 +5,15 @@ import { supabase } from "../../lib/supabaseClient";
 
 type LeaderboardRow = {
   id: string;
-  username: string | null;
-  full_name: string | null;
+  nombre_completo: string | null;
   runner_best_score: number | null;
 };
 
-export default function Leaderboard() {
+type LeaderboardProps = {
+  refreshKey?: number;
+};
+
+export default function Leaderboard({ refreshKey = 0 }: LeaderboardProps) {
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,7 +27,7 @@ export default function Leaderboard() {
 
       const { data, error: queryError } = await supabase
         .from("profiles")
-        .select("id, username, full_name, runner_best_score")
+        .select("id, nombre_completo, runner_best_score")
         .order("runner_best_score", { ascending: false })
         .limit(10);
 
@@ -58,7 +61,7 @@ export default function Leaderboard() {
       isMounted = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [refreshKey]);
 
   return (
     <section
@@ -97,7 +100,7 @@ export default function Leaderboard() {
       ) : (
         <ol style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 8 }}>
           {rows.map((row) => {
-            const name = row.username || row.full_name || "Jugador anónimo";
+            const name = row.nombre_completo || "Jugador anónimo";
             return (
               <li
                 key={row.id}
