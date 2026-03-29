@@ -1,18 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', 
+  output: 'export',
   images: {
     unoptimized: true,
   },
   basePath: '/gatoCan',
-  // ESTO ES LO QUE ARREGLA TU ERROR:
+  // Con esto le decimos: "Pasa de los errores, yo sé lo que hago"
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Evita que Next.js intente pre-renderizar las rutas de la API
+  // Esto ayuda a que las rutas no den error 404
   trailingSlash: true,
 }
 
