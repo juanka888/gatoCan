@@ -99,6 +99,7 @@ export default function ForoPage() {
       title,
       content,
       author: user.email ?? user.id,
+      // user.id proviene de auth.uid() en Supabase Auth
       author_id: user.id,
     });
 
