@@ -7,7 +7,9 @@ type RssItem = {
   link?: string;
   pubDate?: string;
   thumbnail?: string;
-  description?: string;
+  enclosure?: {
+    link?: string;
+  };
 };
 
 type RssResponse = {
@@ -20,11 +22,27 @@ type News = {
   title: string;
   link: string;
   dateLabel: string;
-  image?: string;
+  image: string;
 };
 
 const FEED_URL =
-  "https://api.rss2json.com/v1/api.json?rss_url=https://www.animalshealth.es/rss/legislacion";
+  "https://api.rss2json.com/v1/api.json?rss_url=https://www.europapress.es/rss/rss.aspx?ch=00647";
+
+const DEFAULT_IMAGE =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 300'>
+    <defs>
+      <linearGradient id='bg' x1='0' x2='1' y1='0' y2='1'>
+        <stop offset='0%' stop-color='#fef6f3'/>
+        <stop offset='100%' stop-color='#f5e6ff'/>
+      </linearGradient>
+    </defs>
+    <rect width='480' height='300' fill='url(#bg)'/>
+    <text x='240' y='140' text-anchor='middle' font-size='88'>🐾</text>
+    <text x='240' y='190' text-anchor='middle' fill='#6b4e94' font-family='Arial, sans-serif' font-size='28' font-weight='700'>GatoCan</text>
+  </svg>
+`);
 
 export default function NoticiasPage() {
   const [news, setNews] = useState<News[]>([]);
@@ -39,9 +57,13 @@ export default function NoticiasPage() {
       setError("");
 
       try {
-        const response = await fetch(FEED_URL, {
+        const response = await fetch(`${FEED_URL}&_=${Date.now()}`, {
           signal: controller.signal,
           cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
         });
 
         if (!response.ok) {
@@ -55,12 +77,15 @@ export default function NoticiasPage() {
         }
 
         const parsedNews = (payload.items ?? []).slice(0, 12).map((item) => ({
-          title: item.title?.trim() || "Sin título",
-          link: item.link || "#",
+          title: item.title?.trim() || "Sin titular",
+          link: item.link?.trim() || "#",
           dateLabel: item.pubDate
-            ? new Date(item.pubDate).toLocaleString("es-ES")
+            ? new Date(item.pubDate).toLocaleString("es-ES", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })
             : "Fecha no disponible",
-          image: item.thumbnail || undefined,
+          image: item.thumbnail?.trim() || item.enclosure?.link?.trim() || DEFAULT_IMAGE,
         }));
 
         setNews(parsedNews);
@@ -69,7 +94,7 @@ export default function NoticiasPage() {
 
         console.error("Error cargando noticias:", err);
         setError(
-          "No se pudieron cargar las noticias en este momento. Inténtalo de nuevo en unos minutos.",
+          "No pudimos cargar las noticias ahora mismo. Revisa tu conexión e inténtalo de nuevo en unos minutos.",
         );
         setNews([]);
       } finally {
@@ -102,57 +127,40 @@ export default function NoticiasPage() {
     }
 
     return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 14,
-        }}
-      >
+      <div style={{ display: "grid", gap: 14 }}>
         {news.map((item) => (
           <article
             key={`${item.link}-${item.dateLabel}`}
             style={{
               border: "1px solid #ddd",
-              borderRadius: 10,
+              borderRadius: 12,
               overflow: "hidden",
               background: "#fff",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             }}
           >
-            {item.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(140px, 220px) 1fr",
+                color: "inherit",
+                textDecoration: "none",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.image}
                 alt={item.title}
-                style={{ width: "100%", height: 160, objectFit: "cover" }}
+                style={{ width: "100%", height: "100%", minHeight: 140, objectFit: "cover" }}
               />
-            ) : (
-              <div
-                aria-hidden="true"
-                style={{
-                  width: "100%",
-                  height: 160,
-                  display: "grid",
-                  placeItems: "center",
-                  background: "#f6f6f6",
-                  fontSize: 26,
-                }}
-              >
-                🐾
+              <div style={{ padding: 14 }}>
+                <h3 style={{ margin: "0 0 8px", fontSize: "1rem", lineHeight: 1.45 }}>{item.title}</h3>
+                <p style={{ margin: 0, color: "#555", fontSize: ".9rem" }}>{item.dateLabel}</p>
               </div>
-            )}
-
-            <div style={{ padding: 12 }}>
-              <h3 style={{ margin: "0 0 8px", fontSize: "1rem", lineHeight: 1.4 }}>
-                {item.title}
-              </h3>
-              <p style={{ margin: "0 0 10px", color: "#555", fontSize: ".9rem" }}>
-                {item.dateLabel}
-              </p>
-              <a href={item.link} target="_blank" rel="noreferrer">
-                Leer noticia
-              </a>
-            </div>
+            </a>
           </article>
         ))}
       </div>
@@ -162,7 +170,7 @@ export default function NoticiasPage() {
   return (
     <main style={{ maxWidth: 980, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Noticias de bienestar animal</h1>
-      <p>Fuente RSS transformada con rss2json para evitar bloqueos CORS en cliente.</p>
+      <p>Actualizadas desde Europa Press vía rss2json.</p>
       {content}
     </main>
   );
