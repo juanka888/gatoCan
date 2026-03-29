@@ -67,11 +67,15 @@ export default function NoticiasPage() {
 
         const items = Array.isArray(payload.items) ? payload.items : [];
 
-        const parsedNews = items.map((newsItem) => ({
-          title: newsItem.title || "Titular no disponible",
-          link: newsItem.link || "#",
-          dateLabel: newsItem.pubDate
-            ? new Date(newsItem.pubDate).toLocaleString("es-ES", {
+        if (!payload.items) {
+          throw new Error("Formato de datos incorrecto");
+        }
+
+        const parsedNews = payload.items.map((item) => ({
+          title: item.title?.trim() || "Sin titular",
+          link: item.link?.trim() || "#",
+          dateLabel: item.pubDate
+            ? new Date(item.pubDate).toLocaleString("es-ES", {
                 dateStyle: "medium",
                 timeStyle: "short",
               })
