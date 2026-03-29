@@ -9,12 +9,17 @@ type SpriteMetrics = {
 
 const TOTAL_RUN_FRAMES = 7;
 const ANIMATION_SPEED_MS = 100;
+const HORIZONTAL_SPEED = 4.2;
 
 export default function GatoRunnerPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   const jumpRequestedRef = useRef(false);
+  const movementRef = useRef({
+    left: false,
+    right: false,
+  });
 
   const requestJump = useCallback(() => {
     jumpRequestedRef.current = true;
@@ -46,6 +51,7 @@ export default function GatoRunnerPage() {
         x: 130,
         y: 230,
         velocityY: 0,
+        velocityX: 0,
         onGround: true,
       },
       animation: {
@@ -91,14 +97,23 @@ export default function GatoRunnerPage() {
     };
 
     const updatePhysics = () => {
+      const horizontalInput =
+        Number(movementRef.current.right) - Number(movementRef.current.left);
+      game.cat.velocityX = horizontalInput * HORIZONTAL_SPEED;
+
       if (jumpRequestedRef.current && game.cat.onGround) {
         game.cat.velocityY = game.jumpStrength;
         game.cat.onGround = false;
       }
       jumpRequestedRef.current = false;
 
+      game.cat.x += game.cat.velocityX;
       game.cat.velocityY += game.gravity;
       game.cat.y += game.cat.velocityY;
+
+      const minX = 50;
+      const maxX = 910;
+      game.cat.x = Math.max(minX, Math.min(maxX, game.cat.x));
 
       if (game.cat.y >= game.floorY) {
         game.cat.y = game.floorY;
@@ -110,6 +125,14 @@ export default function GatoRunnerPage() {
     };
 
     const updateAnimationFrame = (time: number) => {
+      const isMovingOnGround = game.cat.onGround && Math.abs(game.cat.velocityX) > 0.1;
+
+      if (!isMovingOnGround) {
+        game.animation.frame = 0;
+        game.animation.lastFrameAt = time;
+        return;
+      }
+
       if (time - game.animation.lastFrameAt >= ANIMATION_SPEED_MS) {
         game.animation.frame = (game.animation.frame + 1) % TOTAL_RUN_FRAMES;
         game.animation.lastFrameAt = time;
@@ -160,6 +183,25 @@ export default function GatoRunnerPage() {
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
         requestJump();
+        return;
+      }
+
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        movementRef.current.left = true;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        movementRef.current.right = true;
+      }
+    };
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        movementRef.current.left = false;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        movementRef.current.right = false;
       }
     };
 
@@ -177,6 +219,7 @@ export default function GatoRunnerPage() {
 
       window.addEventListener("resize", resize);
       window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keyup", onKeyUp);
       canvas.addEventListener("pointerdown", onPointerDown);
 
       rafId = window.requestAnimationFrame(render);
@@ -191,6 +234,7 @@ export default function GatoRunnerPage() {
       window.cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
       canvas.removeEventListener("pointerdown", onPointerDown);
     };
   }, [requestJump]);
@@ -208,7 +252,8 @@ export default function GatoRunnerPage() {
     >
       <h1 style={{ margin: 0 }}>Gato Runner</h1>
       <p style={{ margin: 0, textAlign: "center" }}>
-        Pulsa <strong>Espacio</strong>, <strong>↑</strong> o toca el canvas para saltar.
+        Muévete con <strong>← →</strong> / <strong>A D</strong> y salta con{" "}
+        <strong>Espacio</strong> o <strong>↑</strong>.
       </p>
 
       <canvas
