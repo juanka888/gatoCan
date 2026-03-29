@@ -215,7 +215,8 @@
                     <button id="restart-btn" class="btn btn-secondary" type="button" hidden>↻ Reintentar</button>
                     <p class="game-score">Puntos: <span id="score">0</span></p>
                     <p class="game-score">Metros recorridos: <span id="distance">0</span> m</p>
-                    <p class="game-score">Récord local: <span id="best-score">0</span></p>
+                    <p class="game-score">Récord local (puntos): <span id="best-score">0</span></p>
+                    <p class="game-score">Récord local (más metros): <span id="best-distance">0</span> m</p>
                     <p id="game-status" class="game-status">Juego en espera. Pulsa Iniciar para empezar.</p>
                 </div>
             </div>
@@ -688,17 +689,20 @@
         const scoreNode = document.getElementById('score');
         const distanceNode = document.getElementById('distance');
         const bestScoreNode = document.getElementById('best-score');
+        const bestDistanceNode = document.getElementById('best-distance');
         const statusNode = document.getElementById('game-status');
         const bestScoreKey = 'gatocanBestScore';
+        const bestDistanceKey = 'gatocanBestDistance';
         const leaderboardKey = 'gatocanRunnerLeaderboard';
 
-        if (canvas && ctx && startBtn && jumpBtn && restartBtn && retryOverlayBtn && gameOverOverlay && scoreNode && distanceNode && bestScoreNode && statusNode) {
+        if (canvas && ctx && startBtn && jumpBtn && restartBtn && retryOverlayBtn && gameOverOverlay && scoreNode && distanceNode && bestScoreNode && bestDistanceNode && statusNode) {
             const game = {
                 started: false,
                 running: false,
                 score: 0,
                 distance: 0,
                 best: Number(localStorage.getItem(bestScoreKey) || 0),
+                bestDistance: Number(localStorage.getItem(bestDistanceKey) || 0),
                 speed: 4,
                 gravity: 0.7,
                 cat: { x: 65, y: 170, w: 34, h: 28, vy: 0, onGround: true },
@@ -753,7 +757,7 @@
                 localStorage.setItem(leaderboardKey, JSON.stringify(board));
             }
 
-            async function persistRunnerBestScore(bestScore) {
+            async function persistRunnerStats(bestScore, bestDistance) {
                 const supabase = getSupabaseClient();
                 if (!supabase) return;
                 const { data: authData } = await supabase.auth.getUser();
@@ -762,15 +766,17 @@
 
                 const { data: profileData } = await supabase
                     .from('perfiles')
-                    .select('runner_best_score')
+                    .select('runner_best_score, runner_best_distance_m')
                     .eq('id', user.id)
                     .maybeSingle();
 
                 const nextBest = Math.max(Number(profileData?.runner_best_score || 0), Number(bestScore || 0));
+                const nextBestDistance = Math.max(Number(profileData?.runner_best_distance_m || 0), Number(bestDistance || 0));
                 await supabase.from('perfiles').upsert({
                     id: user.id,
                     email: user.email || null,
-                    runner_best_score: nextBest
+                    runner_best_score: nextBest,
+                    runner_best_distance_m: nextBestDistance
                 }, { onConflict: 'id' });
             }
 
@@ -796,6 +802,7 @@
             }
 
             bestScoreNode.textContent = String(game.best);
+            bestDistanceNode.textContent = String(Math.floor(game.bestDistance));
             updateRunnerLeaderboard(game.best);
             resizeGameCanvas();
             window.addEventListener('resize', resizeGameCanvas);
@@ -847,15 +854,26 @@
 
             function gameOver() {
                 game.running = false;
-                statusNode.textContent = `Game over: ${Math.floor(game.distance)} m recorridos. Pulsa reintentar para volver a jugar.`;
+                const runDistance = Math.floor(game.distance);
+                statusNode.textContent = `Game over: ${runDistance} m recorridos. Pulsa reintentar para volver a jugar.`;
                 gameOverOverlay.hidden = false;
                 restartBtn.hidden = false;
+                let shouldPersistStats = false;
                 if (game.score > game.best) {
                     game.best = game.score;
                     localStorage.setItem(bestScoreKey, String(game.best));
                     bestScoreNode.textContent = String(game.best);
                     updateRunnerLeaderboard(game.best);
-                    persistRunnerBestScore(game.best);
+                    shouldPersistStats = true;
+                }
+                if (runDistance > game.bestDistance) {
+                    game.bestDistance = runDistance;
+                    localStorage.setItem(bestDistanceKey, String(game.bestDistance));
+                    bestDistanceNode.textContent = String(game.bestDistance);
+                    shouldPersistStats = true;
+                }
+                if (shouldPersistStats) {
+                    persistRunnerStats(game.best, game.bestDistance);
                 }
             }
 

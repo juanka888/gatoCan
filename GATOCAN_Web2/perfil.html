@@ -46,6 +46,7 @@
                     <li><strong>Zarpa Karma acumulado:</strong> <span id="profileKarmaPoints">0</span></li>
                     <li><strong>Puesto ranking donaciones:</strong> <span id="profileRanking">Sin asignar</span></li>
                     <li><strong>Puntuación máxima Gatito Runner:</strong> <span id="profileRunnerBest">0</span></li>
+                    <li><strong>Máximo de metros Gatito Runner:</strong> <span id="profileRunnerBestDistance">0 m</span></li>
                     <li><strong>Puesto global Gatito Runner:</strong> <span id="profileRunnerRanking">Sin asignar</span></li>
                 </ul>
                 <p class="auth-helper"><a href="./rankings.html">Ver página completa de rankings</a></p>
@@ -113,6 +114,7 @@
             const profileRanking = document.getElementById("profileRanking");
             const profileKarmaPoints = document.getElementById("profileKarmaPoints");
             const profileRunnerBest = document.getElementById("profileRunnerBest");
+            const profileRunnerBestDistance = document.getElementById("profileRunnerBestDistance");
             const profileRunnerRanking = document.getElementById("profileRunnerRanking");
 
             function resolveAvatar(user) {
@@ -172,7 +174,7 @@
             async function setRankingStats(supabase, user) {
                 const { data: profileRows, error: rankingError } = await supabase
                     .from("perfiles")
-                    .select("id, karma_points, runner_best_score, total_donaciones")
+                    .select("id, karma_points, runner_best_score, runner_best_distance_m, total_donaciones")
                     .order("karma_points", { ascending: false })
                     .limit(200);
 
@@ -190,6 +192,7 @@
                 profileDonations.textContent = `${Number(current.total_donaciones || 0)} €`;
                 profileKarmaPoints.textContent = String(Number(current.karma_points || 0));
                 profileRunnerBest.textContent = String(Number(current.runner_best_score || 0));
+                profileRunnerBestDistance.textContent = `${Number(current.runner_best_distance_m || 0)} m`;
                 profileRanking.textContent = donationIndex >= 0 ? `#${donationIndex + 1}` : "Sin asignar";
                 profileRunnerRanking.textContent = runnerIndex >= 0 ? `#${runnerIndex + 1}` : "Sin asignar";
 
