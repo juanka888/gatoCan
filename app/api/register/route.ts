@@ -10,12 +10,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     }
 
+    const normalizedEmail = String(email).toLowerCase().trim();
     const hashed = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashed,
+      },
+    });
+
+    await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: { email: normalizedEmail },
+      create: {
+        userId: user.id,
+        email: normalizedEmail,
       },
     });
 

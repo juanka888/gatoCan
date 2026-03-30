@@ -1,0 +1,114 @@
+import type { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import bcrypt from "bcrypt";
+import { prisma } from "@/lib/prisma";
+
+const providers = [
+  CredentialsProvider({
+    name: "Credentials",
+    credentials: {
+      email: { label: "Email", type: "text" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) return null;
+
+      const user = await prisma.user.findUnique({
+        where: { email: credentials.email.toLowerCase() },
+      });
+
+      if (!user?.password) return null;
+
+      const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
+      if (!isPasswordCorrect) return null;
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      };
+    },
+  }),
+];
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  providers,
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
+  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async jwt({ token, user, account, profile }) {
+      if (user?.email) {
+        const email = user.email.toLowerCase();
+        const existing = await prisma.user.findUnique({ where: { email } });
+
+        const name = user.name || token.name || null;
+        const image = user.image || token.picture || null;
+        const googleId = account?.provider === "google" ? account.providerAccountId : null;
+
+        if (!existing) {
+          const created = await prisma.user.create({
+            data: {
+              email,
+              name,
+              image,
+              googleId,
+            },
+          });
+          token.uid = created.id;
+        } else {
+          const shouldUpdate =
+            (name && name !== existing.name) ||
+            (image && image !== existing.image) ||
+            (googleId && googleId !== existing.googleId);
+
+          if (shouldUpdate) {
+            await prisma.user.update({
+              where: { id: existing.id },
+              data: {
+                name: name ?? existing.name,
+                image: image ?? existing.image,
+                googleId: googleId ?? existing.googleId,
+              },
+            });
+          }
+
+          token.uid = existing.id;
+        }
+      }
+
+      if (!token.uid && token.email) {
+        const userByEmail = await prisma.user.findUnique({
+          where: { email: token.email.toLowerCase() },
+        });
+        if (userByEmail) token.uid = userByEmail.id;
+      }
+
+      if (profile && typeof profile === "object" && "picture" in profile && !token.picture) {
+        token.picture = profile.picture as string;
+      }
+
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.uid as string;
+        if (!session.user.image && token.picture) {
+          session.user.image = token.picture as string;
+        }
+      }
+      return session;
+    },
+  },
+};

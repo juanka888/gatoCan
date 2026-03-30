@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
 
 type LeaderboardRow = {
-  id: string;
-  nombre_completo: string | null;
-  runner_best_score: number | null;
+  userId: string;
+  nombreCompleto: string | null;
+  email: string;
+  runnerBestScore: number;
 };
 
 type LeaderboardProps = {
@@ -25,74 +25,35 @@ export default function Leaderboard({ refreshKey = 0 }: LeaderboardProps) {
       setLoading(true);
       setError("");
 
-      const { data, error: queryError } = await supabase
-        .from("profiles")
-        .select("id, nombre_completo, runner_best_score")
-        .order("runner_best_score", { ascending: false })
-        .limit(10);
-
-      if (!isMounted) return;
-
-      if (queryError) {
+      const response = await fetch("/api/rankings/runner", { cache: "no-store" });
+      if (!response.ok) {
+        if (!isMounted) return;
         setRows([]);
         setError("No se pudo cargar el ranking.");
         setLoading(false);
         return;
       }
 
-      setRows((data ?? []) as LeaderboardRow[]);
+      const data = await response.json();
+      if (!isMounted) return;
+
+      setRows(data.rows || []);
       setLoading(false);
     };
 
     loadLeaderboard();
 
-    const channel = supabase
-      .channel("runner-leaderboard")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles" },
-        () => {
-          loadLeaderboard();
-        },
-      )
-      .subscribe();
-
     return () => {
       isMounted = false;
-      supabase.removeChannel(channel);
     };
   }, [refreshKey]);
 
   return (
-    <section
-      style={{
-        width: "100%",
-        maxWidth: 960,
-        border: "2px solid #8f5a2d",
-        borderRadius: 12,
-        background: "#fffaf0",
-        padding: 16,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-      }}
-    >
+    <section style={{ width: "100%", maxWidth: 960, border: "2px solid #8f5a2d", borderRadius: 12, background: "#fffaf0", padding: 16, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}>
       <h2 style={{ marginTop: 0, marginBottom: 12 }}>🏆 Top 10 Runner</h2>
 
       {loading ? (
-        <p style={{ margin: 0, display: "flex", gap: 8, alignItems: "center" }}>
-          <span
-            aria-hidden="true"
-            style={{
-              width: 16,
-              height: 16,
-              border: "2px solid #d8b282",
-              borderTopColor: "#8f5a2d",
-              borderRadius: "50%",
-              display: "inline-block",
-              animation: "spin 0.9s linear infinite",
-            }}
-          />
-          Cargando ranking...
-        </p>
+        <p style={{ margin: 0 }}>Cargando ranking...</p>
       ) : error ? (
         <p style={{ margin: 0, color: "#9d1c1c" }}>{error}</p>
       ) : rows.length === 0 ? (
@@ -100,39 +61,16 @@ export default function Leaderboard({ refreshKey = 0 }: LeaderboardProps) {
       ) : (
         <ol style={{ margin: 0, paddingLeft: 20, display: "grid", gap: 8 }}>
           {rows.map((row) => {
-            const name = row.nombre_completo || "Jugador anónimo";
+            const name = row.nombreCompleto || row.email || "Jugador anónimo";
             return (
-              <li
-                key={row.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 12,
-                  background: "#fff",
-                  border: "1px solid #f1ddbe",
-                  borderRadius: 8,
-                  padding: "8px 10px",
-                }}
-              >
+              <li key={row.userId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #f1ddbe", borderRadius: 8, padding: "8px 10px" }}>
                 <strong>{name}</strong>
-                <span>{Number(row.runner_best_score || 0)} pts</span>
+                <span>{Number(row.runnerBestScore || 0)} pts</span>
               </li>
             );
           })}
         </ol>
       )}
-
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </section>
   );
 }

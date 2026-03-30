@@ -1,32 +1,23 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { signIn, useSession } from "next-auth/react";
 
 type Post = {
   id: number;
   title: string;
   content: string;
-  author: string;
-  author_id?: string | null;
-  created_at: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 };
 
-function isPermissionError(error: unknown) {
-  if (!error || typeof error !== "object") return false;
-
-  const err = error as { code?: string; message?: string };
-  const message = (err.message ?? "").toLowerCase();
-
-  return (
-    err.code === "42501" ||
-    message.includes("permission") ||
-    message.includes("rls") ||
-    message.includes("row-level")
-  );
-}
-
 export default function ForoPage() {
+  const { status, data: session } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -34,129 +25,77 @@ export default function ForoPage() {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      setLoadingPosts(true);
-      setErrorMessage("");
-
-      const { data, error } = await supabase
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      console.log("Datos del foro:", data, error);
-
-      if (error) {
-        if (isPermissionError(error)) {
-          setErrorMessage("Error de permisos, contacta al administrador");
-        } else {
-          setErrorMessage("No se pudieron cargar las publicaciones del foro.");
-        }
-
-        setPosts([]);
-        setLoadingPosts(false);
-        return;
-      }
-
-      setPosts((data ?? []) as Post[]);
+  const loadPosts = async () => {
+    setLoadingPosts(true);
+    const response = await fetch("/api/forum/posts", { cache: "no-store" });
+    if (!response.ok) {
+      setErrorMessage("No se pudieron cargar las publicaciones del foro.");
       setLoadingPosts(false);
-    };
+      return;
+    }
 
+    const data = await response.json();
+    setPosts(data.posts || []);
+    setLoadingPosts(false);
+  };
+
+  useEffect(() => {
     loadPosts();
-
-    const channel = supabase
-      .channel("posts-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "posts" },
-        () => {
-          loadPosts();
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      alert("Debes iniciar sesión para publicar.");
-      setLoading(false);
+    if (status !== "authenticated") {
+      setErrorMessage("Debes iniciar sesión para publicar.");
       return;
     }
 
-    const { error } = await supabase.from("posts").insert({
-      title,
-      content,
-      author: user.email ?? user.id,
-      // user.id proviene de auth.uid() en Supabase Auth
-      author_id: user.id,
+    setLoading(true);
+    setErrorMessage("");
+
+    const response = await fetch("/api/forum/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content }),
     });
 
     setLoading(false);
 
-    if (error) {
-      if (isPermissionError(error)) {
-        setErrorMessage("Error de permisos, contacta al administrador");
-      } else {
-        setErrorMessage(`Error al crear post: ${error.message}`);
-      }
-
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setErrorMessage(data.error || "Error al crear post");
       return;
     }
 
     setTitle("");
     setContent("");
+    loadPosts();
   };
 
   return (
     <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Foro GatoCan</h1>
-      <p>Todos pueden leer. Solo usuarios autenticados pueden publicar.</p>
+      <p>
+        Todos pueden leer. Solo usuarios autenticados pueden publicar.
+        {session?.user?.email ? ` Sesión activa: ${session.user.email}.` : ""}
+      </p>
+
+      {status !== "authenticated" && (
+        <button type="button" onClick={() => signIn("google", { callbackUrl: "/foro" })} style={{ marginBottom: 16 }}>
+          Acceder con Google para publicar
+        </button>
+      )}
 
       {errorMessage && (
-        <p
-          role="alert"
-          style={{
-            color: "#9d1c1c",
-            background: "#ffe6e6",
-            border: "1px solid #f2b8b8",
-            borderRadius: 8,
-            padding: 10,
-            marginBottom: 16,
-          }}
-        >
+        <p role="alert" style={{ color: "#9d1c1c", background: "#ffe6e6", border: "1px solid #f2b8b8", borderRadius: 8, padding: 10, marginBottom: 16 }}>
           {errorMessage}
         </p>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "grid", gap: 12, marginBottom: 24 }}
-      >
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Título"
-          required
-        />
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Contenido"
-          rows={4}
-          required
-        />
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, marginBottom: 24 }}>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" required />
+        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Contenido" rows={4} required />
         <button disabled={loading}>{loading ? "Publicando..." : "Publicar"}</button>
       </form>
 
@@ -167,14 +106,11 @@ export default function ForoPage() {
           <p>No hay publicaciones aún.</p>
         ) : (
           posts.map((post) => (
-            <article
-              key={post.id}
-              style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}
-            >
+            <article key={post.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
               <h3 style={{ margin: "0 0 6px" }}>{post.title}</h3>
               <p style={{ margin: "0 0 10px" }}>{post.content}</p>
               <small>
-                Por {post.author} · {new Date(post.created_at).toLocaleString()}
+                Por {post.author.name || post.author.email || "Usuario"} · {new Date(post.createdAt).toLocaleString()}
               </small>
             </article>
           ))
