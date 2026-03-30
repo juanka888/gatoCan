@@ -38,6 +38,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+          prompt: "select_account",
+        },
+      },
     }),
   );
 }
@@ -67,6 +73,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
           token.uid = created.id;
+          token.sub = created.id;
         } else {
           const shouldUpdate =
             (name && name !== existing.name) ||
@@ -85,14 +92,22 @@ export const authOptions: NextAuthOptions = {
           }
 
           token.uid = existing.id;
+          token.sub = existing.id;
         }
+      }
+
+      if (!token.uid && token.sub) {
+        token.uid = token.sub;
       }
 
       if (!token.uid && token.email) {
         const userByEmail = await prisma.user.findUnique({
           where: { email: token.email.toLowerCase() },
         });
-        if (userByEmail) token.uid = userByEmail.id;
+        if (userByEmail) {
+          token.uid = userByEmail.id;
+          token.sub = userByEmail.id;
+        }
       }
 
       if (profile && typeof profile === "object" && "picture" in profile && !token.picture) {
@@ -101,9 +116,9 @@ export const authOptions: NextAuthOptions = {
 
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token, user }) {
       if (session.user) {
-        session.user.id = token.uid as string;
+        session.user.id = (token.uid || token.sub || user?.id) as string;
         session.user.name = (session.user.name || token.name) as string | null | undefined;
         session.user.image = (session.user.image || token.picture) as string | null | undefined;
       }
