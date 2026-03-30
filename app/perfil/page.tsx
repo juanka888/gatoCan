@@ -14,6 +14,7 @@ type ProfileData = {
   totalDonaciones: number;
   runnerBestScore: number;
   runnerBestDistanceM: number;
+  aceptaPoliticas: boolean;
 };
 
 const emptyProfile: ProfileData = {
@@ -27,6 +28,7 @@ const emptyProfile: ProfileData = {
   totalDonaciones: 0,
   runnerBestScore: 0,
   runnerBestDistanceM: 0,
+  aceptaPoliticas: false,
 };
 
 export default function PerfilPage() {
@@ -70,6 +72,7 @@ export default function PerfilPage() {
         totalDonaciones: Number(p.totalDonaciones || 0),
         runnerBestScore: Number(p.runnerBestScore || 0),
         runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
+        aceptaPoliticas: Boolean(p.aceptaPoliticas),
       });
       setLoading(false);
     };
@@ -83,6 +86,11 @@ export default function PerfilPage() {
 
   const saveProfile = async () => {
     setMessage("");
+    if (!profile.aceptaPoliticas) {
+      setMessage("Debes aceptar las políticas para guardar tu perfil.");
+      return;
+    }
+
     const response = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -93,6 +101,7 @@ export default function PerfilPage() {
         direccion: profile.direccion,
         codigoPostal: profile.codigoPostal,
         poblacion: profile.poblacion,
+        aceptaPoliticas: profile.aceptaPoliticas,
       }),
     });
 
@@ -150,6 +159,15 @@ export default function PerfilPage() {
         <input disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
         <input disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
         <input disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="checkbox"
+            checked={profile.aceptaPoliticas}
+            disabled={!editing}
+            onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
+          />
+          Acepto las políticas de seguridad y privacidad.
+        </label>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {!editing ? (

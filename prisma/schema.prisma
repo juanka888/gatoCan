@@ -37,6 +37,7 @@ model Profile {
   totalDonaciones      Decimal  @default(0)
   runnerBestScore      Int      @default(0)
   runnerBestDistanceM  Int      @default(0)
+  aceptaPoliticas      Boolean  @default(false)
   runnerGlobalRank     Int?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt

@@ -104,11 +104,15 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.uid as string;
-        if (!session.user.image && token.picture) {
-          session.user.image = token.picture as string;
-        }
+        session.user.name = (session.user.name || token.name) as string | null | undefined;
+        session.user.image = (session.user.image || token.picture) as string | null | undefined;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith(baseUrl)) return url;
+      return `${baseUrl}/perfil`;
     },
   },
 };

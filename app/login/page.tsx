@@ -13,12 +13,12 @@ export default function Login() {
     await signIn("credentials", {
       email,
       password,
-      callbackUrl: "/dashboard",
+      callbackUrl: "/perfil",
     });
   };
 
   const handleGoogleLogin = async () => {
-    await signIn("google", { callbackUrl: "/dashboard" });
+    await signIn("google", { callbackUrl: "/perfil" });
   };
 
   return (
