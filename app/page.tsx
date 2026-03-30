@@ -9,6 +9,8 @@ const galleryImages = [
   { src: "/img/foto-04.jpg", alt: "Gato en jaula sobre mesa clínica", tag: "Esterilizaciones" },
   { src: "/img/foto-05.jpg", alt: "Gato blanco en jaula de observación", tag: "Colonias" },
   { src: "/img/foto-06.jpg", alt: "Gata tricolor en transportín de captura", tag: "Actuaciones" },
+  { src: "/img/foto-05.jpg", alt: "Gato blanco en jaula de observación", tag: "Colonias" }
+  
 ];
 
 export default function HomePage() {
