@@ -32,6 +32,7 @@ export async function GET() {
       userId: user.id,
       email,
       nombreCompleto: session.user.name ?? null,
+      aceptaPoliticas: false,
     },
   });
 
@@ -76,6 +77,7 @@ export async function PUT(req: Request) {
       poblacion: body.poblacion ?? null,
       runnerBestScore: body.runnerBestScore ?? undefined,
       runnerBestDistanceM: body.runnerBestDistanceM ?? undefined,
+      aceptaPoliticas: body.aceptaPoliticas === true,
     },
     create: {
       userId: user.id,
@@ -88,6 +90,7 @@ export async function PUT(req: Request) {
       poblacion: body.poblacion ?? null,
       runnerBestScore: body.runnerBestScore ?? 0,
       runnerBestDistanceM: body.runnerBestDistanceM ?? 0,
+      aceptaPoliticas: body.aceptaPoliticas === true,
     },
   });
 

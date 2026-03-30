@@ -1,1 +1,3 @@
 GATOCAN_Web2/supabase-config.js
+node_modules/
+.next/

@@ -138,8 +138,14 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
-            <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-            <a href="/register">Crear cuenta</a>
+            {status === "authenticated" ? (
+              <a href="/perfil">Ir a mi perfil</a>
+            ) : (
+              <>
+                <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
+                <a href="/register">Crear cuenta</a>
+              </>
+            )}
             <a
               href="https://www.teaming.net/proyectogatonaturanrural"
               target="_blank"
@@ -186,7 +192,11 @@ export default function HomePage() {
             respetuosa en el entorno rural.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
+            {status === "authenticated" ? (
+              <a href="/perfil">Mi perfil</a>
+            ) : (
+              <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
+            )}
             <a href="/register">Crear cuenta</a>
             <a href="#ayuda">Hazte voluntario/a</a>
             <a href="#donar">Donar ahora</a>
@@ -271,7 +281,17 @@ export default function HomePage() {
         <EuropaPressNews />
       </section>
 
-      <section id="login" style={card}><h3>Iniciar sesión</h3><p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p><button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>{status === "authenticated" ? "Sesión activa" : "Acceder con Google"}</button></section>
+      <section id="login" style={card}>
+        <h3>Iniciar sesión</h3>
+        <p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p>
+        {status === "authenticated" ? (
+          <a href="/perfil">Sesión activa · Ir al perfil</a>
+        ) : (
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>
+            Acceder con Google
+          </button>
+        )}
+      </section>
       <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/register">Ir a registro</a></section>
       <section id="donar" style={card}>
         <h3>Apoya nuestro trabajo con una donación</h3>
