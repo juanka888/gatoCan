@@ -46,7 +46,7 @@ export default function GatoRunnerPage() {
     let isDisposed = false;
 
     const sprite = new Image();
-    sprite.src = "/assets/gato_runner_new.png";
+    sprite.src = "/img/gato_runner_new.png";
 
     const spriteMetrics: SpriteMetrics = {
       frameWidth: 0,
