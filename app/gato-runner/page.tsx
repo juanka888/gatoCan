@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Leaderboard from "./Leaderboard";
-import { supabase } from "../../lib/supabaseClient";
+import { useSession } from "next-auth/react";
 
 type SpriteMetrics = {
   frameWidth: number;
@@ -24,6 +24,7 @@ export default function GatoRunnerPage() {
   const savingRunRef = useRef(false);
   const [runMessage, setRunMessage] = useState("");
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
+  const { status } = useSession();
 
   const jumpRequestedRef = useRef(false);
   const movementRef = useRef({
@@ -87,45 +88,36 @@ export default function GatoRunnerPage() {
       savingRunRef.current = true;
 
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
+        if (status !== "authenticated") {
           setRunMessage("Inicia sesión para guardar tu récord.");
           return;
         }
 
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("runner_best_score, runner_best_distance_m")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("No se pudo leer el perfil del runner:", profileError);
+        const currentProfileResponse = await fetch("/api/profile", { cache: "no-store" });
+        if (!currentProfileResponse.ok) {
           setRunMessage("No se pudo verificar tu récord actual.");
           return;
         }
 
-        const savedBestScore = Number(profileData?.runner_best_score || 0);
+        const currentProfileData = await currentProfileResponse.json();
+        const savedBestScore = Number(currentProfileData?.profile?.runnerBestScore || 0);
+        const savedBestDistance = Number(currentProfileData?.profile?.runnerBestDistanceM || 0);
+
         if (runScore <= savedBestScore) {
           setRunMessage("No superaste tu mejor puntuación. ¡Inténtalo de nuevo!");
           return;
         }
 
-        const savedBestDistance = Number(profileData?.runner_best_distance_m || 0);
-        const { error: upsertError } = await supabase.from("profiles").upsert(
-          {
-            id: user.id,
-            runner_best_score: runScore,
-            runner_best_distance_m: Math.max(savedBestDistance, runDistance),
-          },
-          { onConflict: "id" },
-        );
+        const saveResponse = await fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            runnerBestScore: runScore,
+            runnerBestDistanceM: Math.max(savedBestDistance, runDistance),
+          }),
+        });
 
-        if (upsertError) {
-          console.error("No se pudo guardar el récord del runner:", upsertError);
+        if (!saveResponse.ok) {
           setRunMessage("No se pudo guardar tu nuevo récord.");
           return;
         }

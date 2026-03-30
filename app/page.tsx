@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { signIn, useSession } from "next-auth/react";
 import EuropaPressNews from "./components/EuropaPressNews";
 
 type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones";
@@ -68,6 +69,8 @@ export default function HomePage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [bestScore, setBestScore] = useState(0);
   const [bestDistance, setBestDistance] = useState(0);
+  const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
+  const { status } = useSession();
 
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
@@ -110,6 +113,19 @@ export default function HomePage() {
 
   const activeImage = visibleImages[currentIndex] || galleryImages[0];
 
+  useEffect(() => {
+    const stored = localStorage.getItem("gatocanColaboradoresClicks");
+    if (stored) {
+      setColabClicks(JSON.parse(stored));
+    }
+  }, []);
+
+  const registerColabClick = (id: string) => {
+    const next = { ...colabClicks, [id]: Number(colabClicks[id] || 0) + 1 };
+    setColabClicks(next);
+    localStorage.setItem("gatocanColaboradoresClicks", JSON.stringify(next));
+  };
+
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
       <header id="inicio" style={card}>
@@ -122,7 +138,7 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
-            <a href="/login">Acceder</a>
+            <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
             <a href="/register">Crear cuenta</a>
             <a
               href="https://www.teaming.net/proyectogatonaturanrural"
@@ -170,7 +186,7 @@ export default function HomePage() {
             respetuosa en el entorno rural.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <a href="/login">Acceder</a>
+            <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
             <a href="/register">Crear cuenta</a>
             <a href="#ayuda">Hazte voluntario/a</a>
             <a href="#donar">Donar ahora</a>
@@ -255,7 +271,7 @@ export default function HomePage() {
         <EuropaPressNews />
       </section>
 
-      <section id="login" style={card}><h3>Iniciar sesión</h3><p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p><a href="/login">Ir a login</a></section>
+      <section id="login" style={card}><h3>Iniciar sesión</h3><p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p><button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>{status === "authenticated" ? "Sesión activa" : "Acceder con Google"}</button></section>
       <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/register">Ir a registro</a></section>
       <section id="donar" style={card}>
         <h3>Apoya nuestro trabajo con una donación</h3>
@@ -266,6 +282,26 @@ export default function HomePage() {
             title="Widget Teaming GatoCan"
             style={{ width: "100%", minHeight: 180, border: "1px solid #cbd5e1", borderRadius: 10 }}
           />
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <h4>Contador de colaboradores (rescatado del legacy)</h4>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[
+              { id: "zooplus", nombre: "Zooplus", url: "https://www.zooplus.es" },
+              { id: "kiwoko", nombre: "Kiwoko", url: "https://www.kiwoko.com" },
+              { id: "tiendanimal", nombre: "Tiendanimal", url: "https://www.tiendanimal.es" },
+            ].map((colab) => (
+              <a
+                key={colab.id}
+                href={colab.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => registerColabClick(colab.id)}
+              >
+                {colab.nombre} ({Number(colabClicks[colab.id] || 0)} clics)
+              </a>
+            ))}
+          </div>
         </div>
       </section>
       <section id="contacto" style={card}><h3>Contacta con Gatocan Natura Rural</h3><p>Para voluntariado, avisos o colaboración, usa los formularios de la web.</p></section>
