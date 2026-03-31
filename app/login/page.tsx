@@ -17,10 +17,6 @@ export default function Login() {
     });
   };
 
-  const handleGoogleLogin = async () => {
-    await signIn("google", { callbackUrl: "/perfil" });
-  };
-
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "1rem" }}>
       <form
@@ -33,7 +29,7 @@ export default function Login() {
         <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" required />
         <input onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Contraseña" required />
         <button type="submit">Login</button>
-        <button type="button" onClick={handleGoogleLogin}>Iniciar sesión con Google</button>
+        <button type="button" onClick={() => signIn('google', { callbackUrl: '/' })}>Iniciar sesión con Google</button>
       </form>
     </main>
   );
