@@ -1,43 +1,40 @@
-'use client';
-import { signIn } from 'next-auth/react';
-import { Suspense } from 'react';
+"use client";
 
-function LoginContent() {
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+
+export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    await signIn("credentials", {
+      email,
+      password,
+      callbackUrl: "/perfil",
+    });
+  };
+
+  const handleGoogleLogin = async () => {
+    await signIn("google", { callbackUrl: "/perfil" });
+  };
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      height: '100vh',
-      gap: '20px',
-      fontFamily: 'sans-serif'
-    }}>
-      <h1>Acceso Gato-Can</h1>
-      <p>Pulsa el botón para identificarte con Google:</p>
-      <button 
-        onClick={() => signIn('google', { callbackUrl: '/' })}
-        style={{ 
-          padding: '15px 30px', 
-          backgroundColor: '#4285F4', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          fontWeight: 'bold'
-        }}
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "1rem" }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "grid", gap: ".65rem", width: "100%", maxWidth: 420, padding: "1rem", border: "1px solid #e5e7eb", borderRadius: 12 }}
       >
-        Entrar con Google
-      </button>
-    </div>
-  );
-}
+        <h1 style={{ margin: 0 }}>Iniciar sesión</h1>
+        <p style={{ marginTop: 0 }}>Accede con correo/contraseña o usando tu cuenta de Google.</p>
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div style={{ textAlign: 'center', marginTop: '50px' }}>Cargando sistema de acceso...</div>}>
-      <LoginContent />
-    </Suspense>
+        <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" required />
+        <input onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Contraseña" required />
+        <button type="submit">Login</button>
+        <button type="button" onClick={handleGoogleLogin}>Iniciar sesión con Google</button>
+      </form>
+    </main>
   );
 }

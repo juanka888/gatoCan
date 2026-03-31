@@ -70,11 +70,7 @@ export default function HomePage() {
   const [bestScore, setBestScore] = useState(0);
   const [bestDistance, setBestDistance] = useState(0);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return <div style={{ textAlign: "center", padding: "50px" }}>Cargando Gato-Can...</div>;
-  }
+  const { status } = useSession();
 
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
@@ -142,7 +138,7 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
-            {status === "authenticated" && session ? (
+            {status === "authenticated" ? (
               <a href="/perfil">Ir a mi perfil</a>
             ) : (
               <>
@@ -196,7 +192,7 @@ export default function HomePage() {
             respetuosa en el entorno rural.
           </p>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {status === "authenticated" && session ? (
+            {status === "authenticated" ? (
               <a href="/perfil">Mi perfil</a>
             ) : (
               <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
