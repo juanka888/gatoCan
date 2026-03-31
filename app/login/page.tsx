@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 export default function Login() {
+  return (
+    <Suspense fallback={<main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "1rem" }}>Cargando...</main>}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();

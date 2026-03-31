@@ -1,10 +1,10 @@
-import NextAuth, { type NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
-const providers = [
+const providers: any[] = [
   CredentialsProvider({
     name: "Credentials",
     credentials: {
@@ -58,11 +58,11 @@ if (googleClientId && googleClientSecret) {
 
 const appBaseUrl = "https://gato-can.vercel.app";
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers,
   trustHost: true,
   debug: process.env.AUTH_DEBUG === "true",
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt" as const },
   pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   logger: {
