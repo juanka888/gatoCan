@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -31,12 +32,40 @@ const emptyProfile: ProfileData = {
   aceptaPoliticas: false,
 };
 
+const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+function normalizeDni(value: string): string {
+  return value.replace(/\s|-/g, "").toUpperCase();
+}
+
+function isValidDni(value: string): boolean {
+  const dni = normalizeDni(value);
+  if (!/^\d{8}[A-Z]$/.test(dni)) {
+    return false;
+  }
+
+  const number = Number(dni.slice(0, 8));
+  const expectedLetter = dniLetters[number % 23];
+  return dni[8] === expectedLetter;
+}
+
+const inputStyle: CSSProperties = {
+  border: "1px solid #cbd5e1",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "#ffffff",
+  color: "#0f172a",
+  fontSize: "0.95rem",
+  outline: "none",
+};
+
 export default function PerfilPage() {
   const { data: session, status } = useSession();
   const [profile, setProfile] = useState<ProfileData>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const avatar = useMemo(
     () =>
@@ -54,7 +83,7 @@ export default function PerfilPage() {
 
       const response = await fetch("/api/profile");
       if (!response.ok) {
-        setMessage("No se pudo cargar tu perfil.");
+        setErrorMessage("No se pudo cargar tu perfil.");
         setLoading(false);
         return;
       }
@@ -82,12 +111,30 @@ export default function PerfilPage() {
 
   const updateField = (field: keyof ProfileData, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
+    setMessage("");
+
+    if (field === "dniNie") {
+      const nextDni = normalizeDni(value);
+      if (nextDni.length > 0 && !isValidDni(nextDni)) {
+        setErrorMessage("El DNI no es válido. Debe tener 8 números y una letra de control correcta.");
+      } else {
+        setErrorMessage("");
+      }
+    }
   };
 
   const saveProfile = async () => {
     setMessage("");
+    setErrorMessage("");
+
+    const normalizedDni = normalizeDni(profile.dniNie);
+    if (normalizedDni && !isValidDni(normalizedDni)) {
+      setErrorMessage("El DNI no es válido. Revísalo antes de guardar.");
+      return;
+    }
+
     if (!profile.aceptaPoliticas) {
-      setMessage("Debes aceptar las políticas para guardar tu perfil.");
+      setErrorMessage("Debes aceptar las políticas para guardar tu perfil.");
       return;
     }
 
@@ -97,7 +144,7 @@ export default function PerfilPage() {
       body: JSON.stringify({
         nombreCompleto: profile.nombreCompleto,
         telefono: profile.telefono,
-        dniNie: profile.dniNie,
+        dniNie: normalizedDni,
         direccion: profile.direccion,
         codigoPostal: profile.codigoPostal,
         poblacion: profile.poblacion,
@@ -106,60 +153,95 @@ export default function PerfilPage() {
     });
 
     if (!response.ok) {
-      setMessage("No se pudo guardar el perfil.");
+      const data = await response.json().catch(() => null);
+      setErrorMessage(data?.error || "No se pudo guardar el perfil.");
       return;
     }
 
+    setProfile((prev) => ({ ...prev, dniNie: normalizedDni }));
     setEditing(false);
     setMessage("Perfil actualizado correctamente.");
   };
 
   if (status === "loading" || loading) {
-    return <main style={{ maxWidth: 900, margin: "0 auto", padding: "1rem" }}>Cargando perfil...</main>;
+    return <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", color: "#0f172a" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "1rem", display: "grid", gap: 12 }}>
-        <h1>Mi perfil</h1>
+      <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12, color: "#0f172a" }}>
+        <h1 style={{ color: "#0f172a" }}>Mi perfil</h1>
         <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
-        <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>
-          Acceder con Google
-        </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
+          <Link
+            href="/"
+            style={{
+              textDecoration: "none",
+              background: "#1d4ed8",
+              color: "#fff",
+              borderRadius: 8,
+              padding: "0.55rem 0.85rem",
+              fontWeight: 600,
+            }}
+          >
+            Volver al Inicio
+          </Link>
+        </div>
       </main>
     );
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: "1rem", display: "grid", gap: 12 }}>
-      <h1>Mi perfil</h1>
+    <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14, color: "#0f172a" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <h1 style={{ margin: 0, color: "#0f172a" }}>Mi perfil</h1>
+        <Link
+          href="/"
+          style={{
+            textDecoration: "none",
+            background: "#1d4ed8",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "0.55rem 0.85rem",
+            fontWeight: 600,
+          }}
+        >
+          Volver al Inicio
+        </Link>
+      </div>
+
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%" }} />
+        <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
         <div>
           <strong>{session.user?.name || "Usuario"}</strong>
           <div>{session.user?.email}</div>
         </div>
       </div>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-        <h3>Actividad solidaria</h3>
+      <section style={{ border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 14 }}>
+        <h3 style={{ marginTop: 0 }}>Actividad solidaria</h3>
         <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
         <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
         <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
         <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12, display: "grid", gap: 8 }}>
-        <h3>Datos personales</h3>
+      <section style={{ border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+        <h3 style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input value={session.user?.email || ""} disabled placeholder="Email" />
-        <input disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
-        <input disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI/NIE" />
-        <input disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-        <input disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
-        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input style={{ ...inputStyle, backgroundColor: "#eef2ff", color: "#334155" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        </div>
+
+        <label style={{ display: "flex", gap: 8, alignItems: "center", color: "#0f172a" }}>
           <input
             type="checkbox"
             checked={profile.aceptaPoliticas}
@@ -182,7 +264,8 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {message && <p>{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }
