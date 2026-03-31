@@ -1,506 +1,424 @@
 "use client";
 
-import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import Leaderboard from "../gato-runner/Leaderboard";
-
-type SpriteMetrics = {
-  frameWidth: number;
-  frameHeight: number;
-};
 
 type GatitoRunnerProps = {
   embedded?: boolean;
   showLeaderboard?: boolean;
 };
 
-const TOTAL_RUN_FRAMES = 7;
-const ANIMATION_SPEED_MS = 100;
-const HORIZONTAL_SPEED = 4.2;
+type Obstacle = { x: number; y: number; w: number; h: number; type: "yarn" | "mouseObstacle" };
+type Mouse = { x: number; y: number; w: number; h: number; caught: boolean };
+
+const BEST_SCORE_KEY = "gatocanBestScore";
+const BEST_DISTANCE_KEY = "gatocanBestDistance";
 
 export default function GatitoRunner({ embedded = false, showLeaderboard = true }: GatitoRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
+  const rafRef = useRef<number | null>(null);
   const [score, setScore] = useState(0);
   const [distance, setDistance] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [bestDistance, setBestDistance] = useState(0);
-  const scoreRef = useRef(0);
-  const distanceRef = useRef(0);
-  const savingRunRef = useRef(false);
-  const [runMessage, setRunMessage] = useState("");
-  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
-  const { data: session, status } = useSession();
-
-  const jumpRequestedRef = useRef(false);
-  const movementRef = useRef({
-    left: false,
-    right: false,
-  });
-
-  const playerEmail = useMemo(() => session?.user?.email?.toLowerCase().trim() ?? null, [session?.user?.email]);
-
-  const bestScoreKey = playerEmail ? `gatocanBestScore:${playerEmail}` : "gatocanBestScore";
-  const bestDistanceKey = playerEmail ? `gatocanBestDistance:${playerEmail}` : "gatocanBestDistance";
+  const [started, setStarted] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [statusText, setStatusText] = useState("Juego en espera. Pulsa Iniciar para empezar.");
+  const { data: session } = useSession();
 
   useEffect(() => {
-    const localScore = Number(localStorage.getItem(bestScoreKey) || 0);
-    const localDistance = Number(localStorage.getItem(bestDistanceKey) || 0);
-    setBestScore(localScore);
-    setBestDistance(localDistance);
-  }, [bestDistanceKey, bestScoreKey]);
-
-  const requestJump = useCallback(() => {
-    jumpRequestedRef.current = true;
+    const localBest = Number(localStorage.getItem(BEST_SCORE_KEY) || 0);
+    const localBestDistance = Number(localStorage.getItem(BEST_DISTANCE_KEY) || 0);
+    setBestScore(localBest);
+    setBestDistance(localBestDistance);
   }, []);
+
+  useEffect(() => {
+    const email = session?.user?.email;
+    if (email) {
+      console.log(`Preparado para enviar puntuación de ${email}`);
+    }
+  }, [session?.user?.email]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    let rafId = 0;
-    let isDisposed = false;
-
-    const sprite = new Image();
-    sprite.src = "/img/gato_runner_new.png";
-
-    const spriteMetrics: SpriteMetrics = {
-      frameWidth: 0,
-      frameHeight: 0,
+    const catSprites = {
+      run: new Image(),
+      jump: new Image(),
+      fall: new Image(),
     };
+
+    catSprites.run.src = "/img/walk_sprite.png";
+    catSprites.jump.src = "/img/jump_sprite.png";
+    catSprites.fall.src = "/img/idle_sprite.png";
+
+    const spriteMeta = {
+      run: { frames: 7, frameDuration: 90, loop: true },
+      jump: { frames: 4, frameDuration: 110, loop: false },
+      fall: { frames: 8, frameDuration: 120, loop: true },
+    } as const;
+
+    const spriteReady = { run: false, jump: false, fall: false };
+    (Object.entries(catSprites) as Array<[keyof typeof catSprites, HTMLImageElement]>).forEach(([name, image]) => {
+      image.onload = () => {
+        spriteReady[name] = true;
+      };
+      image.onerror = () => {
+        spriteReady[name] = false;
+      };
+    });
 
     const game = {
-      gravity: 0.85,
-      jumpStrength: -13,
-      floorY: 230,
-      speed: 4.3,
+      started: false,
+      running: false,
       score: 0,
       distance: 0,
-      isGameOver: false,
-      cat: {
-        x: 130,
-        y: 230,
-        velocityY: 0,
-        velocityX: 0,
-        onGround: true,
-      },
-      obstacle: {
-        x: 960,
-        y: 205,
-        width: 22,
-        height: 40,
-      },
-      animation: {
-        frame: 0,
-        lastFrameAt: 0,
-      },
-      cloudOffset: 0,
-      scoreTimer: 0,
+      speed: 4,
+      gravity: 0.7,
+      cat: { x: 65, y: 170, w: 34, h: 28, vy: 0, onGround: true },
+      groundY: 170,
+      width: 860,
+      height: 260,
+      obstacles: [] as Obstacle[],
+      mice: [] as Mouse[],
+      obstacleSpawn: 0,
+      mouseSpawn: 0,
+      animation: { current: "run" as "run" | "jump" | "fall", frame: 0, lastFrameAt: 0 },
     };
 
-    const persistBestRun = async (runScore: number, runDistance: number) => {
-      if (savingRunRef.current) return;
-      savingRunRef.current = true;
-
-      try {
-        const localBestScore = Number(localStorage.getItem(bestScoreKey) || 0);
-        const localBestDistance = Number(localStorage.getItem(bestDistanceKey) || 0);
-        const nextLocalScore = Math.max(localBestScore, runScore);
-        const nextLocalDistance = Math.max(localBestDistance, runDistance);
-        localStorage.setItem(bestScoreKey, String(nextLocalScore));
-        localStorage.setItem(bestDistanceKey, String(nextLocalDistance));
-        setBestScore(nextLocalScore);
-        setBestDistance(nextLocalDistance);
-
-        if (!playerEmail) {
-          setRunMessage("Récord guardado en este dispositivo. Inicia sesión para subirlo al ranking.");
-          return;
-        }
-
-        if (status !== "authenticated") {
-          setRunMessage("Sesión no disponible ahora mismo. Tu récord local sí se ha guardado.");
-          return;
-        }
-
-        const currentProfileResponse = await fetch("/api/profile", { cache: "no-store" });
-        if (!currentProfileResponse.ok) {
-          setRunMessage("Récord local guardado. No se pudo verificar tu perfil online.");
-          return;
-        }
-
-        const currentProfileData = await currentProfileResponse.json();
-        const savedBestScore = Number(currentProfileData?.profile?.runnerBestScore || 0);
-        const savedBestDistance = Number(currentProfileData?.profile?.runnerBestDistanceM || 0);
-
-        if (runScore <= savedBestScore) {
-          setRunMessage("No superaste tu récord online, pero se actualizó tu récord local.");
-          return;
-        }
-
-        const saveResponse = await fetch("/api/profile", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            runnerBestScore: runScore,
-            runnerBestDistanceM: Math.max(savedBestDistance, runDistance),
-          }),
-        });
-
-        if (!saveResponse.ok) {
-          setRunMessage("Récord local guardado. No se pudo guardar tu nuevo récord online.");
-          return;
-        }
-
-        setRunMessage("¡Nuevo récord guardado en local y en el ranking!");
-        setLeaderboardRefreshKey((previous) => previous + 1);
-      } finally {
-        savingRunRef.current = false;
+    const resizeGameCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(window.devicePixelRatio || 1, 1);
+      const cssWidth = Math.max(320, Math.floor(rect.width || 860));
+      const cssHeight = Math.max(240, Math.floor(rect.height || 260));
+      canvas.width = Math.floor(cssWidth * dpr);
+      canvas.height = Math.floor(cssHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      game.width = cssWidth;
+      game.height = cssHeight;
+      game.groundY = Math.max(150, game.height - 60);
+      if (game.cat.onGround || game.cat.y > game.groundY) {
+        game.cat.y = game.groundY;
+        game.cat.vy = 0;
+        game.cat.onGround = true;
       }
     };
 
-    const onGameOver = () => {
-      if (game.isGameOver) return;
-      game.isGameOver = true;
+    const overlap = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
+      a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+    const jump = () => {
+      if (!game.started) {
+        game.started = true;
+        game.running = true;
+        setStarted(true);
+        setRunning(true);
+      }
+      if (!game.running) return;
+      if (game.cat.onGround) {
+        game.cat.vy = -11;
+        game.cat.onGround = false;
+        setStatusText("¡Buen salto!");
+      }
+    };
+
+    const persistBest = (runScore: number, runDistance: number) => {
+      const nextBestScore = Math.max(Number(localStorage.getItem(BEST_SCORE_KEY) || 0), runScore);
+      const nextBestDistance = Math.max(Number(localStorage.getItem(BEST_DISTANCE_KEY) || 0), runDistance);
+      localStorage.setItem(BEST_SCORE_KEY, String(nextBestScore));
+      localStorage.setItem(BEST_DISTANCE_KEY, String(nextBestDistance));
+      setBestScore(nextBestScore);
+      setBestDistance(nextBestDistance);
+    };
+
+    const doGameOver = () => {
+      if (!game.running) return;
+      game.running = false;
+      const runDistance = Math.floor(game.distance);
+      setRunning(false);
       setGameOver(true);
-      persistBestRun(game.score, Math.floor(game.distance));
+      setStatusText(`Game over: ${runDistance} m recorridos. Pulsa reintentar para volver a jugar.`);
+      persistBest(game.score, runDistance);
     };
 
     const resetGame = () => {
-      game.isGameOver = false;
+      game.started = true;
+      game.running = true;
       game.score = 0;
       game.distance = 0;
-      game.scoreTimer = 0;
-      game.cat.x = 130;
-      game.cat.y = game.floorY;
-      game.cat.velocityY = 0;
-      game.cat.velocityX = 0;
+      game.speed = 4;
+      game.cat.y = game.groundY;
+      game.cat.vy = 0;
       game.cat.onGround = true;
-      game.obstacle.x = 960;
-      jumpRequestedRef.current = false;
-      setGameOver(false);
+      game.obstacles = [];
+      game.mice = [];
+      game.obstacleSpawn = 0;
+      game.mouseSpawn = 0;
       setScore(0);
       setDistance(0);
-      scoreRef.current = 0;
-      distanceRef.current = 0;
-      setRunMessage("");
+      setGameOver(false);
+      setStarted(true);
+      setRunning(true);
+      setStatusText("Partida reiniciada. ¡Vamos!");
     };
 
-    const resize = () => {
-      const ratio = window.devicePixelRatio || 1;
-      const width = 960;
-      const height = 300;
-
-      canvas.width = Math.floor(width * ratio);
-      canvas.height = Math.floor(height * ratio);
-
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      context.imageSmoothingEnabled = false;
-    };
-
-    const drawBackground = () => {
-      context.fillStyle = "#f7efe2";
-      context.fillRect(0, 0, 960, 300);
-
-      context.fillStyle = "#f2d9a9";
-      context.fillRect(0, game.floorY + 14, 960, 300 - game.floorY - 14);
-
-      context.strokeStyle = "#e7c58c";
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(0, game.floorY + 14);
-      context.lineTo(960, game.floorY + 14);
-      context.stroke();
-
-      context.fillStyle = "rgba(255,255,255,0.65)";
-      for (let i = 0; i < 4; i += 1) {
-        const x = ((i * 260 - game.cloudOffset) % 1180) - 180;
-        context.fillRect(x, 40 + i * 18, 140, 26);
+    const updateAnimation = (name: "run" | "jump" | "fall", now: number) => {
+      const meta = spriteMeta[name];
+      if (game.animation.current !== name) {
+        game.animation.current = name;
+        game.animation.frame = 0;
+        game.animation.lastFrameAt = now;
+        return;
       }
+      if (now - game.animation.lastFrameAt < meta.frameDuration) return;
+      game.animation.lastFrameAt = now;
+      game.animation.frame = meta.loop
+        ? (game.animation.frame + 1) % meta.frames
+        : Math.min(game.animation.frame + 1, meta.frames - 1);
     };
 
-    const drawObstacle = () => {
-      context.fillStyle = "#8f5a2d";
-      context.fillRect(
-        game.obstacle.x,
-        game.obstacle.y,
-        game.obstacle.width,
-        game.obstacle.height,
-      );
+    const drawCat = (name: "run" | "jump" | "fall", now: number) => {
+      const sprite = catSprites[name];
+      const meta = spriteMeta[name];
+      if (!spriteReady[name] || !sprite.width) return false;
+      updateAnimation(name, now);
+      const frameWidth = Math.floor(sprite.width / meta.frames);
+      const sourceX = game.animation.frame * frameWidth;
+      ctx.drawImage(sprite, sourceX, 0, frameWidth, sprite.height, game.cat.x - 10, game.cat.y - 20, 60, 60);
+      return true;
     };
 
-    const updatePhysics = () => {
-      if (game.isGameOver) return;
+    const update = () => {
+      if (!game.started || !game.running) return;
+      game.speed += 0.0012;
+      game.distance += game.speed * 0.12;
+      game.cat.vy += game.gravity;
+      game.cat.y += game.cat.vy;
 
-      const horizontalInput =
-        Number(movementRef.current.right) - Number(movementRef.current.left);
-      game.cat.velocityX = horizontalInput * HORIZONTAL_SPEED;
-
-      if (jumpRequestedRef.current && game.cat.onGround) {
-        game.cat.velocityY = game.jumpStrength;
-        game.cat.onGround = false;
-      }
-      jumpRequestedRef.current = false;
-
-      game.cat.x += game.cat.velocityX;
-      game.cat.velocityY += game.gravity;
-      game.cat.y += game.cat.velocityY;
-
-      const minX = 50;
-      const maxX = 910;
-      game.cat.x = Math.max(minX, Math.min(maxX, game.cat.x));
-
-      if (game.cat.y >= game.floorY) {
-        game.cat.y = game.floorY;
-        game.cat.velocityY = 0;
+      if (game.cat.y >= game.groundY) {
+        game.cat.y = game.groundY;
+        game.cat.vy = 0;
         game.cat.onGround = true;
       }
 
-      game.cloudOffset += 1.2;
-      game.obstacle.x -= game.speed;
+      game.obstacleSpawn -= 1;
+      game.mouseSpawn -= 1;
 
-      if (game.obstacle.x + game.obstacle.width < 0) {
-        game.obstacle.x = 960 + Math.random() * 240;
+      if (game.obstacleSpawn <= 0) {
+        const isYarn = Math.random() < 0.7;
+        const h = isYarn ? 30 : 22;
+        const w = isYarn ? 30 : 26;
+        game.obstacles.push({ x: game.width, y: game.groundY + game.cat.h - h, w, h, type: isYarn ? "yarn" : "mouseObstacle" });
+        game.obstacleSpawn = 80 + Math.random() * 65;
       }
 
-      const catWidth = 68;
-      const catHeight = 62;
-      const catLeft = game.cat.x - catWidth / 2;
-      const catTop = game.cat.y - catHeight;
-
-      const isColliding =
-        catLeft < game.obstacle.x + game.obstacle.width &&
-        catLeft + catWidth > game.obstacle.x &&
-        catTop < game.obstacle.y + game.obstacle.height &&
-        catTop + catHeight > game.obstacle.y;
-
-      if (isColliding) {
-        onGameOver();
-        return;
+      if (game.mouseSpawn <= 0) {
+        const miceMinY = Math.max(96, game.groundY - 85);
+        const miceMaxY = Math.max(miceMinY + 10, game.groundY - 28);
+        game.mice.push({ x: game.width, y: miceMinY + Math.random() * (miceMaxY - miceMinY), w: 18, h: 14, caught: false });
+        game.mouseSpawn = 100 + Math.random() * 95;
       }
 
-      game.scoreTimer += 1;
-      if (game.scoreTimer % 8 === 0) {
-        game.score += 1;
-        setScore(game.score);
-        scoreRef.current = game.score;
+      game.obstacles.forEach((item) => {
+        item.x -= game.speed;
+      });
+      game.mice.forEach((item) => {
+        item.x -= game.speed + 1.2;
+      });
+
+      game.obstacles = game.obstacles.filter((item) => item.x + item.w > -20);
+      game.mice = game.mice.filter((item) => item.x + item.w > -20 && !item.caught);
+
+      const catBox = { x: game.cat.x, y: game.cat.y, w: game.cat.w, h: game.cat.h };
+      for (const obstacle of game.obstacles) {
+        if (overlap(catBox, obstacle)) {
+          doGameOver();
+          break;
+        }
       }
 
-      game.distance += game.speed * 0.12;
-      const roundedDistance = Math.floor(game.distance);
-      setDistance(roundedDistance);
-      distanceRef.current = roundedDistance;
+      for (const mouse of game.mice) {
+        if (!mouse.caught && overlap(catBox, mouse)) {
+          mouse.caught = true;
+          game.score += 10;
+          setScore(game.score);
+          setStatusText(`¡Ratón atrapado! +10 | Distancia: ${Math.floor(game.distance)} m`);
+        }
+      }
+
+      setDistance(Math.floor(game.distance));
     };
 
-    const updateAnimationFrame = (time: number) => {
-      if (game.isGameOver) return;
+    const draw = (now: number) => {
+      ctx.clearRect(0, 0, game.width, game.height);
 
-      if (game.animation.lastFrameAt === 0) {
-        game.animation.lastFrameAt = time;
+      const bg = ctx.createLinearGradient(0, 0, 0, game.height);
+      bg.addColorStop(0, "#f0f9ff");
+      bg.addColorStop(1, "#dbeffd");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, game.width, game.height);
+
+      ctx.strokeStyle = "#7cb4d5";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, game.groundY + game.cat.h + 1);
+      ctx.lineTo(game.width, game.groundY + game.cat.h + 1);
+      ctx.stroke();
+
+      const catSpriteName = !game.running ? "fall" : game.cat.onGround ? "run" : "jump";
+      const catDrawn = drawCat(catSpriteName, now);
+      if (!catDrawn) {
+        ctx.fillStyle = "#22303c";
+        ctx.font = "700 13px Segoe UI";
+        ctx.fillText("🐾", game.cat.x + 2, game.cat.y + 20);
       }
 
-      if (time - game.animation.lastFrameAt >= ANIMATION_SPEED_MS) {
-        game.animation.frame = (game.animation.frame + 1) % TOTAL_RUN_FRAMES;
-        game.animation.lastFrameAt = time;
+      game.obstacles.forEach((item) => {
+        if (item.type === "yarn") {
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.arc(item.x + item.w / 2, item.y + item.h / 2, Math.max(item.w, item.h) / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#b91c1c";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "#64748b";
+          ctx.fillRect(item.x, item.y, item.w, item.h);
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(item.x + 4, item.y + 4, item.w - 8, 4);
+        }
+      });
+
+      game.mice.forEach((item) => {
+        ctx.font = "16px Segoe UI";
+        ctx.fillText("🐭", item.x, item.y + 12);
+      });
+
+      if (!game.started) {
+        ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+        ctx.fillRect(0, 0, game.width, game.height);
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "700 20px Segoe UI";
+        ctx.fillText("Pulsa Iniciar para comenzar", game.width / 2, game.height / 2 - 8);
+        ctx.font = "500 14px Segoe UI";
+        ctx.fillText("También puedes tocar el canvas o usar Espacio", game.width / 2, game.height / 2 + 20);
+        ctx.textAlign = "start";
       }
     };
 
-    const drawCat = () => {
-      if (!spriteMetrics.frameWidth || !spriteMetrics.frameHeight) return;
-
-      const sourceX = game.animation.frame * spriteMetrics.frameWidth;
-      const sourceY = 0;
-
-      const renderScale = 2.9;
-      const drawWidth = spriteMetrics.frameWidth * renderScale;
-      const drawHeight = spriteMetrics.frameHeight * renderScale;
-
-      const drawX = game.cat.x - drawWidth / 2;
-      const drawY = game.cat.y - drawHeight;
-
-      context.drawImage(
-        sprite,
-        sourceX,
-        sourceY,
-        spriteMetrics.frameWidth,
-        spriteMetrics.frameHeight,
-        drawX,
-        drawY,
-        drawWidth,
-        drawHeight,
-      );
-    };
-
-    const drawHud = () => {
-      context.fillStyle = "#583210";
-      context.font = "700 18px Arial";
-      context.fillText(`Puntos: ${scoreRef.current}`, 16, 30);
-      context.fillText(`Distancia: ${distanceRef.current} m`, 16, 54);
-
-      if (game.isGameOver) {
-        context.fillStyle = "rgba(0, 0, 0, 0.45)";
-        context.fillRect(0, 0, 960, 300);
-        context.fillStyle = "#fff";
-        context.font = "700 34px Arial";
-        context.fillText("GAME OVER", 365, 130);
-        context.font = "600 18px Arial";
-        context.fillText("Pulsa R para reiniciar", 372, 165);
-      }
-    };
-
-    const render = (time: number) => {
-      if (isDisposed) return;
-
-      updatePhysics();
-      updateAnimationFrame(time);
-
-      context.clearRect(0, 0, 960, 300);
-      drawBackground();
-      drawObstacle();
-      drawCat();
-      drawHud();
-
-      rafId = window.requestAnimationFrame(render);
+    const tick = (now: number) => {
+      update();
+      draw(now || performance.now());
+      rafRef.current = window.requestAnimationFrame(tick);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "KeyR" && game.isGameOver) {
-        resetGame();
-        return;
-      }
-
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
-        requestJump();
-        return;
-      }
-
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        movementRef.current.left = true;
-      }
-
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        movementRef.current.right = true;
-      }
-    };
-
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code === "ArrowLeft" || event.code === "KeyA") {
-        movementRef.current.left = false;
-      }
-
-      if (event.code === "ArrowRight" || event.code === "KeyD") {
-        movementRef.current.right = false;
+        jump();
       }
     };
 
     const onPointerDown = () => {
-      if (game.isGameOver) {
-        resetGame();
+      if (!game.started) {
+        game.started = true;
+        game.running = true;
+        setStarted(true);
+        setRunning(true);
+        setStatusText("¡Vamos!");
         return;
       }
-
-      requestJump();
+      jump();
     };
 
-    sprite.onload = () => {
-      spriteMetrics.frameWidth = sprite.width / TOTAL_RUN_FRAMES;
-      spriteMetrics.frameHeight = sprite.height;
-
-      resize();
-      setIsReady(true);
-
-      window.addEventListener("resize", resize);
-      window.addEventListener("keydown", onKeyDown);
-      window.addEventListener("keyup", onKeyUp);
-      canvas.addEventListener("pointerdown", onPointerDown);
-
-      rafId = window.requestAnimationFrame(render);
+    const onStart = () => {
+      if (game.started && game.running) return;
+      game.started = true;
+      game.running = true;
+      setStarted(true);
+      setRunning(true);
+      setGameOver(false);
+      setStatusText("¡Vamos!");
     };
 
-    sprite.onerror = () => {
-      setIsReady(false);
-    };
+    const onJump = () => jump();
+    const onRestart = () => resetGame();
+
+    resizeGameCanvas();
+    window.addEventListener("resize", resizeGameCanvas);
+    window.addEventListener("keydown", onKeyDown);
+    canvas.addEventListener("pointerdown", onPointerDown);
+
+    const startButton = document.getElementById("start-btn");
+    const jumpButton = document.getElementById("jump-btn");
+    const restartButton = document.getElementById("restart-btn");
+    const retryOverlayButton = document.getElementById("retry-overlay-btn");
+
+    startButton?.addEventListener("click", onStart);
+    jumpButton?.addEventListener("click", onJump);
+    restartButton?.addEventListener("click", onRestart);
+    retryOverlayButton?.addEventListener("click", onRestart);
+
+    rafRef.current = window.requestAnimationFrame(tick);
 
     return () => {
-      isDisposed = true;
-      window.cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", resize);
+      if (rafRef.current) window.cancelAnimationFrame(rafRef.current);
+      window.removeEventListener("resize", resizeGameCanvas);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
       canvas.removeEventListener("pointerdown", onPointerDown);
+      startButton?.removeEventListener("click", onStart);
+      jumpButton?.removeEventListener("click", onJump);
+      restartButton?.removeEventListener("click", onRestart);
+      retryOverlayButton?.removeEventListener("click", onRestart);
     };
-  }, [bestDistanceKey, bestScoreKey, playerEmail, requestJump, status]);
+  }, []);
 
   return (
-    <section
-      style={{
-        display: "grid",
-        gap: 12,
-        width: "100%",
-        justifyItems: "center",
-      }}
-    >
-      {!embedded && <h1 style={{ margin: 0 }}>Gato Runner</h1>}
-      <p style={{ margin: 0, textAlign: "center" }}>
-        Muévete con <strong>← →</strong> / <strong>A D</strong> y salta con <strong>Espacio</strong> o <strong>↑</strong>.
-      </p>
-      <p style={{ margin: 0 }}>
-        Puntos: <strong>{score}</strong> · Distancia: <strong>{distance} m</strong>
-      </p>
-      <p style={{ margin: 0, fontSize: "0.95rem", textAlign: "center" }}>
-        Récord {playerEmail ? `de ${playerEmail}` : "local"}: <strong>{bestScore}</strong> puntos · <strong>{Math.floor(bestDistance)} m</strong>
-      </p>
-      {gameOver && (
-        <p style={{ margin: 0, color: "#7a2e00", fontWeight: 700, textAlign: "center" }}>
-          {runMessage || "Has perdido. Se guarda récord si superas tu mejor marca."}
-        </p>
-      )}
+    <div style={{ display: "grid", gap: "1rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: embedded ? "1fr" : "1.5fr 1fr", gap: "1rem", alignItems: "start" }}>
+        <div style={{ position: "relative" }}>
+          <canvas
+            id="cat-runner"
+            ref={canvasRef}
+            width={860}
+            height={260}
+            role="img"
+            aria-label="Juego de gatito que salta"
+            style={{ width: "100%", height: "clamp(240px, 36vh, 320px)", display: "block", border: "1px solid #d3e1e8", borderRadius: 10, background: "#fff" }}
+          />
+          {gameOver && (
+            <div
+              id="game-over-overlay"
+              style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", justifyItems: "center", gap: "0.55rem", background: "rgba(10, 17, 23, 0.68)", borderRadius: 10, textAlign: "center", padding: "1.25rem" }}
+            >
+              <p style={{ margin: 0, color: "#fff", fontSize: "1.45rem", fontWeight: 800 }}>💥 Game Over</p>
+              <p style={{ margin: 0, color: "#f4f9fc", fontWeight: 600 }}>Te chocaste. ¿Reintentar?</p>
+              <button id="retry-overlay-btn" type="button" style={{ minWidth: 52, minHeight: 52, borderRadius: "50%", fontSize: "1.35rem", fontWeight: 900, lineHeight: 1, padding: "0.2rem" }}>↻</button>
+            </div>
+          )}
+        </div>
 
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 600,
-          aspectRatio: "16 / 9",
-          borderRadius: 12,
-          overflow: "hidden",
-          border: "3px solid #8f5a2d",
-          background: "#f7efe2",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-        }}
-      >
-        <canvas
-          ref={canvasRef}
-          width={960}
-          height={300}
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "block",
-            touchAction: "manipulation",
-          }}
-          aria-label="Juego Gato Runner"
-          role="img"
-        />
+        <div style={{ display: "grid", gap: "0.55rem", alignContent: "start" }}>
+          <button id="start-btn" type="button" hidden={started && running}>Iniciar</button>
+          <button id="jump-btn" type="button">Saltar</button>
+          <button id="restart-btn" type="button" hidden={!gameOver}>↻ Reintentar</button>
+          <p style={{ margin: 0, fontWeight: 700 }}>Puntos: <span>{score}</span></p>
+          <p style={{ margin: 0, fontWeight: 700 }}>Metros recorridos: <span>{distance}</span> m</p>
+          <p style={{ margin: 0, fontWeight: 700 }}>Récord local (puntos): <span>{bestScore}</span></p>
+          <p style={{ margin: 0, fontWeight: 700 }}>Récord local (más metros): <span>{Math.floor(bestDistance)}</span> m</p>
+          <p style={{ margin: 0 }}>{statusText}</p>
+        </div>
       </div>
 
-      {!isReady && (
-        <p style={{ margin: 0, color: "#7a2e00", fontWeight: 700 }}>
-          Cargando sprite del Gatito Runner...
-        </p>
-      )}
-
-      {embedded && (
-        <Link href="/gato-runner" style={{ fontSize: "0.9rem" }}>
-          Jugar a pantalla completa
-        </Link>
-      )}
-
-      {showLeaderboard && <Leaderboard refreshKey={leaderboardRefreshKey} />}
-    </section>
+      {!embedded && showLeaderboard && <p style={{ margin: 0, fontSize: "0.9rem" }}>Modo local-first activo para evitar bloqueos de red.</p>}
+    </div>
   );
 }
