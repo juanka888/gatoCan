@@ -33,11 +33,15 @@ const providers = [
   }),
 ];
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+if (googleClientId && googleClientSecret) {
   providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
+      checks: ["state"],
       authorization: {
         params: {
           scope: "openid email profile",
@@ -45,6 +49,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         },
       },
     }),
+  );
+} else {
+  console.warn(
+    "[auth] GOOGLE_CLIENT_ID o GOOGLE_CLIENT_SECRET no están configuradas. Google OAuth deshabilitado.",
   );
 }
 
@@ -71,6 +79,14 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    async signIn() {
+      try {
+        return true;
+      } catch (error) {
+        console.error("Error en OAuth:", error);
+        return false;
+      }
+    },
     async jwt({ token, user, account, profile }) {
       if (user?.email) {
         const email = user.email.toLowerCase();
