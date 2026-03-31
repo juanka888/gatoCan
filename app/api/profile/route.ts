@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -29,6 +30,18 @@ function normalizeOptionalField(value: unknown): string | null {
 }
 
 function getErrorMessage(error: unknown): string {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return `Prisma error ${error.code}: ${error.message}`;
+  }
+
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    return `Prisma initialization error: ${error.message}`;
+  }
+
+  if (error instanceof Prisma.PrismaClientValidationError) {
+    return `Prisma validation error: ${error.message}`;
+  }
+
   if (error instanceof Error) {
     return error.message;
   }
@@ -39,11 +52,12 @@ function getErrorMessage(error: unknown): string {
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const sessionEmail = session?.user?.email?.trim().toLowerCase();
+    if (!sessionEmail) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
-    const email = session.user.email.toLowerCase();
+    const email = sessionEmail;
 
     const user = await prisma.user.upsert({
       where: { email },
@@ -72,7 +86,16 @@ export async function GET() {
 
     return NextResponse.json({ user, profile });
   } catch (error) {
-    console.error("Error en base de datos:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error("Prisma known request error en profile GET:", {
+        code: error.code,
+        message: error.message,
+        meta: error.meta,
+      });
+    } else {
+      console.error("Error en base de datos (profile GET):", error);
+    }
+
     const message = getErrorMessage(error);
     return NextResponse.json({ error: message, message }, { status: 500 });
   }
@@ -81,12 +104,13 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const sessionEmail = session?.user?.email?.trim().toLowerCase();
+    if (!sessionEmail) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
     const body = await req.json();
-    const email = session.user.email.toLowerCase();
+    const email = sessionEmail;
     const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
     const telefono = normalizeOptionalField(body?.telefono);
     const direccion = normalizeOptionalField(body?.direccion);
@@ -146,7 +170,16 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ profile });
   } catch (error) {
-    console.error("Error en base de datos:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error("Prisma known request error en profile PUT:", {
+        code: error.code,
+        message: error.message,
+        meta: error.meta,
+      });
+    } else {
+      console.error("Error en base de datos (profile PUT):", error);
+    }
+
     const message = getErrorMessage(error);
     return NextResponse.json({ error: message, message }, { status: 500 });
   }
