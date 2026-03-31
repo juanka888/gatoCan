@@ -35,7 +35,7 @@ export default function SessionHeader() {
       }}
     >
       {status !== "authenticated" ? (
-        <button type="button" onClick={() => signIn("google", { callbackUrl: "https://gato-can.vercel.app" })}>
+        <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>
           Acceder
         </button>
       ) : (
