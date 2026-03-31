@@ -50,9 +50,24 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 export const authOptions: NextAuthOptions = {
   providers,
+  trustHost: true,
+  debug: process.env.AUTH_DEBUG === "true",
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET,
+  logger: {
+    error(code, metadata) {
+      console.error("[next-auth][error]", code, metadata);
+    },
+    warn(code) {
+      console.warn("[next-auth][warn]", code);
+    },
+    debug(code, metadata) {
+      if (process.env.AUTH_DEBUG === "true") {
+        console.info("[next-auth][debug]", code, metadata);
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user, account, profile }) {
       if (user?.email) {
