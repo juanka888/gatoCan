@@ -3,6 +3,22 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+function normalizeDni(value: string): string {
+  return value.replace(/\s|-/g, "").toUpperCase();
+}
+
+function isValidDni(value: string): boolean {
+  if (!/^\d{8}[A-Z]$/.test(value)) {
+    return false;
+  }
+
+  const dniNumber = Number(value.slice(0, 8));
+  const expectedLetter = dniLetters[dniNumber % 23];
+  return value[8] === expectedLetter;
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
@@ -47,6 +63,11 @@ export async function PUT(req: Request) {
 
   const body = await req.json();
   const email = session.user.email.toLowerCase();
+  const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
+
+  if (normalizedDni && !isValidDni(normalizedDni)) {
+    return NextResponse.json({ error: "El DNI no es válido" }, { status: 400 });
+  }
 
   const user = await prisma.user.upsert({
     where: { email },
@@ -71,7 +92,7 @@ export async function PUT(req: Request) {
       email,
       nombreCompleto: body.nombreCompleto ?? null,
       telefono: body.telefono ?? null,
-      dniNie: body.dniNie ?? null,
+      dniNie: normalizedDni || null,
       direccion: body.direccion ?? null,
       codigoPostal: body.codigoPostal ?? null,
       poblacion: body.poblacion ?? null,
@@ -84,7 +105,7 @@ export async function PUT(req: Request) {
       email,
       nombreCompleto: body.nombreCompleto ?? session.user.name ?? null,
       telefono: body.telefono ?? null,
-      dniNie: body.dniNie ?? null,
+      dniNie: normalizedDni || null,
       direccion: body.direccion ?? null,
       codigoPostal: body.codigoPostal ?? null,
       poblacion: body.poblacion ?? null,
