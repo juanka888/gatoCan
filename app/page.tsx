@@ -244,7 +244,9 @@ export default function HomePage() {
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
-        <GatitoRunner embedded showLeaderboard={false} />
+        <div style={{ margin: "0 auto", maxWidth: 920 }}>
+          <GatitoRunner embedded showLeaderboard={false} />
+        </div>
       </section>
       <section id="campana" style={{ ...card, borderColor: "#0f766e" }}>
         <h3>Campaña de firmas (Change.org)</h3>
