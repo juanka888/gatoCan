@@ -1,4 +1,4 @@
-import type { NextAuthOptions } from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
@@ -48,13 +48,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   );
 }
 
+const appBaseUrl = "https://gato-can.vercel.app";
+
 export const authOptions: NextAuthOptions = {
   providers,
   trustHost: true,
   debug: process.env.AUTH_DEBUG === "true",
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   logger: {
     error(code, metadata) {
       console.error("[next-auth][error]", code, metadata);
@@ -139,10 +141,10 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (url.startsWith(baseUrl)) return url;
-      return `${baseUrl}/perfil`;
+    async redirect() {
+      return appBaseUrl;
     },
   },
 };
+
+export const { GET, POST } = NextAuth(authOptions);
