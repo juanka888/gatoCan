@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { signIn, useSession } from "next-auth/react";
 import EuropaPressNews from "./components/EuropaPressNews";
+import GatitoRunner from "./components/GatitoRunner";
 
 type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones";
 
@@ -60,15 +60,11 @@ const galleryImages: GalleryImage[] = [
   },
 ];
 
-const bestScoreKey = "gatocanBestScore";
-const bestDistanceKey = "gatocanBestDistance";
 
 export default function HomePage() {
   const [filter, setFilter] = useState<GalleryCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [bestScore, setBestScore] = useState(0);
-  const [bestDistance, setBestDistance] = useState(0);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const { status } = useSession();
 
@@ -80,13 +76,6 @@ export default function HomePage() {
   useEffect(() => {
     setCurrentIndex(0);
   }, [filter]);
-
-  useEffect(() => {
-    const score = Number(localStorage.getItem(bestScoreKey) || 0);
-    const distance = Number(localStorage.getItem(bestDistanceKey) || 0);
-    setBestScore(score);
-    setBestDistance(distance);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -255,10 +244,7 @@ export default function HomePage() {
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
-        <p style={{ margin: ".5rem 0" }}>
-          Récord local restaurado: <strong>{bestScore}</strong> puntos · <strong>{Math.floor(bestDistance)}</strong> m
-        </p>
-        <Link href="/gato-runner">Ir al minijuego</Link>
+        <GatitoRunner embedded showLeaderboard={false} />
       </section>
       <section id="campana" style={{ ...card, borderColor: "#0f766e" }}>
         <h3>Campaña de firmas (Change.org)</h3>
