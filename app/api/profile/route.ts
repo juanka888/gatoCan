@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@lib/prisma";
 
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
 
