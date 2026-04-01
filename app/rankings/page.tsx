@@ -53,7 +53,7 @@ export default function RankingsPage() {
         Rankings solidarios
       </h1>
 
-      <section className="bg-black/80 backdrop-blur-lg border border-white/20 rounded-xl p-6 !text-white">
+      <section className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white">
         <h2 className="!text-white border-b border-white/20 pb-2 mb-4 font-semibold">
           Top donaciones (Zarpa Karma)
         </h2>
@@ -73,7 +73,7 @@ export default function RankingsPage() {
         )}
       </section>
 
-      <section className="bg-black/80 backdrop-blur-lg border border-white/20 rounded-xl p-6 !text-white">
+      <section className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white">
         <h2 className="!text-white border-b border-white/20 pb-2 mb-4 font-semibold">Top Gatito Runner</h2>
         {runnerLoading && <p className="!text-white">Cargando ranking de runner...</p>}
         {runnerError && <p className="!text-white">No se pudo cargar el ranking de runner.</p>}
