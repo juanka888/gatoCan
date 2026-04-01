@@ -177,6 +177,58 @@ h1 {
     backdrop-filter: blur(8px);
 }
 
+.main-nav ul:not(.is-open) {
+    display: none;
+}
+
+.menu-toggle {
+    margin-top: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.45rem 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+}
+
+.session-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem 0;
+}
+
+.session-btn,
+.home-link {
+    text-decoration: none;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.38rem 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.session-btn:hover,
+.home-link:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.home-link {
+    margin-right: auto;
+}
+
 
 .main-nav ul li {
     flex: 0 0 auto;
@@ -264,6 +316,35 @@ h1 {
 
 .profile-page .btn-primary {
     color: #1f1f1f;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+button {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 0.45rem 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #edf2f7;
+}
+
+input,
+textarea {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    background: #fff;
+    color: #111827;
 }
 
 main {
@@ -1005,6 +1086,16 @@ footer {
     color: #fff;
     padding: 1rem;
     background: rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 701px) {
+    .menu-toggle {
+        display: none;
+    }
+
+    .main-nav ul {
+        display: flex !important;
+    }
 }
 
 @media (max-width: 700px) {
