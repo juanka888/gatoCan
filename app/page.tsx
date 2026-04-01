@@ -60,6 +60,45 @@ const galleryImages: GalleryImage[] = [
   },
 ];
 
+type DonationOption = {
+  id: string;
+  label: string;
+  price: number;
+  karma: number;
+  icon: string;
+  iconClassName: string;
+};
+
+const donationOptions: DonationOption[] = [
+  { id: "male", label: "Esterilización macho — 60 €", price: 60, karma: 30, icon: "✚", iconClassName: "icon-med" },
+  { id: "female", label: "Esterilización femenina — 100 €", price: 100, karma: 50, icon: "♀", iconClassName: "icon-female" },
+  { id: "food", label: "Comida mensual — 10 €", price: 10, karma: 10, icon: "🍴", iconClassName: "icon-food" },
+  { id: "pipette", label: "Pipeta antiparasitaria — 12 €", price: 12, karma: 8, icon: "PP", iconClassName: "icon-pipette" },
+  { id: "sponsor", label: "Apadrina este gato — 15 €/mes", price: 15, karma: 18, icon: "♥", iconClassName: "icon-love" },
+];
+
+const donationCats = [
+  {
+    id: "luna",
+    image: "https://images.pexels.com/photos/320014/pexels-photo-320014.jpeg",
+    alt: "Foto del gatete Luna",
+    name: "Gatete Luna (pincha para ver opciones)",
+  },
+  {
+    id: "misu",
+    image: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg",
+    alt: "Foto del gatete Misu",
+    name: "Gatete Misu (pincha para ver opciones)",
+  },
+  {
+    id: "bigotes",
+    image: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg",
+    alt: "Foto del gatete Bigotes",
+    name: "Gatete Bigotes (pincha para ver opciones)",
+  },
+];
+
+
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,6 +106,7 @@ export default function HomePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
+  const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const { status } = useSession();
 
   const visibleImages = useMemo(
@@ -119,6 +159,18 @@ export default function HomePage() {
     setColabClicks(next);
     localStorage.setItem("gatocanColaboradoresClicks", JSON.stringify(next));
   };
+
+  const donationTotal = donationCats.reduce((total, cat) => {
+    return total + donationOptions.reduce((subtotal, option) => {
+      return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.price : subtotal;
+    }, 0);
+  }, 0);
+
+  const karmaTotal = donationCats.reduce((total, cat) => {
+    return total + donationOptions.reduce((subtotal, option) => {
+      return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.karma : subtotal;
+    }, 0);
+  }, 0);
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
@@ -361,36 +413,52 @@ export default function HomePage() {
         )}
       </section>
       <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/register">Ir a registro</a></section>
-      <section id="donar" style={card}>
+      <section id="donar" style={card} className="donation-card">
         <h3>Apoya nuestro trabajo con una donación</h3>
         <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
-        <div style={{ marginTop: ".6rem" }}>
-          <iframe
-            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
-            title="Widget Teaming GatoCan"
-            style={{ width: "100%", minHeight: 180, border: "1px solid #cbd5e1", borderRadius: 10 }}
-          />
+        <a href="#contacto" className="btn btn-primary">Quiero donar</a>
+        <h3>Haz tu aporte gatuno 🐾</h3>
+        <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
+
+        {donationCats.map((cat) => (
+          <details key={cat.id} className="donation-panel" open>
+            <summary>
+              <span className="cat-summary">
+                <img src={cat.image} alt={cat.alt} />
+                <span>{cat.name}</span>
+              </span>
+            </summary>
+            <div className="cat-options">
+              {donationOptions.map((option) => {
+                const key = `${cat.id}-${option.id}`;
+                return (
+                  <label key={key}>
+                    <input
+                      type="checkbox"
+                      className="donation-item"
+                      checked={Boolean(donationSelections[key])}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setDonationSelections((prev) => ({ ...prev, [key]: checked }));
+                      }}
+                    />{" "}
+                    <span className={`option-icon ${option.iconClassName}`}>{option.icon}</span> {option.label}
+                  </label>
+                );
+              })}
+            </div>
+          </details>
+        ))}
+
+        <div className="donation-summary" aria-live="polite">
+          <p><strong>Total estimado:</strong> <span id="donation-total">{donationTotal} €</span></p>
+          <p><strong>Puntos Karma:</strong> <span id="karma-total">{karmaTotal}</span></p>
+          <p id="karma-message" className="karma-message">Cada punto ayuda a cambiar vidas felinas 💛</p>
+          <button id="saveDonationScoreBtn" type="button" className="btn btn-secondary">Guardar puntos en mi perfil</button>
+          <p id="saveDonationScoreMsg" className="auth-message" aria-live="polite"></p>
         </div>
-        <div style={{ marginTop: 12 }}>
-          <h4>Contador de colaboradores (rescatado del legacy)</h4>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {[
-              { id: "zooplus", nombre: "Zooplus", url: "https://www.zooplus.es" },
-              { id: "kiwoko", nombre: "Kiwoko", url: "https://www.kiwoko.com" },
-              { id: "tiendanimal", nombre: "Tiendanimal", url: "https://www.tiendanimal.es" },
-            ].map((colab) => (
-              <a
-                key={colab.id}
-                href={colab.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => registerColabClick(colab.id)}
-              >
-                {colab.nombre} ({Number(colabClicks[colab.id] || 0)} clics)
-              </a>
-            ))}
-          </div>
-        </div>
+
+        <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
       <section id="contacto" style={card}><h3>Contacta con Gatocan Natura Rural</h3><p>Para voluntariado, avisos o colaboración, usa los formularios de la web.</p></section>
 
