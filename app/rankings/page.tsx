@@ -53,15 +53,15 @@ export default function RankingsPage() {
 
       <section className="rounded-xl border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
         <h2 className="text-white">Top donaciones (Zarpa Karma)</h2>
-        {donationsLoading && <p className="text-slate-100">Cargando ranking de donaciones...</p>}
-        {donationsError && <p className="text-red-200">No se pudo cargar el ranking de donaciones.</p>}
+        {donationsLoading && <p className="text-white">Cargando ranking de donaciones...</p>}
+        {donationsError && <p className="text-white">No se pudo cargar el ranking de donaciones.</p>}
         {!donationsLoading && !donationsError && (
           <ol className="grid gap-2">
             {donations.map((row) => (
-              <li key={row.userId} className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-white">
+              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white">
                 <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
                 <span className="text-white">{Number(row.karmaPoints || 0)} puntos</span> ·{" "}
-                <span className="text-slate-100">{Number(row.totalDonaciones || 0)} €</span>
+                <span className="text-white">{Number(row.totalDonaciones || 0)} €</span>
               </li>
             ))}
           </ol>
@@ -70,12 +70,12 @@ export default function RankingsPage() {
 
       <section className="rounded-xl border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
         <h2 className="text-white">Top Gatito Runner</h2>
-        {runnerLoading && <p className="text-slate-100">Cargando ranking de runner...</p>}
-        {runnerError && <p className="text-red-200">No se pudo cargar el ranking de runner.</p>}
+        {runnerLoading && <p className="text-white">Cargando ranking de runner...</p>}
+        {runnerError && <p className="text-white">No se pudo cargar el ranking de runner.</p>}
         {!runnerLoading && !runnerError && (
           <ol className="grid gap-2">
             {runner.map((row) => (
-              <li key={row.userId} className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-white">
+              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white">
                 <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
                 <span className="text-white">{Number(row.runnerBestScore || 0)} puntos</span>
               </li>
