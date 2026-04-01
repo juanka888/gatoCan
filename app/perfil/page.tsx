@@ -177,7 +177,7 @@ export default function PerfilPage() {
 
   return (
     <main className="mx-auto grid max-w-[900px] gap-4 p-6 !text-white">
-      <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex flex-wrap items-center justify-between gap-3">
         <h1 className="!text-white text-3xl font-bold">Mi perfil</h1>
         <Link
           href="/"
@@ -187,7 +187,7 @@ export default function PerfilPage() {
         </Link>
       </div>
 
-      <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white flex items-center gap-3">
+      <div className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex items-center gap-3">
         <img src={avatar} alt="Avatar" className="h-[70px] w-[70px] rounded-full border-2 border-slate-300" />
         <div>
           <strong className="!text-white">{session.user?.name || "Usuario"}</strong>
@@ -195,7 +195,7 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <section className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white">
+      <section className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white">
         <h3 className="!text-white mt-0 text-xl font-semibold">Actividad solidaria</h3>
         <p className="!text-white">Total donaciones: <strong className="!text-white">{profile.totalDonaciones} €</strong></p>
         <p className="!text-white">Zarpa Karma: <strong className="!text-white">{profile.karmaPoints}</strong></p>
@@ -203,19 +203,16 @@ export default function PerfilPage() {
         <p className="!text-white">Mejor distancia Gatito Runner: <strong className="!text-white">{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 !text-white flex flex-col gap-4">
+      <section className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex flex-col gap-4">
         <h3 className="!text-white mt-0 text-xl font-semibold">Datos personales</h3>
 
-        <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="w-full bg-black/40 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
-        </div>
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
 
         <label className="!text-white flex items-center gap-2">
           <input
