@@ -48,33 +48,36 @@ export default function RankingsPage() {
   const runner = runnerData?.rows || [];
 
   return (
-    <main style={{ maxWidth: 880, margin: "0 auto", padding: "1rem", display: "grid", gap: 14 }}>
-      <h1>Rankings solidarios</h1>
+    <main className="grid gap-3.5 text-white" style={{ maxWidth: 880, margin: "0 auto", padding: "1rem" }}>
+      <h1 className="text-white">Rankings solidarios</h1>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-        <h2>Top donaciones (Zarpa Karma)</h2>
-        {donationsLoading && <p>Cargando ranking de donaciones...</p>}
-        {donationsError && <p style={{ color: "#dc2626" }}>No se pudo cargar el ranking de donaciones.</p>}
+      <section className="rounded-xl border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
+        <h2 className="text-white">Top donaciones (Zarpa Karma)</h2>
+        {donationsLoading && <p className="text-slate-100">Cargando ranking de donaciones...</p>}
+        {donationsError && <p className="text-red-200">No se pudo cargar el ranking de donaciones.</p>}
         {!donationsLoading && !donationsError && (
-          <ol>
+          <ol className="grid gap-2">
             {donations.map((row) => (
-              <li key={row.userId}>
-                {(row.nombreCompleto || row.email || "Usuario")} — {Number(row.karmaPoints || 0)} puntos · {Number(row.totalDonaciones || 0)} €
+              <li key={row.userId} className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-white">
+                <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
+                <span className="text-white">{Number(row.karmaPoints || 0)} puntos</span> ·{" "}
+                <span className="text-slate-100">{Number(row.totalDonaciones || 0)} €</span>
               </li>
             ))}
           </ol>
         )}
       </section>
 
-      <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-        <h2>Top Gatito Runner</h2>
-        {runnerLoading && <p>Cargando ranking de runner...</p>}
-        {runnerError && <p style={{ color: "#dc2626" }}>No se pudo cargar el ranking de runner.</p>}
+      <section className="rounded-xl border border-white/20 bg-white/10 p-3 text-white backdrop-blur-md">
+        <h2 className="text-white">Top Gatito Runner</h2>
+        {runnerLoading && <p className="text-slate-100">Cargando ranking de runner...</p>}
+        {runnerError && <p className="text-red-200">No se pudo cargar el ranking de runner.</p>}
         {!runnerLoading && !runnerError && (
-          <ol>
+          <ol className="grid gap-2">
             {runner.map((row) => (
-              <li key={row.userId}>
-                {(row.nombreCompleto || row.email || "Usuario")} — {Number(row.runnerBestScore || 0)} puntos
+              <li key={row.userId} className="rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-white">
+                <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
+                <span className="text-white">{Number(row.runnerBestScore || 0)} puntos</span>
               </li>
             ))}
           </ol>
