@@ -17,8 +17,9 @@ const BEST_DISTANCE_KEY = "gatocanBestDistance";
 export default function GatitoRunner({ embedded = false, showLeaderboard = true }: GatitoRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
-  const controlsRef = useRef<{ start: () => void; restart: () => void }>({
+  const controlsRef = useRef<{ start: () => void; jump: () => void; restart: () => void }>({
     start: () => {},
+    jump: () => {},
     restart: () => {},
   });
   const [score, setScore] = useState(0);
@@ -30,6 +31,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
   const [gameOver, setGameOver] = useState(false);
   const [statusText, setStatusText] = useState("Juego en espera. Pulsa Iniciar para empezar.");
   const { data: session } = useSession();
+  const gameStatus: "idle" | "playing" | "gameOver" = gameOver ? "gameOver" : running ? "playing" : "idle";
 
   useEffect(() => {
     const localBest = Number(localStorage.getItem(BEST_SCORE_KEY) || 0);
@@ -52,7 +54,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       const response = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score: runScore, distance: runDistance }),
+        body: JSON.stringify({ runnerBestScore: runScore, runnerBestDistanceM: runDistance }),
       });
 
       if (!response.ok) {
@@ -347,8 +349,12 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
-        if (game.started && !game.running) {
-          resetGame();
+        if (!game.started || !game.running) {
+          if (game.started && !game.running) {
+            resetGame();
+            return;
+          }
+          onStart();
           return;
         }
         jump();
@@ -377,7 +383,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       setStatusText("¡Vamos!");
     };
     const onRestart = () => resetGame();
-    controlsRef.current = { start: onStart, restart: onRestart };
+    controlsRef.current = { start: onStart, jump, restart: onRestart };
 
     resizeGameCanvas();
     window.addEventListener("resize", resizeGameCanvas);
@@ -414,13 +420,37 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
             >
               <p style={{ margin: 0, color: "#fff", fontSize: "1.45rem", fontWeight: 800 }}>💥 Game Over</p>
               <p style={{ margin: 0, color: "#f4f9fc", fontWeight: 600 }}>Te chocaste. ¿Reintentar?</p>
-              <button id="retry-overlay-btn" type="button" onClick={() => controlsRef.current.restart()} style={{ minWidth: 52, minHeight: 52, borderRadius: "50%", fontSize: "1.35rem", fontWeight: 900, lineHeight: 1, padding: "0.2rem", position: "relative", zIndex: 40 }}>↻</button>
+              <button id="retry-overlay-btn" type="button" onClick={() => controlsRef.current.restart()} style={{ minWidth: 52, minHeight: 52, borderRadius: "50%", fontSize: "1.45rem", fontWeight: 900, lineHeight: 1, padding: "0.2rem", position: "relative", zIndex: 60 }}>↑</button>
             </div>
           )}
         </div>
 
         <div style={{ display: "grid", gap: "0.55rem", alignContent: "start" }}>
-          {!started && !running && !gameOver && <button id="start-btn" type="button" onClick={() => controlsRef.current.start()}>Iniciar Juego</button>}
+          <button
+            id="dynamic-action-btn"
+            type="button"
+            onClick={() => {
+              if (gameStatus === "idle") {
+                controlsRef.current.start();
+                return;
+              }
+              if (gameStatus === "playing") {
+                controlsRef.current.jump();
+                return;
+              }
+              controlsRef.current.restart();
+            }}
+            style={{
+              minHeight: gameStatus === "playing" ? 84 : 48,
+              fontSize: gameStatus === "playing" ? "1.25rem" : "1rem",
+              fontWeight: 800,
+              opacity: gameStatus === "playing" ? 0.7 : 1,
+            }}
+          >
+            {gameStatus === "idle" && "INICIAR JUEGO"}
+            {gameStatus === "playing" && "↑ SALTAR"}
+            {gameStatus === "gameOver" && "REINTENTAR"}
+          </button>
           <p style={{ margin: 0, fontWeight: 700 }}>Puntos: <span>{score}</span></p>
           <p style={{ margin: 0, fontWeight: 700 }}>Metros recorridos: <span>{distance}</span> m</p>
           <p style={{ margin: 0, fontWeight: 700 }}>Récord local (puntos): <span>{bestScore}</span></p>

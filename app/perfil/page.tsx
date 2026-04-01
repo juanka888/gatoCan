@@ -219,15 +219,15 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+      <section className="bg-black/60 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
-        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
-        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
-        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
-        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
+        <p className="text-slate-100">Total donaciones: <strong className="text-white">{profile.totalDonaciones} €</strong></p>
+        <p className="text-slate-100">Zarpa Karma: <strong className="text-white">{profile.karmaPoints}</strong></p>
+        <p className="text-slate-100">Mejor puntuación Gatito Runner: <strong className="text-white">{profile.runnerBestScore}</strong></p>
+        <p className="text-slate-100">Mejor distancia Gatito Runner: <strong className="text-white">{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+      <section className="bg-black/60 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
         <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
@@ -264,8 +264,8 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
-      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
+      {errorMessage && <p className="text-white" style={{ color: "#fca5a5", fontWeight: 700 }}>{errorMessage}</p>}
+      {message && <p className="text-white" style={{ color: "#86efac", fontWeight: 700 }}>{message}</p>}
     </main>
   );
 }
