@@ -17,6 +17,10 @@ const BEST_DISTANCE_KEY = "gatocanBestDistance";
 export default function GatitoRunner({ embedded = false, showLeaderboard = true }: GatitoRunnerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const controlsRef = useRef<{ start: () => void; restart: () => void }>({
+    start: () => {},
+    restart: () => {},
+  });
   const [score, setScore] = useState(0);
   const [distance, setDistance] = useState(0);
   const [bestScore, setBestScore] = useState(0);
@@ -343,6 +347,10 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
+        if (game.started && !game.running) {
+          resetGame();
+          return;
+        }
         jump();
       }
     };
@@ -368,24 +376,13 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       setGameOver(false);
       setStatusText("¡Vamos!");
     };
-
-    const onJump = () => jump();
     const onRestart = () => resetGame();
+    controlsRef.current = { start: onStart, restart: onRestart };
 
     resizeGameCanvas();
     window.addEventListener("resize", resizeGameCanvas);
     window.addEventListener("keydown", onKeyDown);
     canvas.addEventListener("pointerdown", onPointerDown);
-
-    const startButton = document.getElementById("start-btn");
-    const jumpButton = document.getElementById("jump-btn");
-    const restartButton = document.getElementById("restart-btn");
-    const retryOverlayButton = document.getElementById("retry-overlay-btn");
-
-    startButton?.addEventListener("click", onStart);
-    jumpButton?.addEventListener("click", onJump);
-    restartButton?.addEventListener("click", onRestart);
-    retryOverlayButton?.addEventListener("click", onRestart);
 
     rafRef.current = window.requestAnimationFrame(tick);
 
@@ -394,10 +391,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       window.removeEventListener("resize", resizeGameCanvas);
       window.removeEventListener("keydown", onKeyDown);
       canvas.removeEventListener("pointerdown", onPointerDown);
-      startButton?.removeEventListener("click", onStart);
-      jumpButton?.removeEventListener("click", onJump);
-      restartButton?.removeEventListener("click", onRestart);
-      retryOverlayButton?.removeEventListener("click", onRestart);
     };
   }, []);
 
@@ -417,19 +410,17 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
           {gameOver && (
             <div
               id="game-over-overlay"
-              style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", justifyItems: "center", gap: "0.55rem", background: "rgba(10, 17, 23, 0.68)", borderRadius: 10, textAlign: "center", padding: "1.25rem" }}
+              style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", justifyItems: "center", gap: "0.55rem", background: "rgba(10, 17, 23, 0.68)", borderRadius: 10, textAlign: "center", padding: "1.25rem", zIndex: 30 }}
             >
               <p style={{ margin: 0, color: "#fff", fontSize: "1.45rem", fontWeight: 800 }}>💥 Game Over</p>
               <p style={{ margin: 0, color: "#f4f9fc", fontWeight: 600 }}>Te chocaste. ¿Reintentar?</p>
-              <button id="retry-overlay-btn" type="button" style={{ minWidth: 52, minHeight: 52, borderRadius: "50%", fontSize: "1.35rem", fontWeight: 900, lineHeight: 1, padding: "0.2rem" }}>↻</button>
+              <button id="retry-overlay-btn" type="button" onClick={() => controlsRef.current.restart()} style={{ minWidth: 52, minHeight: 52, borderRadius: "50%", fontSize: "1.35rem", fontWeight: 900, lineHeight: 1, padding: "0.2rem", position: "relative", zIndex: 40 }}>↻</button>
             </div>
           )}
         </div>
 
         <div style={{ display: "grid", gap: "0.55rem", alignContent: "start" }}>
-          <button id="start-btn" type="button" hidden={started && running}>Iniciar</button>
-          <button id="jump-btn" type="button">Saltar</button>
-          <button id="restart-btn" type="button" hidden={!gameOver}>↻ Reintentar</button>
+          {!started && !running && !gameOver && <button id="start-btn" type="button" onClick={() => controlsRef.current.start()}>Iniciar Juego</button>}
           <p style={{ margin: 0, fontWeight: 700 }}>Puntos: <span>{score}</span></p>
           <p style={{ margin: 0, fontWeight: 700 }}>Metros recorridos: <span>{distance}</span> m</p>
           <p style={{ margin: 0, fontWeight: 700 }}>Récord local (puntos): <span>{bestScore}</span></p>

@@ -50,11 +50,11 @@ function isValidDni(value: string): boolean {
 }
 
 const inputStyle: CSSProperties = {
-  border: "1px solid #cbd5e1",
+  border: "1px solid rgba(148, 163, 184, 0.45)",
   borderRadius: 8,
   padding: "0.65rem 0.8rem",
-  backgroundColor: "#ffffff",
-  color: "#0f172a",
+  backgroundColor: "rgba(15, 23, 42, 0.55)",
+  color: "#f8fafc",
   fontSize: "0.95rem",
   outline: "none",
 };
@@ -164,13 +164,13 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", color: "#0f172a" }}>Cargando perfil...</main>;
+    return <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12, color: "#0f172a" }}>
-        <h1 style={{ color: "#0f172a" }}>Mi perfil</h1>
+      <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+        <h1 className="text-white">Mi perfil</h1>
         <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
@@ -193,9 +193,9 @@ export default function PerfilPage() {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14, color: "#0f172a" }}>
+    <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <h1 style={{ margin: 0, color: "#0f172a" }}>Mi perfil</h1>
+        <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
           href="/"
           style={{
@@ -219,19 +219,19 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <section style={{ border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 14 }}>
-        <h3 style={{ marginTop: 0 }}>Actividad solidaria</h3>
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
         <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
         <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
         <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
         <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section style={{ border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
-        <h3 style={{ marginTop: 0 }}>Datos personales</h3>
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
         <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input style={{ ...inputStyle, backgroundColor: "#eef2ff", color: "#334155" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
         <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
         <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
         <input style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
@@ -241,7 +241,7 @@ export default function PerfilPage() {
           <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
-        <label style={{ display: "flex", gap: 8, alignItems: "center", color: "#0f172a" }}>
+        <label className="text-slate-100" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
             checked={profile.aceptaPoliticas}
