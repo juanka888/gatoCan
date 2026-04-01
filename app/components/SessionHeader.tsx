@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 
@@ -8,7 +9,9 @@ const fallbackAvatar = "/img/default-avatar.svg";
 
 export default function SessionHeader() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const showHomeButton = pathname !== "/";
 
   const avatar = useMemo(() => {
     if (session?.user?.image) return session.user.image;
@@ -24,18 +27,18 @@ export default function SessionHeader() {
   }, [session?.user?.image, session?.user?.name]);
 
   return (
-    <div
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        display: "flex",
-        justifyContent: "flex-end",
-        padding: "0.6rem 1rem 0",
-      }}
-    >
+    <div className="session-header">
+      {showHomeButton && (
+        <Link href="/" className="home-link">
+          ⌂ Volver al inicio
+        </Link>
+      )}
       {status !== "authenticated" ? (
-        <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>
+        <button
+          type="button"
+          className="session-btn"
+          onClick={() => signIn("google", { callbackUrl: "/perfil" })}
+        >
           Acceder
         </button>
       ) : (
@@ -43,7 +46,7 @@ export default function SessionHeader() {
           <button
             type="button"
             onClick={() => setOpen((current) => !current)}
-            style={{ border: 0, background: "transparent", cursor: "pointer" }}
+            className="user-menu-toggle"
             aria-label="Abrir menú de usuario"
           >
             <img

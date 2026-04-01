@@ -62,6 +62,7 @@ const galleryImages: GalleryImage[] = [
 
 
 export default function HomePage() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState<GalleryCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -76,6 +77,10 @@ export default function HomePage() {
   useEffect(() => {
     setCurrentIndex(0);
   }, [filter]);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [status]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -117,46 +122,47 @@ export default function HomePage() {
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
-      <header id="inicio" style={card}>
+      <header id="inicio" className="site-header">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <img src="/img/logo1.png" alt="Logo de GatoCan Natura Rural" style={{ width: 72, height: 72, objectFit: "contain" }} />
+            <img src="/img/logo1.png" alt="Logo de GatoCan Natura Rural" className="brand-logo" />
             <div>
-              <p style={{ margin: 0 }}>Asociación de protección animal</p>
-              <h1 style={{ margin: 0 }}>GatoCan Natura Rural</h1>
+              <p className="eyebrow">Asociación de protección animal</p>
+              <h1>GatoCan Natura Rural</h1>
             </div>
           </div>
-          <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <div className="hero-actions">
             {status === "authenticated" ? (
-              <a href="/perfil">Ir a mi perfil</a>
+              <a href="/perfil" className="btn btn-secondary">Ir a mi perfil</a>
             ) : (
               <>
-                <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-                <a href="/register">Crear cuenta</a>
+                <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
+                <a href="/register" className="btn btn-secondary">Crear cuenta</a>
               </>
             )}
             <a
               href="https://www.teaming.net/proyectogatonaturanrural"
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                background: "#0f766e",
-                color: "#fff",
-                borderRadius: 999,
-                padding: "0.4rem 0.85rem",
-                fontWeight: 700,
-                textDecoration: "none",
-              }}
+              className="btn btn-primary"
             >
               Teaming 1€
             </a>
           </div>
         </div>
 
-        <nav aria-label="Principal">
-          <ul style={navList}>
+        <button
+          type="button"
+          className="menu-toggle"
+          onClick={() => setMenuOpen((current) => !current)}
+          aria-expanded={menuOpen}
+          aria-controls="main-menu"
+        >
+          ☰ Menú
+        </button>
+
+        <nav aria-label="Principal" className="main-nav">
+          <ul id="main-menu" className={menuOpen ? "is-open" : ""}>
             <li><a href="#inicio">Inicio</a></li>
             <li><a href="#mision">Misión</a></li>
             <li><a href="#colonias">Colonias</a></li>
@@ -174,22 +180,22 @@ export default function HomePage() {
           </ul>
         </nav>
 
-        <section>
+        <section className="hero">
           <h2>Cuidamos colonias felinas con responsabilidad y compromiso</h2>
           <p>
             Aplicamos el método CER para mejorar la vida de los gatos comunitarios y fomentar una convivencia
             respetuosa en el entorno rural.
           </p>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <div className="hero-actions">
             {status === "authenticated" ? (
-              <a href="/perfil">Mi perfil</a>
+              <a href="/perfil" className="btn btn-secondary">Mi perfil</a>
             ) : (
-              <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
+              <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
             )}
-            <a href="/register">Crear cuenta</a>
-            <a href="#ayuda">Hazte voluntario/a</a>
-            <a href="#donar">Donar ahora</a>
-            <a href="/foro">Entrar al foro</a>
+            <a href="/register" className="btn btn-secondary">Crear cuenta</a>
+            <a href="#ayuda" className="btn btn-secondary">Hazte voluntario/a</a>
+            <a href="#donar" className="btn btn-primary">Donar ahora</a>
+            <a href="/foro" className="btn btn-secondary">Entrar al foro</a>
           </div>
         </section>
       </header>
@@ -351,13 +357,4 @@ const card: CSSProperties = {
   border: "1px solid #e5e7eb",
   borderRadius: 12,
   padding: "1rem",
-};
-
-const navList: CSSProperties = {
-  listStyle: "none",
-  padding: 0,
-  margin: "0.75rem 0",
-  display: "flex",
-  gap: "0.6rem",
-  flexWrap: "wrap",
 };
