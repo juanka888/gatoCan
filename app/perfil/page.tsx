@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -48,6 +48,25 @@ function isValidDni(value: string): boolean {
   const expectedLetter = dniLetters[number % 23];
   return dni[8] === expectedLetter;
 }
+
+const inputStyle: CSSProperties = {
+  border: "1px solid rgba(255, 255, 255, 0.25)",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "rgba(0, 0, 0, 0.4)",
+  color: "#ffffff",
+  fontSize: "0.95rem",
+  outline: "none",
+};
+
+const actionButtonStyle: CSSProperties = {
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  color: "#ffffff",
+  border: "1px solid rgba(255, 255, 255, 0.3)",
+  borderRadius: 8,
+  padding: "0.55rem 0.85rem",
+  fontWeight: 600,
+};
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -154,14 +173,14 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main className="!text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
+    return <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="!text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
-        <h1 className="!text-white">Mi perfil</h1>
-        <p className="!text-white">Necesitas iniciar sesión para ver y editar tu perfil.</p>
+      <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+        <h1 className="text-white">Mi perfil</h1>
+        <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
           <Link
@@ -183,9 +202,9 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="!text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <h1 className="!text-white" style={{ margin: 0 }}>Mi perfil</h1>
+    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+      <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", padding: 14, borderRadius: 10 }}>
+        <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
           href="/"
           style={{
@@ -201,43 +220,39 @@ export default function PerfilPage() {
         </Link>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, borderRadius: 10 }}>
         <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
         <div>
-          <strong className="!text-white">{session.user?.name || "Usuario"}</strong>
-          <div className="!text-white">{session.user?.email}</div>
+          <strong>{session.user?.name || "Usuario"}</strong>
+          <div>{session.user?.email}</div>
         </div>
       </div>
 
-      <section className="bg-black/80 backdrop-blur-md border border-white/20 rounded-xl p-6 !text-white">
-        <h3 className="!text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
-        <p className="!text-white">Total donaciones: <strong className="!text-white">{profile.totalDonaciones} €</strong></p>
-        <p className="!text-white">Zarpa Karma: <strong className="!text-white">{profile.karmaPoints}</strong></p>
-        <p className="!text-white">Mejor puntuación Gatito Runner: <strong className="!text-white">{profile.runnerBestScore}</strong></p>
-        <p className="!text-white">Mejor distancia Gatito Runner: <strong className="!text-white">{profile.runnerBestDistanceM} m</strong></p>
+      <section className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ borderRadius: 10, padding: 14 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
+        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
+        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
+        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-black/80 backdrop-blur-md border border-white/20 rounded-xl p-6 !text-white">
-        <h3 className="!text-white" style={{ marginTop: 0 }}>Datos personales</h3>
+      <section className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <div className="flex flex-col gap-4">
-          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" value={session.user?.email || ""} disabled placeholder="Email" />
-          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
-          <div className="flex flex-col gap-4">
-            <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-            <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
-          </div>
-
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
-        <label className="!text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
-            className="!text-white"
             checked={profile.aceptaPoliticas}
             disabled={!editing}
             onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
@@ -247,19 +262,19 @@ export default function PerfilPage() {
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {!editing ? (
-            <button type="button" onClick={() => setEditing(true)}>Modificar</button>
+            <button type="button" style={actionButtonStyle} onClick={() => setEditing(true)}>Modificar</button>
           ) : (
             <>
-              <button type="button" onClick={saveProfile}>Guardar</button>
-              <button type="button" onClick={() => setEditing(false)}>Cancelar</button>
+              <button type="button" style={actionButtonStyle} onClick={saveProfile}>Guardar</button>
+              <button type="button" style={actionButtonStyle} onClick={() => setEditing(false)}>Cancelar</button>
             </>
           )}
-          <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
+          <button type="button" style={actionButtonStyle} onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
         </div>
       </section>
 
-      {errorMessage && <p className="!text-white" style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
-      {message && <p className="!text-white" style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }

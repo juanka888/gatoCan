@@ -112,7 +112,6 @@ export default function HomePage() {
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const { status } = useSession();
 
   const visibleImages = useMemo(
@@ -127,16 +126,6 @@ export default function HomePage() {
   useEffect(() => {
     setMenuOpen(false);
   }, [status]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -510,29 +499,11 @@ export default function HomePage() {
         <h3>Apóyanos también desde Teaming</h3>
         <p>Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.</p>
         <div className="teaming-widget" aria-label="Widget de Teaming">
-          {isMobile ? (
-            <iframe
-              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true"
-              width="305"
-              height="567"
-              frameBorder="0"
-              scrolling="no"
-              style={{ overflow: "hidden", margin: "0 auto", display: "block" }}
-              loading="lazy"
-              title="Widget Teaming GatoCan vertical"
-            />
-          ) : (
-            <iframe
-              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
-              width="696"
-              height="315"
-              frameBorder="0"
-              scrolling="no"
-              style={{ overflow: "hidden", margin: "0 auto", display: "block" }}
-              loading="lazy"
-              title="Widget Teaming GatoCan horizontal"
-            />
-          )}
+          <iframe
+            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
+            loading="lazy"
+            title="Widget Teaming GatoCan"
+          />
         </div>
       </section>
 
