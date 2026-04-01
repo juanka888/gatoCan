@@ -205,7 +205,7 @@ export default function PerfilPage() {
         <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
         <div className="text-white">
           <strong className="text-white">{session.user?.name || "Usuario"}</strong>
-          <div className="text-slate-100">{session.user?.email}</div>
+          <div className="text-white">{session.user?.email}</div>
         </div>
       </div>
 
@@ -220,18 +220,18 @@ export default function PerfilPage() {
       <section className="grid gap-2.5 rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md">
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="rounded-lg border border-white/20 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
-        <label className="text-slate-100" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
             checked={profile.aceptaPoliticas}
