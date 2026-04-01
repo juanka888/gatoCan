@@ -203,7 +203,7 @@ export default function PerfilPage() {
 
   return (
     <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+      <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", padding: 14, borderRadius: 10 }}>
         <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
           href="/"
@@ -220,7 +220,7 @@ export default function PerfilPage() {
         </Link>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div className="bg-black/70 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ display: "flex", alignItems: "center", gap: 12, padding: 14, borderRadius: 10 }}>
         <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
         <div>
           <strong>{session.user?.name || "Usuario"}</strong>
