@@ -109,6 +109,7 @@ export default function HomePage() {
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [openDonationCatId, setOpenDonationCatId] = useState<string>(donationCats[0]?.id ?? "");
+  const [isMobile, setIsMobile] = useState(false);
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
@@ -126,6 +127,14 @@ export default function HomePage() {
   useEffect(() => {
     setMenuOpen(false);
   }, [status]);
+
+  useEffect(() => {
+    const updateIsMobile = () => setIsMobile(window.innerWidth < 768);
+    updateIsMobile();
+    window.addEventListener("resize", updateIsMobile);
+    return () => window.removeEventListener("resize", updateIsMobile);
+  }, []);
+
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -231,8 +240,7 @@ export default function HomePage() {
             ) : (
               <>
                 <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-                <a href="/register" className="btn btn-secondary">Crear cuenta</a>
-              </>
+                              </>
             )}
             <a
               href="https://www.teaming.net/proyectogatonaturanrural"
@@ -286,8 +294,7 @@ export default function HomePage() {
             ) : (
               <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
             )}
-            <a href="/register" className="btn btn-secondary">Crear cuenta</a>
-            <a href="#ayuda" className="btn btn-secondary">Hazte voluntario/a</a>
+                        <a href="#ayuda" className="btn btn-secondary">Hazte voluntario/a</a>
             <a href="#donar" className="btn btn-primary">Donar ahora</a>
             <a href="/foro" className="btn btn-secondary">Entrar al foro</a>
           </div>
@@ -455,7 +462,7 @@ export default function HomePage() {
             <summary
               onClick={(event) => {
                 event.preventDefault();
-                setOpenDonationCatId(cat.id);
+                setOpenDonationCatId((current) => (current === cat.id ? "" : cat.id));
               }}
             >
               <span className="cat-summary">
@@ -499,11 +506,29 @@ export default function HomePage() {
         <h3>Apóyanos también desde Teaming</h3>
         <p>Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.</p>
         <div className="teaming-widget" aria-label="Widget de Teaming">
-          <iframe
-            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
-            loading="lazy"
-            title="Widget Teaming GatoCan"
-          />
+          {isMobile ? (
+            <iframe
+              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true"
+              width={305}
+              height={567}
+              frameBorder={0}
+              scrolling="no"
+              style={{ overflow: "hidden", margin: "0 auto", display: "block" }}
+              loading="lazy"
+              title="Widget Teaming GatoCan vertical"
+            />
+          ) : (
+            <iframe
+              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
+              width={696}
+              height={315}
+              frameBorder={0}
+              scrolling="no"
+              style={{ overflow: "hidden", margin: "0 auto", display: "block" }}
+              loading="lazy"
+              title="Widget Teaming GatoCan horizontal"
+            />
+          )}
         </div>
       </section>
 
