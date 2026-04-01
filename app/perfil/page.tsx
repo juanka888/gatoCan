@@ -217,18 +217,38 @@ export default function PerfilPage() {
         <p className="text-white">Mejor distancia Gatito Runner: <strong className="text-white">{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="grid gap-2.5 rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md">
+      <section className="grid gap-3 rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md">
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-100 focus:border-blue-400 focus:outline-none disabled:text-slate-100" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">Nombre</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+          </label>
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">Email</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" value={session.user?.email || ""} disabled placeholder="Email" />
+          </label>
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">DNI</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+          </label>
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">Dirección</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+          </label>
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">Teléfono</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+          </label>
+          <label className="grid gap-1 text-white">
+            <span className="text-sm font-medium text-white">Código postal</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          </label>
+          <label className="grid gap-1 text-white md:col-span-2">
+            <span className="text-sm font-medium text-white">Población</span>
+            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          </label>
         </div>
 
         <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
