@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -48,6 +48,16 @@ function isValidDni(value: string): boolean {
   const expectedLetter = dniLetters[number % 23];
   return dni[8] === expectedLetter;
 }
+
+const inputStyle: CSSProperties = {
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "rgba(15, 23, 42, 0.55)",
+  color: "#f8fafc",
+  fontSize: "0.95rem",
+  outline: "none",
+};
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -161,9 +171,9 @@ export default function PerfilPage() {
     return (
       <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
         <h1 className="text-white">Mi perfil</h1>
-        <p className="text-slate-100">Necesitas iniciar sesión para ver y editar tu perfil.</p>
+        <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white backdrop-blur-md" type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
           <Link
             href="/"
             style={{
@@ -183,7 +193,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+    <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
@@ -203,55 +213,35 @@ export default function PerfilPage() {
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
-        <div className="text-white">
-          <strong className="text-white">{session.user?.name || "Usuario"}</strong>
-          <div className="text-white">{session.user?.email}</div>
+        <div>
+          <strong>{session.user?.name || "Usuario"}</strong>
+          <div>{session.user?.email}</div>
         </div>
       </div>
 
-      <section className="rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md">
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
-        <p className="text-white">Total donaciones: <strong className="text-white">{profile.totalDonaciones} €</strong></p>
-        <p className="text-white">Zarpa Karma: <strong className="text-white">{profile.karmaPoints}</strong></p>
-        <p className="text-white">Mejor puntuación Gatito Runner: <strong className="text-white">{profile.runnerBestScore}</strong></p>
-        <p className="text-white">Mejor distancia Gatito Runner: <strong className="text-white">{profile.runnerBestDistanceM} m</strong></p>
+        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
+        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
+        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="grid gap-3 rounded-xl border border-white/20 bg-white/10 p-4 text-white backdrop-blur-md">
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">Nombre</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-          </label>
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">Email</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" value={session.user?.email || ""} disabled placeholder="Email" />
-          </label>
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">DNI</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-          </label>
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">Dirección</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-          </label>
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">Teléfono</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
-          </label>
-          <label className="grid gap-1 text-white">
-            <span className="text-sm font-medium text-white">Código postal</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          </label>
-          <label className="grid gap-1 text-white md:col-span-2">
-            <span className="text-sm font-medium text-white">Población</span>
-            <input className="rounded-lg border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-200 focus:border-blue-400 focus:outline-none disabled:text-slate-200" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
-          </label>
+        <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
-        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label className="text-slate-100" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
             checked={profile.aceptaPoliticas}
@@ -263,19 +253,19 @@ export default function PerfilPage() {
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {!editing ? (
-            <button className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white backdrop-blur-md" type="button" onClick={() => setEditing(true)}>Modificar</button>
+            <button type="button" onClick={() => setEditing(true)}>Modificar</button>
           ) : (
             <>
-              <button className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white backdrop-blur-md" type="button" onClick={saveProfile}>Guardar</button>
-              <button className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white backdrop-blur-md" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+              <button type="button" onClick={saveProfile}>Guardar</button>
+              <button type="button" onClick={() => setEditing(false)}>Cancelar</button>
             </>
           )}
-          <button className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white backdrop-blur-md" type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
+          <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
         </div>
       </section>
 
-      {errorMessage && <p className="font-semibold text-red-200">{errorMessage}</p>}
-      {message && <p className="font-semibold text-emerald-200">{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }
