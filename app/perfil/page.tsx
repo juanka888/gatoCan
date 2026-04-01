@@ -217,18 +217,21 @@ export default function PerfilPage() {
         <p className="!text-white">Mejor distancia Gatito Runner: <strong className="!text-white">{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-black/80 backdrop-blur-md border border-white/20 rounded-xl p-6 !text-white" style={{ display: "grid", gap: 10 }}>
+      <section className="bg-black/80 backdrop-blur-md border border-white/20 rounded-xl p-6 !text-white">
         <h3 className="!text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <div className="flex flex-col gap-4">
+          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" value={session.user?.email || ""} disabled placeholder="Email" />
+          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+          <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="w-full bg-black/50 border border-white/30 rounded-lg p-2 !text-white placeholder:text-white/40" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          <div className="flex flex-col gap-4">
+            <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+            <input className="w-full bg-white/10 border border-white/20 rounded-lg p-2 !text-white" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          </div>
+
         </div>
 
         <label className="!text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
