@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -48,6 +48,16 @@ function isValidDni(value: string): boolean {
   const expectedLetter = dniLetters[number % 23];
   return dni[8] === expectedLetter;
 }
+
+const inputStyle: CSSProperties = {
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "rgba(15, 23, 42, 0.55)",
+  color: "#f8fafc",
+  fontSize: "0.95rem",
+  outline: "none",
+};
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -154,12 +164,12 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main className="bg-black text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
+    return <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="bg-black text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+      <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
         <h1 className="text-white">Mi perfil</h1>
         <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -183,7 +193,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="bg-black text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+    <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
@@ -209,26 +219,26 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <section className="bg-black/60 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
-        <p className="text-slate-100">Total donaciones: <strong className="text-white">{profile.totalDonaciones} €</strong></p>
-        <p className="text-slate-100">Zarpa Karma: <strong className="text-white">{profile.karmaPoints}</strong></p>
-        <p className="text-slate-100">Mejor puntuación Gatito Runner: <strong className="text-white">{profile.runnerBestScore}</strong></p>
-        <p className="text-slate-100">Mejor distancia Gatito Runner: <strong className="text-white">{profile.runnerBestDistanceM} m</strong></p>
+        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
+        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
+        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-zinc-900/70 backdrop-blur-md border border-white/10 rounded-xl text-slate-100" style={{ padding: 14, display: "grid", gap: 10 }}>
+      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="bg-white/5 text-white border border-white/20 focus:ring-2 focus:ring-blue-500 rounded-md px-3 py-2 outline-none" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
         <label className="text-slate-100" style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -254,8 +264,8 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {errorMessage && <p className="text-white" style={{ color: "#fca5a5", fontWeight: 700 }}>{errorMessage}</p>}
-      {message && <p className="text-white" style={{ color: "#86efac", fontWeight: 700 }}>{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }
