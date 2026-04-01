@@ -111,6 +111,10 @@ export async function PUT(req: Request) {
 
     const body = await req.json();
     const email = sessionEmail;
+    const incomingScore = Number(body?.runnerBestScore);
+    const incomingDistance = Number(body?.runnerBestDistanceM);
+    const hasIncomingScore = Number.isFinite(incomingScore);
+    const hasIncomingDistance = Number.isFinite(incomingDistance);
     const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
     const telefono = normalizeOptionalField(body?.telefono);
     const direccion = normalizeOptionalField(body?.direccion);
@@ -127,17 +131,40 @@ export async function PUT(req: Request) {
       update: {
         name: session.user.name ?? undefined,
         image: session.user.image ?? undefined,
-        runnerBestScore: body.runnerBestScore ?? undefined,
-        runnerBestDistance: body.runnerBestDistanceM ?? undefined,
       },
       create: {
         email,
         name: session.user.name,
         image: session.user.image,
-        runnerBestScore: body.runnerBestScore ?? 0,
-        runnerBestDistance: body.runnerBestDistanceM ?? 0,
+        runnerBestScore: hasIncomingScore ? incomingScore : 0,
+        runnerBestDistance: hasIncomingDistance ? incomingDistance : 0,
       },
     });
+
+    const currentProfile = await prisma.profile.findFirst({
+      where: { email },
+      select: {
+        runnerBestScore: true,
+        runnerBestDistanceM: true,
+      },
+    });
+
+    const currentBestScore = currentProfile?.runnerBestScore ?? 0;
+    const currentBestDistance = currentProfile?.runnerBestDistanceM ?? 0;
+    const isNewBestScore = hasIncomingScore && incomingScore > currentBestScore;
+    const isNewBestDistance = hasIncomingDistance && incomingDistance > currentBestDistance;
+    const nextBestScore = isNewBestScore ? incomingScore : currentBestScore;
+    const nextBestDistance = isNewBestDistance ? incomingDistance : currentBestDistance;
+
+    if (isNewBestScore || isNewBestDistance) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          runnerBestScore: isNewBestScore ? incomingScore : undefined,
+          runnerBestDistance: isNewBestDistance ? incomingDistance : undefined,
+        },
+      });
+    }
 
     const profile = await prisma.profile.upsert({
       where: { userId: user.id },
@@ -149,8 +176,8 @@ export async function PUT(req: Request) {
         direccion,
         codigoPostal,
         poblacion,
-        runnerBestScore: body.runnerBestScore ?? undefined,
-        runnerBestDistanceM: body.runnerBestDistanceM ?? undefined,
+        runnerBestScore: isNewBestScore ? nextBestScore : undefined,
+        runnerBestDistanceM: isNewBestDistance ? nextBestDistance : undefined,
         aceptaPoliticas: body.aceptaPoliticas === true,
       },
       create: {
@@ -162,13 +189,22 @@ export async function PUT(req: Request) {
         direccion,
         codigoPostal,
         poblacion,
-        runnerBestScore: body.runnerBestScore ?? 0,
-        runnerBestDistanceM: body.runnerBestDistanceM ?? 0,
+        runnerBestScore: hasIncomingScore ? incomingScore : 0,
+        runnerBestDistanceM: hasIncomingDistance ? incomingDistance : 0,
         aceptaPoliticas: body.aceptaPoliticas === true,
       },
     });
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({
+      profile,
+      records: {
+        isNewBestScore,
+        isNewBestDistance,
+        hasNewRecord: isNewBestScore || isNewBestDistance,
+        bestScore: nextBestScore,
+        bestDistanceM: nextBestDistance,
+      },
+    });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       console.error("Prisma known request error en profile PUT:", {
