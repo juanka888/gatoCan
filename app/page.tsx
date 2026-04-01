@@ -501,9 +501,19 @@ export default function HomePage() {
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
-      <section id="contacto" style={card}><h3>Contacta con Gatocan Natura Rural</h3><p>Para voluntariado, avisos o colaboración, usa los formularios de la web.</p></section>
+      <section style={card}>
+        <h3>Apóyanos también desde Teaming</h3>
+        <p>Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.</p>
+        <div className="teaming-widget" aria-label="Widget de Teaming">
+          <iframe
+            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
+            loading="lazy"
+            title="Widget Teaming GatoCan"
+          />
+        </div>
+      </section>
 
-      <section style={card} className="contact-card">
+      <section id="contacto" style={card} className="contact-card">
         <h3>Contacta con Gatocan Natura Rural</h3>
         <form className="contact-form" onSubmit={submitContactForm}>
           <label htmlFor="nombre">Nombre completo:</label>
