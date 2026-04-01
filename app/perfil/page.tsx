@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -48,6 +48,16 @@ function isValidDni(value: string): boolean {
   const expectedLetter = dniLetters[number % 23];
   return dni[8] === expectedLetter;
 }
+
+const inputStyle: CSSProperties = {
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "rgba(15, 23, 42, 0.55)",
+  color: "#f8fafc",
+  fontSize: "0.95rem",
+  outline: "none",
+};
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -154,19 +164,26 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main className="mx-auto grid max-w-[900px] gap-4 p-6 !text-white"><p className="!text-white">Cargando perfil...</p></main>;
+    return <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto grid max-w-[900px] gap-4 p-6 !text-white">
-        <h1 className="!text-white text-3xl font-bold">Mi perfil</h1>
-        <p className="!text-white">Necesitas iniciar sesión para ver y editar tu perfil.</p>
-        <div className="flex flex-wrap gap-3">
-          <button className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 font-semibold !text-white" type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
+      <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+        <h1 className="text-white">Mi perfil</h1>
+        <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
           <Link
             href="/"
-            className="rounded-lg bg-blue-700 px-4 py-2 font-semibold no-underline !text-white"
+            style={{
+              textDecoration: "none",
+              background: "#1d4ed8",
+              color: "#fff",
+              borderRadius: 8,
+              padding: "0.55rem 0.85rem",
+              fontWeight: 600,
+            }}
           >
             Volver al Inicio
           </Link>
@@ -176,70 +193,79 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="mx-auto grid max-w-[900px] gap-4 p-6 !text-white">
-      <div className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex flex-wrap items-center justify-between gap-3">
-        <h1 className="!text-white text-3xl font-bold">Mi perfil</h1>
+    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
           href="/"
-          className="rounded-lg bg-blue-700 px-4 py-2 font-semibold no-underline !text-white"
+          style={{
+            textDecoration: "none",
+            background: "#1d4ed8",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "0.55rem 0.85rem",
+            fontWeight: 600,
+          }}
         >
           Volver al Inicio
         </Link>
       </div>
 
-      <div className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex items-center gap-3">
-        <img src={avatar} alt="Avatar" className="h-[70px] w-[70px] rounded-full border-2 border-slate-300" />
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
         <div>
-          <strong className="!text-white">{session.user?.name || "Usuario"}</strong>
-          <p className="!text-white">{session.user?.email}</p>
+          <strong>{session.user?.name || "Usuario"}</strong>
+          <div>{session.user?.email}</div>
         </div>
       </div>
 
-      <section className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white">
-        <h3 className="!text-white mt-0 text-xl font-semibold">Actividad solidaria</h3>
-        <p className="!text-white">Total donaciones: <strong className="!text-white">{profile.totalDonaciones} €</strong></p>
-        <p className="!text-white">Zarpa Karma: <strong className="!text-white">{profile.karmaPoints}</strong></p>
-        <p className="!text-white">Mejor puntuación Gatito Runner: <strong className="!text-white">{profile.runnerBestScore}</strong></p>
-        <p className="!text-white">Mejor distancia Gatito Runner: <strong className="!text-white">{profile.runnerBestDistanceM} m</strong></p>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
+        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
+        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
+        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-black/85 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl !text-white flex flex-col gap-4">
-        <h3 className="!text-white mt-0 text-xl font-semibold">Datos personales</h3>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-        <input className="w-full bg-white/10 border border-white/20 rounded-lg p-3 !text-white placeholder:text-white/40 outline-none focus:border-blue-500 disabled:opacity-60" disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
-        <label className="!text-white flex items-center gap-2">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        </div>
+
+        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-white/20 bg-black/40 !text-white"
             checked={profile.aceptaPoliticas}
             disabled={!editing}
             onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
           />
-          <span className="!text-white">Acepto las políticas de seguridad y privacidad.</span>
+          Acepto las políticas de seguridad y privacidad.
         </label>
 
-        <div className="flex flex-wrap gap-2">
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {!editing ? (
-            <button className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 font-semibold !text-white" type="button" onClick={() => setEditing(true)}>Modificar</button>
+            <button type="button" onClick={() => setEditing(true)}>Modificar</button>
           ) : (
             <>
-              <button className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 font-semibold !text-white" type="button" onClick={saveProfile}>Guardar</button>
-              <button className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 font-semibold !text-white" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+              <button type="button" onClick={saveProfile}>Guardar</button>
+              <button type="button" onClick={() => setEditing(false)}>Cancelar</button>
             </>
           )}
-          <button className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 font-semibold !text-white" type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
+          <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
         </div>
       </section>
 
-      {errorMessage && <p className="!text-white font-semibold">{errorMessage}</p>}
-      {message && <p className="!text-white font-semibold">{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }
