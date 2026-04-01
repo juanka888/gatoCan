@@ -113,17 +113,8 @@ export async function PUT(req: Request) {
     console.log("Datos recibidos en API:", body);
 
     const email = sessionEmail;
-    const incomingScore = Number(body?.score ?? body?.runnerBestScore ?? 0);
-    const incomingDistance = Number(body?.distance ?? body?.runnerBestDistanceM ?? 0);
-    const hasIncomingScore = Number.isFinite(incomingScore);
-    const hasIncomingDistance = Number.isFinite(incomingDistance);
-
-    if (body?.score != null && body?.runnerBestScore == null) {
-      console.warn("El frontend envía 'score'. El schema usa runnerBestScore.");
-    }
-    if (body?.distance != null && body?.runnerBestDistanceM == null) {
-      console.warn("El frontend envía 'distance'. El schema usa runnerBestDistanceM.");
-    }
+    const mappedScore = Number(body?.score ?? 0);
+    const mappedDistance = Number(body?.distance ?? 0);
 
     const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
     const telefono = normalizeOptionalField(body?.telefono);
@@ -151,9 +142,19 @@ export async function PUT(req: Request) {
 
     const currentProfile = await prisma.profile.findUnique({ where: { userId: user.id } });
 
+    const finalScore = Math.max(
+      Number.isFinite(mappedScore) ? mappedScore : 0,
+      currentProfile?.runnerBestScore || 0
+    );
+    const finalDistance = Math.max(
+      Number.isFinite(mappedDistance) ? mappedDistance : 0,
+      currentProfile?.runnerBestDistanceM || 0
+    );
+    console.log("Guardando récord: Score " + finalScore + ", Distancia " + finalDistance);
+
     const dataToUpdate = {
-      runnerBestScore: Math.max(hasIncomingScore ? incomingScore : 0, currentProfile?.runnerBestScore || 0),
-      runnerBestDistanceM: Math.max(hasIncomingDistance ? incomingDistance : 0, currentProfile?.runnerBestDistanceM || 0),
+      runnerBestScore: finalScore,
+      runnerBestDistanceM: finalDistance,
       email,
       nombreCompleto,
       telefono,
