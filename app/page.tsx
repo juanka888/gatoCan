@@ -108,6 +108,7 @@ export default function HomePage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
+  const [openDonationCatId, setOpenDonationCatId] = useState<string>(donationCats[0]?.id ?? "");
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
@@ -442,18 +443,6 @@ export default function HomePage() {
         <EuropaPressNews />
       </section>
 
-      <section id="login" style={card}>
-        <h3>Iniciar sesión</h3>
-        <p>Accede para gestionar tus aportaciones y revisar tus puntos Karma.</p>
-        {status === "authenticated" ? (
-          <a href="/perfil">Sesión activa · Ir al perfil</a>
-        ) : (
-          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>
-            Acceder con Google
-          </button>
-        )}
-      </section>
-      <section id="registro" style={card}><h3>Registro</h3><p>Crea una cuenta y participa en campañas, eventos y retos solidarios.</p><a href="/register">Ir a registro</a></section>
       <section id="donar" style={card} className="donation-card">
         <h3>Apoya nuestro trabajo con una donación</h3>
         <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
@@ -462,8 +451,13 @@ export default function HomePage() {
         <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
 
         {donationCats.map((cat) => (
-          <details key={cat.id} className="donation-panel" open>
-            <summary>
+          <details key={cat.id} className="donation-panel" open={openDonationCatId === cat.id}>
+            <summary
+              onClick={(event) => {
+                event.preventDefault();
+                setOpenDonationCatId(cat.id);
+              }}
+            >
               <span className="cat-summary">
                 <img src={cat.image} alt={cat.alt} />
                 <span>{cat.name}</span>
