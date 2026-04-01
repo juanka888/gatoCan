@@ -164,12 +164,12 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
+    return <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+      <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
         <h1 className="text-white">Mi perfil</h1>
         <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -193,7 +193,7 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="text-slate-100" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
@@ -219,7 +219,7 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
         <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
         <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
@@ -227,21 +227,21 @@ export default function PerfilPage() {
         <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-zinc-900/80 backdrop-blur-md text-slate-100" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
         <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
-        <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
         </div>
 
-        <label className="text-slate-100" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input
             type="checkbox"
             checked={profile.aceptaPoliticas}
