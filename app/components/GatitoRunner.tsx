@@ -41,6 +41,25 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
     }
   }, [session?.user?.email]);
 
+
+
+  const persistRemoteRecord = async (runScore: number, runDistance: number) => {
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score: runScore, distance: runDistance }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        console.error("No se pudo guardar récord remoto:", data || response.statusText);
+      }
+    } catch (error) {
+      console.error("Error enviando récord remoto:", error);
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -145,6 +164,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       setGameOver(true);
       setStatusText(`Game over: ${runDistance} m recorridos. Pulsa reintentar para volver a jugar.`);
       persistBest(game.score, runDistance);
+      void persistRemoteRecord(game.score, runDistance);
     };
 
     const resetGame = () => {

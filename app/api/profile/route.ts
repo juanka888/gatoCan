@@ -110,11 +110,21 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
+    console.log("Datos recibidos en API:", body);
+
     const email = sessionEmail;
-    const incomingScore = Number(body?.runnerBestScore);
-    const incomingDistance = Number(body?.runnerBestDistanceM);
+    const incomingScore = Number(body?.score ?? body?.runnerBestScore ?? 0);
+    const incomingDistance = Number(body?.distance ?? body?.runnerBestDistanceM ?? 0);
     const hasIncomingScore = Number.isFinite(incomingScore);
     const hasIncomingDistance = Number.isFinite(incomingDistance);
+
+    if (body?.score != null && body?.runnerBestScore == null) {
+      console.warn("El frontend envía 'score'. El schema usa runnerBestScore.");
+    }
+    if (body?.distance != null && body?.runnerBestDistanceM == null) {
+      console.warn("El frontend envía 'distance'. El schema usa runnerBestDistanceM.");
+    }
+
     const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
     const telefono = normalizeOptionalField(body?.telefono);
     const direccion = normalizeOptionalField(body?.direccion);
@@ -136,73 +146,52 @@ export async function PUT(req: Request) {
         email,
         name: session.user.name,
         image: session.user.image,
-        runnerBestScore: hasIncomingScore ? incomingScore : 0,
-        runnerBestDistance: hasIncomingDistance ? incomingDistance : 0,
       },
     });
 
-    const currentProfile = await prisma.profile.findFirst({
-      where: { email },
-      select: {
-        runnerBestScore: true,
-        runnerBestDistanceM: true,
-      },
-    });
+    const currentProfile = await prisma.profile.findUnique({ where: { userId: user.id } });
 
-    const currentBestScore = currentProfile?.runnerBestScore ?? 0;
-    const currentBestDistance = currentProfile?.runnerBestDistanceM ?? 0;
-    const isNewBestScore = hasIncomingScore && incomingScore > currentBestScore;
-    const isNewBestDistance = hasIncomingDistance && incomingDistance > currentBestDistance;
-    const nextBestScore = isNewBestScore ? incomingScore : currentBestScore;
-    const nextBestDistance = isNewBestDistance ? incomingDistance : currentBestDistance;
+    const dataToUpdate = {
+      runnerBestScore: Math.max(hasIncomingScore ? incomingScore : 0, currentProfile?.runnerBestScore || 0),
+      runnerBestDistanceM: Math.max(hasIncomingDistance ? incomingDistance : 0, currentProfile?.runnerBestDistanceM || 0),
+      email,
+      nombreCompleto,
+      telefono,
+      dniNie: normalizedDni || null,
+      direccion,
+      codigoPostal,
+      poblacion,
+      aceptaPoliticas: body.aceptaPoliticas === true,
+    };
 
-    if (isNewBestScore || isNewBestDistance) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          runnerBestScore: isNewBestScore ? incomingScore : undefined,
-          runnerBestDistance: isNewBestDistance ? incomingDistance : undefined,
+    let profile;
+    try {
+      profile = await prisma.profile.upsert({
+        where: { userId: user.id },
+        update: dataToUpdate,
+        create: {
+          userId: user.id,
+          ...dataToUpdate,
         },
       });
+    } catch (error) {
+      console.error("Error detallado de Prisma:", error);
+      throw error;
     }
 
-    const profile = await prisma.profile.upsert({
-      where: { userId: user.id },
-      update: {
-        email,
-        nombreCompleto,
-        telefono,
-        dniNie: normalizedDni || null,
-        direccion,
-        codigoPostal,
-        poblacion,
-        runnerBestScore: isNewBestScore ? nextBestScore : undefined,
-        runnerBestDistanceM: isNewBestDistance ? nextBestDistance : undefined,
-        aceptaPoliticas: body.aceptaPoliticas === true,
-      },
-      create: {
-        userId: user.id,
-        email,
-        nombreCompleto,
-        telefono,
-        dniNie: normalizedDni || null,
-        direccion,
-        codigoPostal,
-        poblacion,
-        runnerBestScore: hasIncomingScore ? incomingScore : 0,
-        runnerBestDistanceM: hasIncomingDistance ? incomingDistance : 0,
-        aceptaPoliticas: body.aceptaPoliticas === true,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        runnerBestScore: dataToUpdate.runnerBestScore,
+        runnerBestDistance: dataToUpdate.runnerBestDistanceM,
       },
     });
 
     return NextResponse.json({
       profile,
       records: {
-        isNewBestScore,
-        isNewBestDistance,
-        hasNewRecord: isNewBestScore || isNewBestDistance,
-        bestScore: nextBestScore,
-        bestDistanceM: nextBestDistance,
+        bestScore: dataToUpdate.runnerBestScore,
+        bestDistanceM: dataToUpdate.runnerBestDistanceM,
       },
     });
   } catch (error) {
