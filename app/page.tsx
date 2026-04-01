@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { signIn, useSession } from "next-auth/react";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
@@ -107,6 +108,9 @@ export default function HomePage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
+  const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
+  const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const { status } = useSession();
 
   const visibleImages = useMemo(
@@ -171,6 +175,43 @@ export default function HomePage() {
       return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.karma : subtotal;
     }, 0);
   }, 0);
+
+  const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!contactForm.privacidad) {
+      setContactStatus({ type: "error", message: "Debes aceptar las políticas de privacidad para continuar." });
+      return;
+    }
+
+    setIsSubmittingContact(true);
+    setContactStatus(null);
+
+    try {
+      const response = await fetch("/api/contacto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: contactForm.nombre,
+          email: contactForm.email,
+          mensaje: contactForm.mensaje,
+          privacidad: contactForm.privacidad,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo enviar el mensaje");
+      }
+
+      setContactForm({ nombre: "", email: "", mensaje: "", privacidad: false });
+      setContactStatus({ type: "success", message: "¡Mensaje enviado con éxito!" });
+    } catch (error) {
+      console.error(error);
+      setContactStatus({ type: "error", message: "No hemos podido enviar el mensaje. Inténtalo de nuevo en unos minutos." });
+    } finally {
+      setIsSubmittingContact(false);
+    }
+  };
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
@@ -461,6 +502,67 @@ export default function HomePage() {
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
       <section id="contacto" style={card}><h3>Contacta con Gatocan Natura Rural</h3><p>Para voluntariado, avisos o colaboración, usa los formularios de la web.</p></section>
+
+      <section style={card} className="contact-card">
+        <h3>Contacta con Gatocan Natura Rural</h3>
+        <form className="contact-form" onSubmit={submitContactForm}>
+          <label htmlFor="nombre">Nombre completo:</label>
+          <input
+            type="text"
+            id="nombre"
+            name="nombre"
+            required
+            placeholder="Tu nombre..."
+            value={contactForm.nombre}
+            onChange={(event) => setContactForm((prev) => ({ ...prev, nombre: event.target.value }))}
+          />
+
+          <label htmlFor="email">Correo electrónico:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="tu@email.com"
+            value={contactForm.email}
+            onChange={(event) => setContactForm((prev) => ({ ...prev, email: event.target.value }))}
+          />
+
+          <label htmlFor="mensaje">Tu mensaje:</label>
+          <textarea
+            id="mensaje"
+            name="mensaje"
+            rows={5}
+            required
+            placeholder="Cuéntanos..."
+            value={contactForm.mensaje}
+            onChange={(event) => setContactForm((prev) => ({ ...prev, mensaje: event.target.value }))}
+          />
+
+          <div className="legal">
+            <input
+              type="checkbox"
+              id="privacidad"
+              name="privacidad"
+              checked={contactForm.privacidad}
+              onChange={(event) => setContactForm((prev) => ({ ...prev, privacidad: event.target.checked }))}
+              required
+            />
+            <label htmlFor="privacidad">
+              Acepto las condiciones y la <Link href="/politicas">política de privacidad</Link>.
+            </label>
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-enviar" disabled={isSubmittingContact}>
+            {isSubmittingContact ? "Enviando..." : "Enviar mensaje"}
+          </button>
+          {contactStatus && (
+            <p style={{ margin: 0, color: contactStatus.type === "success" ? "#166534" : "#b91c1c", fontWeight: 600 }} role="status">
+              {contactStatus.message}
+            </p>
+          )}
+        </form>
+      </section>
 
       {isLightboxOpen && (
         <div
