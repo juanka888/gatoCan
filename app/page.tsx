@@ -246,7 +246,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="fichas" style={card}><h3>Fichas de gatos de colonia</h3><p>Pincha o toca cada tarjeta para girarla y ver el estado del caso.</p></section>
+      <section id="fichas" style={card} className="flip-card-section">
+        <h3>Fichas de gatos de colonia</h3>
+        <p>Pincha o toca cada tarjeta para girarla y ver el estado del caso.</p>
+
+        <div className="flip-grid">
+          <label className="flip-card">
+            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Nube" />
+            <span className="flip-card-inner">
+              <span className="flip-face flip-front">
+                <img src="https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg" alt="Gato Nube mirando de frente" />
+                <strong>Nube</strong>
+                <small>Colonia Río Norte</small>
+                <em>Pincha para ver ficha</em>
+              </span>
+              <span className="flip-face flip-back">
+                <h4>Estado de Nube</h4>
+                <ul>
+                  <li><strong>Esterilización:</strong> Hecha ✅</li>
+                  <li><strong>Enfermedad:</strong> Gingivitis leve</li>
+                  <li><strong>Tratamiento:</strong> Antiinflamatorio + revisión mensual</li>
+                  <li><strong>Desaparición:</strong> No</li>
+                  <li><strong>Edad aprox.:</strong> 4 años</li>
+                  <li><strong>Carácter:</strong> Sociable y tranquila</li>
+                </ul>
+              </span>
+            </span>
+          </label>
+
+          <label className="flip-card">
+            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Menta" />
+            <span className="flip-card-inner">
+              <span className="flip-face flip-front">
+                <img src="https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg" alt="Gata Menta sobre la hierba" />
+                <strong>Menta</strong>
+                <small>Colonia Mirador</small>
+                <em>Pincha para ver ficha</em>
+              </span>
+              <span className="flip-face flip-back">
+                <h4>Estado de Menta</h4>
+                <ul>
+                  <li><strong>Esterilización:</strong> Pendiente ⏳</li>
+                  <li><strong>Enfermedad:</strong> Sin diagnóstico actual</li>
+                  <li><strong>Tratamiento:</strong> Desparasitación preventiva</li>
+                  <li><strong>Desaparición:</strong> No</li>
+                  <li><strong>Edad aprox.:</strong> 2 años</li>
+                  <li><strong>Carácter:</strong> Curiosa y algo tímida</li>
+                </ul>
+              </span>
+            </span>
+          </label>
+
+          <label className="flip-card">
+            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Rayo" />
+            <span className="flip-card-inner">
+              <span className="flip-face flip-front">
+                <img src="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg" alt="Gato Rayo tumbado" />
+                <strong>Rayo</strong>
+                <small>Colonia Fonteboa</small>
+                <em>Pincha para ver ficha</em>
+              </span>
+              <span className="flip-face flip-back">
+                <h4>Estado de Rayo</h4>
+                <ul>
+                  <li><strong>Esterilización:</strong> Hecha ✅</li>
+                  <li><strong>Enfermedad:</strong> Lesión ocular antigua</li>
+                  <li><strong>Tratamiento:</strong> Colirio en brotes</li>
+                  <li><strong>Desaparición:</strong> Aviso activo desde febrero 2026</li>
+                  <li><strong>Edad aprox.:</strong> 7 años</li>
+                  <li><strong>Carácter:</strong> Independiente, acepta comida a distancia</li>
+                </ul>
+              </span>
+            </span>
+          </label>
+        </div>
+      </section>
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
