@@ -56,9 +56,9 @@ export default function RankingsPage() {
         {donationsLoading && <p className="text-white">Cargando ranking de donaciones...</p>}
         {donationsError && <p className="text-white">No se pudo cargar el ranking de donaciones.</p>}
         {!donationsLoading && !donationsError && (
-          <ol className="grid gap-2">
+          <ol className="grid list-decimal gap-2 pl-5 text-white marker:text-white">
             {donations.map((row) => (
-              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white">
+              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-white">
                 <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
                 <span className="text-white">{Number(row.karmaPoints || 0)} puntos</span> ·{" "}
                 <span className="text-white">{Number(row.totalDonaciones || 0)} €</span>
@@ -73,9 +73,9 @@ export default function RankingsPage() {
         {runnerLoading && <p className="text-white">Cargando ranking de runner...</p>}
         {runnerError && <p className="text-white">No se pudo cargar el ranking de runner.</p>}
         {!runnerLoading && !runnerError && (
-          <ol className="grid gap-2">
+          <ol className="grid list-decimal gap-2 pl-5 text-white marker:text-white">
             {runner.map((row) => (
-              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-white">
+              <li key={row.userId} className="rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-white">
                 <span className="text-white">{row.nombreCompleto || row.email || "Usuario"}</span> —{" "}
                 <span className="text-white">{Number(row.runnerBestScore || 0)} puntos</span>
               </li>
