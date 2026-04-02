@@ -14,59 +14,54 @@ export default function NoticiasGatocan() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchNews() {
+    async function loadNews() {
       setLoading(true);
-      let allNews: any[] = [];
+      const allItems: any[] = [];
 
       for (const feed of FEEDS) {
         try {
-          // Cambiamos AllOrigins por CORSProxy.io que es más ligero
-          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(feed.url)}`;
-          const res = await fetch(proxyUrl);
-          const text = await res.text(); // Leemos como texto primero
+          // Usamos CodeTabs como proxy alternativo
+          const proxy = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feed.url)}`;
+          const response = await fetch(proxy);
+          const xmlText = await response.text();
+          
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlText, "text/xml");
+          const items = Array.from(xml.querySelectorAll("item")).slice(0, 5);
 
-          if (text) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, "text/xml");
-            const items = Array.from(xml.querySelectorAll("item")).slice(0, 5);
-
-            items.forEach(item => {
-              const title = item.querySelector("title")?.textContent || "";
-              const link = item.querySelector("link")?.textContent || "";
-              const desc = item.querySelector("description")?.textContent || "";
-
-              if (title && link) {
-                allNews.push({
-                  title,
-                  link,
-                  source: feed.name,
-                  description: desc.replace(/<[^>]*>?/gm, '').substring(0, 120) + "..."
-                });
-              }
-            });
-          }
-        } catch (err) {
-          console.warn(`Error en ${feed.name}, saltando fuente...`);
+          items.forEach(item => {
+            const title = item.querySelector("title")?.textContent;
+            const link = item.querySelector("link")?.textContent;
+            if (title && link) {
+              allItems.push({
+                title,
+                link,
+                source: feed.name,
+                desc: (item.querySelector("description")?.textContent || "").replace(/<[^>]*>?/gm, '').substring(0, 100) + "..."
+              });
+            }
+          });
+        } catch (e) {
+          console.log("Error en:", feed.name);
         }
       }
 
-      if (allNews.length > 0) {
-        setNews(allNews.sort(() => Math.random() - 0.5));
-      }
+      setNews(allItems.sort(() => Math.random() - 0.5));
       setLoading(false);
     }
-    fetchNews();
+    loadNews();
   }, []);
 
   if (loading) return (
-    <div style={{padding: '30px', textAlign: 'center', background: '#fff', borderRadius: '24px', border: '1px solid #eee', color: '#888'}}>
-      <div className="animate-pulse">Actualizando prensa...</div>
+    <div style={{padding: '40px', textAlign: 'center', background: 'white', borderRadius: '20px', border: '1px solid #eee'}}>
+      <p style={{color: '#666', fontSize: '14px'}}>Buscando noticias frescas...</p>
     </div>
   );
 
   if (news.length === 0) return (
-    <div style={{padding: '30px', textAlign: 'center', background: '#fff', borderRadius: '24px', border: '1px solid #fee2e2', color: '#b91c1c'}}>
-      No se han podido conectar las noticias. Revisa la conexión.
+    <div style={{padding: '40px', textAlign: 'center', background: '#fffafa', borderRadius: '20px', border: '1px solid #ffdada'}}>
+      <p style={{color: '#c00', fontSize: '14px', fontWeight: 'bold'}}>No pudimos conectar con los periódicos.</p>
+      <button onClick={() => window.location.reload()} style={{marginTop: '10px', padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#c00', color: 'white', cursor: 'pointer'}}>Reintentar</button>
     </div>
   );
 
@@ -75,41 +70,28 @@ export default function NoticiasGatocan() {
   return (
     <div style={{
       background: 'white',
-      border: '1px solid #e2e8f0',
+      border: '1px solid #ddd',
       borderRadius: '24px',
       padding: '24px',
-      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)',
-      minHeight: '280px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
       fontFamily: 'sans-serif'
     }}>
-      <div>
-        <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '15px'}}>
-          <span style={{fontSize: '10px', fontWeight: 'bold', color: '#2563eb', background: '#eff6ff', padding: '3px 10px', borderRadius: '10px'}}>{current.source}</span>
-          <span style={{fontSize: '10px', color: '#94a3b8'}}>{currentIndex + 1} / {news.length}</span>
-        </div>
-        <h3 style={{fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: '0 0 10px 0', lineHeight: '1.3'}}>{current.title}</h3>
-        <p style={{fontSize: '14px', color: '#64748b', lineHeight: '1.5'}}>{current.description}</p>
+      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '15px'}}>
+        <span style={{background: '#2563eb', color: 'white', fontSize: '10px', padding: '3px 8px', borderRadius: '5px', fontWeight: 'bold'}}>{current.source}</span>
+        <span style={{color: '#999', fontSize: '11px'}}>{currentIndex + 1} / {news.length}</span>
       </div>
 
-      <div style={{marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #f1f5f9', textAlign: 'center'}}>
-        <a href={current.link} target="_blank" rel="noopener noreferrer" style={{color: '#2563eb', fontWeight: 'bold', fontSize: '13px', textDecoration: 'none', display: 'block', marginBottom: '20px'}}>
-          LEER NOTICIA COMPLETA ↗
-        </a>
+      <h3 style={{fontSize: '18px', color: '#111', margin: '0 0 10px 0', lineHeight: '1.3'}}>{current.title}</h3>
+      <p style={{fontSize: '14px', color: '#555', lineHeight: '1.4', margin: '0 0 20px 0'}}>{current.desc}</p>
 
-        <div style={{display: 'flex', justifyContent: 'center', gap: '15px'}}>
-          <button 
-            onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)}
-            style={{width: '45px', height: '45px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '20px'}}
-          >‹</button>
-          <button 
-            onClick={() => setCurrentIndex(i => (i + 1) % news.length)}
-            style={{width: '45px', height: '45px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '20px'}}
-          >›</button>
+      <div style={{textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '20px'}}>
+        <a href={current.link} target="_blank" rel="noopener noreferrer" style={{color: '#2563eb', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px'}}>LEER COMPLETA ↗</a>
+        
+        <div style={{display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px'}}>
+          <button onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} style={{width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'white', cursor: 'pointer', fontSize: '20px'}}>‹</button>
+          <button onClick={() => setCurrentIndex(i => (i + 1) % news.length)} style={{width: '50px', height: '50px', borderRadius: '50%', border: '1px solid #ccc', background: 'white', cursor: 'pointer', fontSize: '20px'}}>›</button>
         </div>
       </div>
     </div>
   );
-}
+    }
