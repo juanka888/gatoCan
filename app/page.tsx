@@ -78,25 +78,31 @@ const donationOptions: DonationOption[] = [
   { id: "sponsor", label: "Apadrina este gato — 15 €/mes", price: 15, karma: 18, icon: "♥", iconClassName: "icon-love" },
 ];
 
-const donationCats = [
+ const donationCats = [
   {
     id: "luna",
-    image: "https://images.pexels.com/photos/320014/pexels-photo-320014.jpeg",
-    alt: "Foto del gatete Luna",
-    name: "Gatete Luna (pincha para ver opciones)",
+    image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop",
+    alt: "Gato Luna",
+    name: "Luna (Pincha para apadrinar)",
   },
   {
     id: "misu",
-    image: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg",
-    alt: "Foto del gatete Misu",
-    name: "Gatete Misu (pincha para ver opciones)",
+    image: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop",
+    alt: "Gato Misu",
+    name: "Misu (Pincha para apadrinar)",
   },
   {
     id: "bigotes",
-    image: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg",
-    alt: "Foto del gatete Bigotes",
-    name: "Gatete Bigotes (pincha para ver opciones)",
+    image: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop",
+    alt: "Gato Bigotes",
+    name: "Bigotes (Pincha para apadrinar)",
   },
+  {
+    id: "nube",
+    image: "https://images.unsplash.com/photo-1533733358354-6e99c2c6e0a9?q=80&w=500&auto=format&fit=crop",
+    alt: "Gato Nube",
+    name: "Nube (Pincha para apadrinar)",
+  }
 ];
 
 
