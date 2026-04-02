@@ -1,6 +1,7 @@
 "use client";
 
 import { useSWRLite } from "@/lib/useSWRLite";
+import Link from "next/link";
 
 type DonationRow = {
   userId: string;
@@ -48,27 +49,35 @@ export default function RankingsPage() {
   const runner = runnerData?.rows || [];
 
   return (
-    <main className="text-white" style={{ maxWidth: 880, margin: "0 auto", padding: "1rem", display: "grid", gap: 14 }}>
-      <h1 className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-3xl font-bold">
-        Rankings solidarios
-      </h1>
+    <main className="max-w-[880px] mx-auto p-4 flex flex-col gap-6">
+      <div className="flex justify-between items-center">
+        <h1 className="!text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] text-3xl font-bold">
+          Rankings solidarios
+        </h1>
+        <Link href="/" className="bg-white/20 hover:bg-white/30 !text-white px-4 py-2 rounded-lg backdrop-blur-md transition-all">
+          Volver
+        </Link>
+      </div>
 
-      <section
-        className="!bg-black/60 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white shadow-2xl"
-        style={{ borderRadius: 10 }}
-      >
-        <h2 className="text-white border-b border-white/10 pb-2 mb-4 font-semibold">
+      {/* SECCIÓN 1: DONACIONES */}
+      <section className="bg-black/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl">
+        <h2 className="!text-white border-b border-white/10 pb-3 mb-4 text-xl font-semibold">
           Top donaciones (Zarpa Karma)
         </h2>
-        {donationsLoading && <p className="text-slate-300">Cargando ranking de donaciones...</p>}
-        {donationsError && <p className="text-red-400">No se pudo cargar el ranking de donaciones.</p>}
+        
+        {donationsLoading && <p className="!text-white/70 italic">Cargando ranking...</p>}
+        {donationsError && <p className="text-red-400">Error al cargar datos.</p>}
+        
         {!donationsLoading && !donationsError && (
-          <ol className="list-decimal list-inside space-y-2">
-            {donations.map((row) => (
-              <li className="text-white drop-shadow-sm" key={row.userId}>
-                <span className="font-medium">{row.nombreCompleto || row.email || "Usuario"}</span>{" "}
-                <span className="text-slate-300">
-                  — {Number(row.karmaPoints || 0)} puntos · {Number(row.totalDonaciones || 0)} €
+          <ol className="space-y-3">
+            {donations.map((row, index) => (
+              <li key={row.userId} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
+                <span className="!text-white font-medium">
+                  <span className="text-blue-400 mr-2">#{index + 1}</span>
+                  {row.nombreCompleto || row.email || "Usuario"}
+                </span>
+                <span className="!text-white font-bold bg-blue-600/30 px-3 py-1 rounded-full text-sm">
+                  {Number(row.karmaPoints || 0)} pts · {Number(row.totalDonaciones || 0)} €
                 </span>
               </li>
             ))}
@@ -76,19 +85,26 @@ export default function RankingsPage() {
         )}
       </section>
 
-      <section
-        className="bg-white/70 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white shadow-2xl"
-        style={{ borderRadius: 10 }}
-      >
-        <h2 className="¡text-white border-b border-white/10 pb-2 mb-4 font-semibold">Top Gatito Runner</h2>
-        {runnerLoading && <p className="text-slate-300">Cargando ranking de runner...</p>}
-        {runnerError && <p className="text-red-400">No se pudo cargar el ranking de runner.</p>}
+      {/* SECCIÓN 2: RUNNER */}
+      <section className="bg-black/70 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl">
+        <h2 className="!text-white border-b border-white/10 pb-3 mb-4 text-xl font-semibold">
+          Top Gatito Runner
+        </h2>
+        
+        {runnerLoading && <p className="!text-white/70 italic">Cargando ranking...</p>}
+        {runnerError && <p className="text-red-400">Error al cargar datos.</p>}
+        
         {!runnerLoading && !runnerError && (
-          <ol className="list-decimal list-inside space-y-2">
-            {runner.map((row) => (
-              <li className="!text-white drop-shadow-sm" key={row.userId}>
-                <span className="font-medium">{row.nombreCompleto || row.email || "Usuario"}</span>
-                <span className="text-slate-300"> — {Number(row.runnerBestScore || 0)} puntos</span>
+          <ol className="space-y-3">
+            {runner.map((row, index) => (
+              <li key={row.userId} className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
+                <span className="!text-white font-medium">
+                  <span className="text-orange-400 mr-2">#{index + 1}</span>
+                  {row.nombreCompleto || row.email || "Usuario"}
+                </span>
+                <span className="!text-white font-bold bg-orange-600/30 px-3 py-1 rounded-full text-sm">
+                  {Number(row.runnerBestScore || 0)} puntos
+                </span>
               </li>
             ))}
           </ol>
@@ -96,4 +112,4 @@ export default function RankingsPage() {
       </section>
     </main>
   );
-}
+    }
