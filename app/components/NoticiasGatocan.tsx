@@ -16,81 +16,87 @@ export default function NoticiasGatocan() {
     async function fetchNews() {
       setLoading(true);
       let allNews: any[] = [];
-
       for (const feed of FEEDS) {
         try {
-          // Intentamos cargar cada fuente por separado para que una no rompa la otra
           const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`);
           const data = await res.json();
-          
-          if (data && data.contents) {
+          if (data?.contents) {
             const parser = new DOMParser();
             const xml = parser.parseFromString(data.contents, "text/xml");
             const items = Array.from(xml.querySelectorAll("item"));
-
             items.forEach(item => {
               const title = item.querySelector("title")?.textContent || "";
               const link = item.querySelector("link")?.textContent || "";
-              // Algunos RSS usan 'description' y otros 'encoded' o 'summary'
               let desc = item.querySelector("description")?.textContent || "";
-              
               if (title && link) {
                 allNews.push({
                   title,
                   link,
-                  description: desc.replace(/<[^>]*>?/gm, '').substring(0, 150) + "...",
+                  description: desc.replace(/<[^>]*>?/gm, '').substring(0, 160) + "...",
                   source: feed.name
                 });
               }
             });
           }
-        } catch (err) {
-          console.error(`Error cargando fuente ${feed.name}:`, err);
-          // Si falla una, el bucle sigue con la siguiente
-        }
+        } catch (err) { console.error(err); }
       }
-
       setNews(allNews);
       setLoading(false);
     }
-
     fetchNews();
   }, []);
 
   const next = () => setCurrentIndex(i => (i + 1) % news.length);
   const prev = () => setCurrentIndex(i => (i - 1 + news.length) % news.length);
 
-  if (loading) return <div className="text-white text-center p-10 italic">Cargando noticias...</div>;
-  if (news.length === 0) return <div className="text-slate-400 text-center p-10">No se han podido cargar noticias hoy.</div>;
+  if (loading) return <div className="p-10 text-center animate-pulse text-slate-500">Cargando últimas noticias...</div>;
+  if (news.length === 0) return null;
 
   const current = news[currentIndex];
 
   return (
-    <section className="relative my-10 mx-4">
-      <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 relative min-h-[220px] flex flex-col justify-center shadow-2xl">
-        
-        {/* Etiqueta de la fuente para saber de dónde viene */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xs font-bold text-blue-400 uppercase tracking-widest">
-            {current.source}
-          </h2>
-          <span className="text-[10px] text-slate-500 font-mono">
-            {currentIndex + 1} / {news.length}
-          </span>
-        </div>
-        
-        <div key={currentIndex} className="animate-in fade-in duration-500">
-          <h3 className="text-white text-lg md:text-xl font-bold mb-3 pr-10">{current.title}</h3>
-          <p className="text-slate-300 text-sm mb-6">{current.description}</p>
-          <a href={current.link} target="_blank" rel="noopener noreferrer" className="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold py-2 px-5 rounded-full uppercase inline-block transition-colors">
-            Leer noticia completa
-          </a>
-        </div>
-
-        {/* Flechas */}
-        <button onClick={prev} className="absolute left-[-20px] top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full border border-white/10 backdrop-blur-md">❮</button>
-        <button onClick={next} className="absolute right-[-20px] top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full border border-white/10 backdrop-blur-md">❯</button>
+    <div className="relative group bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300">
+      {/* Cabecera con fuente y contador */}
+      <div className="flex justify-between items-center mb-4">
+        <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+          {current.source}
+        </span>
+        <span className="text-[10px] font-mono text-slate-400">
+          {currentIndex + 1} / {news.length}
+        </span>
       </div>
-    </section>
+
+      {/* Contenido de la noticia */}
+      <div key={currentIndex} className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <h3 className="text-slate-900 text-lg md:text-xl font-extrabold mb-3 leading-snug">
+          {current.title}
+        </h3>
+        <p className="text-slate-600 text-sm md:text-base mb-6 leading-relaxed">
+          {current.description}
+        </p>
+        
+        <div className="flex items-center justify-between">
+          <a 
+            href={current.link} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-flex items-center text-blue-600 font-bold text-sm hover:underline"
+          >
+            Leer noticia completa 
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </a>
+
+          {/* Flechas integradas más pequeñas y estéticas */}
+          <div className="flex gap-2">
+            <button onClick={prev} className="p-2 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <button onClick={next} className="p-2 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
