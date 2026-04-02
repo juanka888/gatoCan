@@ -235,7 +235,7 @@ export default function HomePage() {
               </>
             )}
             <a
-              href="https://www.teaming.net/proyectogatonaturanrural"
+              href="https://www.teaming.net/asociaciongatocannaturarural"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"
