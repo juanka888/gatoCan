@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from
 import { signIn, useSession } from "next-auth/react";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
-
+import NoticiasGatocan from "./components/NoticiasGatocan";
 type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones";
 
 type GalleryImage = {
@@ -440,7 +440,7 @@ export default function HomePage() {
       <section id="noticias" style={card}>
         <h3>Noticias y actualizaciones</h3>
         <p>Feed dinámico de Europa Press (sin filtros).</p>
-        <EuropaPressNews />
+        <NoticiasGatocan />
       </section>
 
       <section id="donar" style={card} className="donation-card">
