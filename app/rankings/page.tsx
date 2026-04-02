@@ -6,7 +6,165 @@ import Link from "next/link";
 type DonationRow = {
   userId: string;
   nombreCompleto: string | null;
-  email: string;
+  email: string;"use client";
+
+import { useSWRLite } from "@/lib/useSWRLite";
+import Link from "next/link";
+
+export default function RankingsPage() {
+  const { data: donationsData } = useSWRLite("/api/rankings/donations", async (url) => (await fetch(url)).json());
+  const { data: runnerData } = useSWRLite("/api/rankings/runner", async (url) => (await fetch(url)).json());
+
+  const donations = donationsData?.rows || [];
+  const runner = runnerData?.rows || [];
+
+  // Estilo común para las tarjetas
+  const cardStyle = {
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    borderRadius: "16px",
+    padding: "24px",
+    color: "#FFFFFF",
+    marginBottom: "20px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+  };
+
+  const textWhite = { color: "#FFFFFF" };
+
+  return (
+    <main style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: "2.5rem", fontWeight: "bold", margin: 0, textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}>
+          Rankings Solidarios
+        </h1>
+        <Link href="/" style={{ backgroundColor: "rgba(255,255,255,0.2)", color: "#FFF", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}>
+          Volver
+        </Link>
+      </div>
+
+      {/* BLOQUE DONACIONES */}
+      <section style={cardStyle}>
+        <h2 style={{ color: "#FFFFFF", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px", marginBottom: "20px" }}>
+          Top Donaciones (Zarpa Karma)
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {donations.map((row, i) => (
+            <div key={row.userId} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <span style={textWhite}>
+                <strong style={{ color: "#60a5fa", marginRight: "10px" }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email}
+              </span>
+              <span style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                {row.karmaPoints} pts · {row.totalDonaciones} €
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* BLOQUE RUNNER */}
+      <section style={cardStyle}>
+        <h2 style={{ color: "#FFFFFF", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px", marginBottom: "20px" }}>
+          Top Gatito Runner
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {runner.map((row, i) => (
+            <div key={row.userId} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <span style={textWhite}>
+                <strong style={{ color: "#fb923c", marginRight: "10px" }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email}
+              </span>
+              <span style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                {row.runnerBestScore} puntos
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+"use client";
+
+import { useSWRLite } from "@/lib/useSWRLite";
+import Link from "next/link";
+
+export default function RankingsPage() {
+  const { data: donationsData } = useSWRLite("/api/rankings/donations", async (url) => (await fetch(url)).json());
+  const { data: runnerData } = useSWRLite("/api/rankings/runner", async (url) => (await fetch(url)).json());
+
+  const donations = donationsData?.rows || [];
+  const runner = runnerData?.rows || [];
+
+  // Estilo común para las tarjetas
+  const cardStyle = {
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    borderRadius: "16px",
+    padding: "24px",
+    color: "#FFFFFF",
+    marginBottom: "20px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+  };
+
+  const textWhite = { color: "#FFFFFF" };
+
+  return (
+    <main style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+        <h1 style={{ color: "#FFFFFF", fontSize: "2.5rem", fontWeight: "bold", margin: 0, textShadow: "2px 2px 4px rgba(0,0,0,0.8)" }}>
+          Rankings Solidarios
+        </h1>
+        <Link href="/" style={{ backgroundColor: "rgba(255,255,255,0.2)", color: "#FFF", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}>
+          Volver
+        </Link>
+      </div>
+
+      {/* BLOQUE DONACIONES */}
+      <section style={cardStyle}>
+        <h2 style={{ color: "#FFFFFF", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px", marginBottom: "20px" }}>
+          Top Donaciones (Zarpa Karma)
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {donations.map((row, i) => (
+            <div key={row.userId} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <span style={textWhite}>
+                <strong style={{ color: "#60a5fa", marginRight: "10px" }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email}
+              </span>
+              <span style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                {row.karmaPoints} pts · {row.totalDonaciones} €
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* BLOQUE RUNNER */}
+      <section style={cardStyle}>
+        <h2 style={{ color: "#FFFFFF", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px", marginBottom: "20px" }}>
+          Top Gatito Runner
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {runner.map((row, i) => (
+            <div key={row.userId} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <span style={textWhite}>
+                <strong style={{ color: "#fb923c", marginRight: "10px" }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email}
+              </span>
+              <span style={{ color: "#FFFFFF", fontWeight: "bold" }}>
+                {row.runnerBestScore} puntos
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
   karmaPoints: number;
   totalDonaciones: number;
 };
