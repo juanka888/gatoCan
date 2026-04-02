@@ -27,7 +27,14 @@ export default function RankingsPage() {
         </div>
       </section>
 
-      <section className="bg-black/80 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl">
+      <section style={{ 
+  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+  padding: '2rem', 
+  borderRadius: '15px', 
+  color: '#1a1a1a', 
+  boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+  margin: '1rem 0'
+}}> className="bg-black/80 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl">
         <h2 className="text-xl font-bold mb-4 border-b border-white/10 pb-2 !text-white">Top Runner</h2>
         <div className="space-y-2">
           {runner.map((row, i) => (
