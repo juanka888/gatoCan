@@ -112,7 +112,6 @@ export default function HomePage() {
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const { status } = useSession();
 
   const visibleImages = useMemo(
@@ -127,14 +126,6 @@ export default function HomePage() {
   useEffect(() => {
     setMenuOpen(false);
   }, [status]);
-
-  useEffect(() => {
-    const updateViewport = () => setIsMobile(window.innerWidth < 768);
-
-    updateViewport();
-    window.addEventListener("resize", updateViewport);
-    return () => window.removeEventListener("resize", updateViewport);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -509,16 +500,9 @@ export default function HomePage() {
         <p>Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.</p>
         <div className="teaming-widget" aria-label="Widget de Teaming">
           <iframe
-            src={isMobile
-              ? "https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true"
-              : "https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"}
-            width={isMobile ? 305 : 696}
-            height={isMobile ? 567 : 315}
-            frameBorder={0}
-            scrolling="no"
+            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
             loading="lazy"
             title="Widget Teaming GatoCan"
-            style={{ overflow: "hidden", margin: "0 auto", display: "block" }}
           />
         </div>
       </section>

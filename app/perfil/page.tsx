@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   nombreCompleto: string;
@@ -48,6 +48,16 @@ function isValidDni(value: string): boolean {
   const expectedLetter = dniLetters[number % 23];
   return dni[8] === expectedLetter;
 }
+
+const inputStyle: CSSProperties = {
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  borderRadius: 8,
+  padding: "0.65rem 0.8rem",
+  backgroundColor: "rgba(15, 23, 42, 0.55)",
+  color: "#f8fafc",
+  fontSize: "0.95rem",
+  outline: "none",
+};
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -154,25 +164,26 @@ export default function PerfilPage() {
   };
 
   if (status === "loading" || loading) {
-    return <main className="mx-auto grid max-w-[900px] gap-4 p-6 text-slate-900">Cargando perfil...</main>;
+    return <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto grid max-w-[900px] gap-4 p-6 text-slate-900">
-        <h1 className="text-slate-900 text-3xl font-bold">Mi perfil</h1>
+      <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
+        <h1 className="text-white">Mi perfil</h1>
         <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
-            onClick={() => signIn("google", { callbackUrl: "/perfil" })}
-          >
-            Acceder con Google
-          </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
           <Link
             href="/"
-            className="rounded-xl bg-slate-800 px-4 py-2 font-semibold text-white transition hover:bg-slate-900"
+            style={{
+              textDecoration: "none",
+              background: "#1d4ed8",
+              color: "#fff",
+              borderRadius: 8,
+              padding: "0.55rem 0.85rem",
+              fontWeight: 600,
+            }}
           >
             Volver al Inicio
           </Link>
@@ -182,147 +193,79 @@ export default function PerfilPage() {
   }
 
   return (
-    <main className="mx-auto grid max-w-[900px] gap-4 p-6 text-slate-900">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-slate-900 text-3xl font-bold">Mi perfil</h1>
+    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
         <Link
           href="/"
-          className="rounded-xl bg-slate-800 px-4 py-2 font-semibold text-white transition hover:bg-slate-900"
+          style={{
+            textDecoration: "none",
+            background: "#1d4ed8",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "0.55rem 0.85rem",
+            fontWeight: 600,
+          }}
         >
           Volver al Inicio
         </Link>
       </div>
 
-      <div className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl p-6 shadow-2xl shadow-black/20 flex items-center gap-4">
-        <img src={avatar} alt="Avatar" className="h-[70px] w-[70px] rounded-full border-2 border-slate-300" />
-        <div className="text-slate-900">
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
+        <div>
           <strong>{session.user?.name || "Usuario"}</strong>
           <div>{session.user?.email}</div>
         </div>
       </div>
 
-      <section className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl p-6 shadow-2xl shadow-black/20 text-slate-900">
-        <h3 className="text-slate-900 font-bold mb-3">Actividad solidaria</h3>
-        <p>
-          Total donaciones: <strong>{profile.totalDonaciones} €</strong>
-        </p>
-        <p>
-          Zarpa Karma: <strong>{profile.karmaPoints}</strong>
-        </p>
-        <p>
-          Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong>
-        </p>
-        <p>
-          Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong>
-        </p>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
+        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
+        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
+        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
       </section>
 
-      <section className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl p-6 shadow-2xl shadow-black/20 text-slate-900">
-        <h3 className="text-slate-900 font-bold mb-3">Datos personales</h3>
+      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
+        <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
 
-        <div className="flex flex-col gap-4">
-          <input
-            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            disabled={!editing}
-            value={profile.nombreCompleto}
-            onChange={(e) => updateField("nombreCompleto", e.target.value)}
-            placeholder="Nombre completo"
-          />
-          <input
-            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:text-slate-500"
-            value={session.user?.email || ""}
-            disabled
-            placeholder="Email"
-          />
-          <input
-            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            disabled={!editing}
-            value={profile.dniNie}
-            onChange={(e) => updateField("dniNie", e.target.value)}
-            placeholder="DNI"
-          />
-          <input
-            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            disabled={!editing}
-            value={profile.direccion}
-            onChange={(e) => updateField("direccion", e.target.value)}
-            placeholder="Dirección"
-          />
-          <input
-            className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            disabled={!editing}
-            value={profile.telefono}
-            onChange={(e) => updateField("telefono", e.target.value)}
-            placeholder="Teléfono"
-          />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
+        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <input
-              className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              disabled={!editing}
-              value={profile.codigoPostal}
-              onChange={(e) => updateField("codigoPostal", e.target.value)}
-              placeholder="Código postal"
-            />
-            <input
-              className="w-full bg-gray-50 border border-gray-300 rounded-xl p-3 text-slate-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              disabled={!editing}
-              value={profile.poblacion}
-              onChange={(e) => updateField("poblacion", e.target.value)}
-              placeholder="Población"
-            />
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
+          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+        </div>
 
-          <label className="flex items-center gap-2 text-slate-900">
-            <input
-              type="checkbox"
-              checked={profile.aceptaPoliticas}
-              disabled={!editing}
-              onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
-            />
-            Acepto las políticas de seguridad y privacidad.
-          </label>
+        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="checkbox"
+            checked={profile.aceptaPoliticas}
+            disabled={!editing}
+            onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
+          />
+          Acepto las políticas de seguridad y privacidad.
+        </label>
 
-          <div className="flex flex-wrap gap-2">
-            {!editing ? (
-              <button
-                type="button"
-                className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
-                onClick={() => setEditing(true)}
-              >
-                Modificar
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700"
-                  onClick={saveProfile}
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  className="rounded-xl bg-slate-500 px-4 py-2 font-semibold text-white transition hover:bg-slate-600"
-                  onClick={() => setEditing(false)}
-                >
-                  Cancelar
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              className="rounded-xl bg-rose-600 px-4 py-2 font-semibold text-white transition hover:bg-rose-700"
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              Cerrar sesión
-            </button>
-          </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {!editing ? (
+            <button type="button" onClick={() => setEditing(true)}>Modificar</button>
+          ) : (
+            <>
+              <button type="button" onClick={saveProfile}>Guardar</button>
+              <button type="button" onClick={() => setEditing(false)}>Cancelar</button>
+            </>
+          )}
+          <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
         </div>
       </section>
 
-      {errorMessage && <p className="font-semibold text-red-700">{errorMessage}</p>}
-      {message && <p className="font-semibold text-green-700">{message}</p>}
+      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
+      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
     </main>
   );
 }
