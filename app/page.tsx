@@ -469,7 +469,8 @@ export default function HomePage() {
                     <input
                       type="checkbox"
                       className="donation-item"
-                      checked={Boolean(donationSelections[key])}
+                      checked={Boolean(donat
+                                       ionSelections[key])}
                       onChange={(event) => {
                         const checked = event.target.checked;
                         setDonationSelections((prev) => ({ ...prev, [key]: checked }));
@@ -492,58 +493,56 @@ export default function HomePage() {
         </div>
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
-      </section>
+      
       <section id="teaming" style={{ ...card, borderColor: "#3b82f6", overflow: "hidden" }}>
-  <div style={{ textAlign: "center", marginBottom: "20px" }}>
-    <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", color: "#1e40af" }}>
-      <span>🐾</span> Apóyanos con 1€ al mes en Teaming
-    </h3>
-    <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "600px", margin: "0 auto" }}>
-      Tu euro mensual se destina íntegramente a comida, tratamientos y urgencias veterinarias de nuestras colonias.
-    </p>
+  <div style={{ textAlign: "center", marginBottom: "15px" }}>
+    <h3 style={{ color: "#1e40af", marginBottom: "5px" }}>🐾 Colabora con 1€ al mes</h3>
+    <p style={{ fontSize: "14px", color: "#64748b" }}>Únete a nuestro grupo de Teaming, es seguro y automático.</p>
   </div>
 
-  <div className="teaming-container" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+  <div className="teaming-responsive-container" style={{ width: "100%" }}>
     <style>{`
-      /* Por defecto mostramos el de PC y ocultamos el de móvil */
-      .teaming-pc { display: block; width: 100%; maxWidth: 800px; }
-      .teaming-mobile { display: none; width: 100%; }
+      /* OCULTAR/MOSTRAR SEGÚN PANTALLA */
+      .teaming-desktop { display: block; }
+      .teaming-mobile { display: none; }
 
-      /* Si la pantalla es pequeña (Móvil), invertimos la visibilidad */
       @media (max-width: 768px) {
-        .teaming-pc { display: none; }
+        .teaming-desktop { display: none; }
         .teaming-mobile { display: block; }
+      }
+
+      /* ESTILO PARA QUE LOS IFRAMES NO TENGAN BORDES FEOS */
+      .teaming-iframe {
+        width: 100%;
+        border: none;
+        display: block;
+        margin: 0 auto;
       }
     `}</style>
 
-    {/* WIDGET PARA PC (Apaisado / Medium) */}
-    <div className="teaming-pc">
+    {/* VERSIÓN PC (Horizontal / Apaisado) */}
+    <div className="teaming-desktop">
       <iframe
-        src="https://www.teaming.net/widgets/tfg-asociaciongatocan/medium?lang=es_ES"
-        width="100%"
-        height="450"
-        frameBorder="0"
+        className="teaming-iframe"
+        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
+        height="250"
         scrolling="no"
-        loading="lazy"
-        title="Teaming GatoCan Desktop"
+        title="Teaming Horizontal PC"
       />
     </div>
 
-    {/* WIDGET PARA MÓVIL (Compacto / Small) */}
+    {/* VERSIÓN MÓVIL (Vertical / Estrecho) */}
     <div className="teaming-mobile">
       <iframe
-        src="https://www.teaming.net/widgets/tfg-asociaciongatocan/small?lang=es_ES"
-        width="100%"
-        height="220"
-        frameBorder="0"
+        className="teaming-iframe"
+        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/3?lang=es_ES&TM=true"
+        height="450"
         scrolling="no"
-        loading="lazy"
-        title="Teaming GatoCan Móvil"
+        title="Teaming Vertical Móvil"
       />
     </div>
   </div>
 
-  {/* Botón de apoyo adicional por si el iframe falla o tarda en cargar */}
   <div style={{ textAlign: "center", marginTop: "15px" }}>
     <a 
       href="https://www.teaming.net/tfg-asociaciongatocan" 
@@ -551,20 +550,20 @@ export default function HomePage() {
       rel="noopener noreferrer"
       style={{ 
         display: "inline-block", 
-        padding: "10px 25px", 
+        padding: "10px 20px", 
         background: "#2563eb", 
         color: "#fff", 
-        borderRadius: "12px", 
+        borderRadius: "10px", 
         textDecoration: "none", 
         fontWeight: "bold",
-        fontSize: "14px"
+        fontSize: "13px"
       }}
     >
-      Unirse al grupo directamente ↗
+      Unirse directamente en Teaming.net ↗
     </a>
   </div>
 </section>
-      
+
 
       <section id="contacto" style={card} className="contact-card">
         <h3>Contacta con Gatocan Natura Rural</h3>
