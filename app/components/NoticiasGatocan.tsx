@@ -18,12 +18,7 @@ export default function NoticiasGatocan() {
       setLoading(true);
       const newsPromises = FEEDS.map(async (feed) => {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
-          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`, {
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`);
           const data = await res.json();
           if (data?.contents) {
             const parser = new DOMParser();
@@ -33,13 +28,12 @@ export default function NoticiasGatocan() {
               link: item.querySelector("link")?.textContent || "",
               source: feed.name,
               description: (item.querySelector("description")?.textContent || "")
-                .replace(/<[^>]*>?/gm, '').substring(0, 130) + "..."
+                .replace(/<[^>]*>?/gm, '').substring(0, 120) + "..."
             }));
           }
-        } catch (e) { console.error(`Error en ${feed.name}`); }
+        } catch (e) { console.error(e); }
         return [];
       });
-
       const results = await Promise.all(newsPromises);
       const combined = results.flat().sort(() => Math.random() - 0.5);
       setNews(combined);
@@ -48,72 +42,123 @@ export default function NoticiasGatocan() {
     fetchAllNews();
   }, []);
 
-  if (loading) return (
-    <div className="p-12 text-center bg-white border border-slate-100 rounded-[2.5rem] shadow-xl">
-      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-      <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">Sincronizando...</p>
-    </div>
-  );
-
+  if (loading) return <div style={{padding: '40px', textAlign: 'center', color: '#64748b'}}>Cargando noticias...</div>;
   if (news.length === 0) return null;
+
   const current = news[currentIndex];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-xl flex flex-col justify-between min-h-[340px] relative overflow-hidden">
-      
-      {/* Adorno visual superior */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-blue-600 to-indigo-500" />
+    <div className="noticias-container">
+      <style>{`
+        .noticias-container {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 24px;
+          padding: 24px;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+          min-height: 300px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          font-family: sans-serif;
+          position: relative;
+          overflow: hidden;
+        }
+        .noticias-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+        .source-tag {
+          background: #2563eb;
+          color: white;
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+          padding: 4px 10px;
+          border-radius: 12px;
+        }
+        .counter {
+          font-size: 10px;
+          color: #94a3b8;
+          background: #f1f5f9;
+          padding: 2px 8px;
+          border-radius: 6px;
+        }
+        .noticias-title {
+          color: #0f172a;
+          font-size: 1.25rem;
+          font-weight: 800;
+          line-height: 1.2;
+          margin: 0 0 12px 0;
+        }
+        .noticias-desc {
+          color: #475569;
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+        .noticias-footer {
+          margin-top: 20px;
+          padding-top: 16px;
+          border-top: 1px solid #f1f5f9;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+        .read-more {
+          color: #2563eb;
+          font-weight: 700;
+          text-decoration: none;
+          font-size: 13px;
+        }
+        .nav-buttons {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          background: #f8fafc;
+          padding: 6px;
+          border-radius: 16px;
+        }
+        .btn-nav {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          background: white;
+          color: #334155;
+          font-size: 24px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        .btn-nav:active {
+          transform: scale(0.9);
+          background: #f1f5f9;
+        }
+      `}</style>
 
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <span className="text-[11px] font-black text-white bg-blue-600 px-3 py-1 rounded-full shadow-sm">
-            {current.source}
-          </span>
-          <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
-            {currentIndex + 1} / {news.length}
-          </span>
+      <div className="noticias-content">
+        <div className="noticias-header">
+          <span className="source-tag">{current.source}</span>
+          <span className="counter">{currentIndex + 1} / {news.length}</span>
         </div>
 
-        <h3 className="text-slate-900 font-extrabold text-xl md:text-2xl leading-tight mb-4 tracking-tight">
-          {current.title}
-        </h3>
-        <p className="text-slate-600 text-sm md:text-base leading-relaxed mb-6 opacity-90">
-          {current.description}
-        </p>
+        <h3 className="noticias-title">{current.title}</h3>
+        <p className="noticias-desc">{current.description}</p>
       </div>
 
-      <div className="flex flex-col items-center gap-6 mt-4 pt-6 border-t border-slate-50">
-        
-        {/* Enlace centrado */}
-        <a 
-          href={current.link} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-blue-600 font-black text-sm hover:text-blue-800 transition-all uppercase tracking-tighter flex items-center gap-2"
-        >
-          Ver noticia completa
-          <span className="text-lg">↗</span>
+      <div className="noticias-footer">
+        <a href={current.link} target="_blank" rel="noopener noreferrer" className="read-more">
+          LEER NOTICIA COMPLETA ↗
         </a>
-        
-        {/* BOTONES CENTRADOS PARA MÓVIL (MÁXIMA ACCESIBILIDAD) */}
-        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
-          <button 
-            onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} 
-            className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-white hover:text-blue-600 active:scale-90 transition-all"
-            aria-label="Anterior"
-          >
-            <span className="text-3xl leading-none">‹</span>
-          </button>
 
-          <div className="w-px h-6 bg-slate-200" />
-
-          <button 
-            onClick={() => setCurrentIndex(i => (i + 1) % news.length)} 
-            className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-white hover:text-blue-600 active:scale-90 transition-all"
-            aria-label="Siguiente"
-          >
-            <span className="text-3xl leading-none">›</span>
-          </button>
+        <div className="nav-buttons">
+          <button className="btn-nav" onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)}>‹</button>
+          <button className="btn-nav" onClick={() => setCurrentIndex(i => (i + 1) % news.length)}>›</button>
         </div>
       </div>
     </div>
