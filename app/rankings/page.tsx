@@ -77,7 +77,7 @@ export default function RankingsPage() {
       </section>
 
       <section
-        className="bg-black/60 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white shadow-2xl"
+        className="bg-white/70 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white shadow-2xl"
         style={{ borderRadius: 10 }}
       >
         <h2 className="text-white border-b border-white/10 pb-2 mb-4 font-semibold">Top Gatito Runner</h2>
