@@ -438,8 +438,6 @@ export default function HomePage() {
       <section id="ranking" style={card}><h3>Rankings solidarios 🏆</h3><p>Consulta los dos rankings completos (donaciones y minijuego).</p><a href="/rankings">Ver página completa de rankings</a></section>
 
       <section id="noticias" style={card}>
-        <h3>Noticias y actualizaciones</h3>
-        <p>Feed dinámico de Europa Press (sin filtros).</p>
         <NoticiasGatocan />
       </section>
 
