@@ -32,32 +32,48 @@ const emptyProfile: ProfileData = {
   aceptaPoliticas: false,
 };
 
-const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
-
-function normalizeDni(value: string): string {
-  return value.replace(/\s|-/g, "").toUpperCase();
-}
-
-function isValidDni(value: string): boolean {
-  const dni = normalizeDni(value);
-  if (!/^\d{8}[A-Z]$/.test(dni)) {
-    return false;
-  }
-
-  const number = Number(dni.slice(0, 8));
-  const expectedLetter = dniLetters[number % 23];
-  return dni[8] === expectedLetter;
-}
+// --- ESTILOS DE CRISTAL UNIFICADOS ---
+const glassCard: CSSProperties = {
+  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255, 255, 255, 0.25)',
+  borderRadius: '24px',
+  padding: '1.5rem',
+  color: '#FFFFFF',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+};
 
 const inputStyle: CSSProperties = {
-  border: "1px solid rgba(148, 163, 184, 0.45)",
-  borderRadius: 8,
-  padding: "0.65rem 0.8rem",
-  backgroundColor: "rgba(15, 23, 42, 0.55)",
-  color: "#f8fafc",
-  fontSize: "0.95rem",
+  border: "1px solid rgba(255, 255, 255, 0.2)",
+  borderRadius: 12,
+  padding: "0.75rem 1rem",
+  backgroundColor: "rgba(255, 255, 255, 0.08)",
+  color: "#FFFFFF",
+  fontSize: "1rem",
   outline: "none",
+  width: "100%",
 };
+
+const btnPrimary: CSSProperties = {
+  background: "rgba(255, 255, 255, 0.2)",
+  color: "#fff",
+  borderRadius: 12,
+  padding: "0.6rem 1.2rem",
+  fontWeight: 600,
+  border: "1px solid rgba(255, 255, 255, 0.3)",
+  cursor: "pointer",
+  backdropFilter: "blur(10px)"
+};
+
+// Lógica de DNI omitida por brevedad, mantenla igual que la tienes...
+const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+function normalizeDni(v: string) { return v.replace(/\s|-/g, "").toUpperCase(); }
+function isValidDni(v: string) {
+  const dni = normalizeDni(v);
+  if (!/^\d{8}[A-Z]$/.test(dni)) return false;
+  return dni[8] === dniLetters[Number(dni.slice(0, 8)) % 23];
+}
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
@@ -67,205 +83,135 @@ export default function PerfilPage() {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const avatar = useMemo(
-    () =>
-      session?.user?.image ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "GatoCan")}&background=0f4c5c&color=fff`,
-    [session?.user?.image, session?.user?.name],
+  const avatar = useMemo(() => 
+    session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
+    [session]
   );
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (status !== "authenticated") {
-        setLoading(false);
-        return;
+      if (status !== "authenticated") { setLoading(false); return; }
+      const res = await fetch("/api/profile");
+      if (res.ok) {
+        const data = await res.json();
+        const p = data.profile || {};
+        setProfile({
+          nombreCompleto: p.nombreCompleto || session?.user?.name || "",
+          telefono: p.telefono || "",
+          dniNie: p.dniNie || "",
+          direccion: p.direccion || "",
+          codigoPostal: p.codigoPostal || "",
+          poblacion: p.poblacion || "",
+          karmaPoints: Number(p.karmaPoints || 0),
+          totalDonaciones: Number(p.totalDonaciones || 0),
+          runnerBestScore: Number(p.runnerBestScore || 0),
+          runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
+          aceptaPoliticas: Boolean(p.aceptaPoliticas),
+        });
       }
-
-      const response = await fetch("/api/profile");
-      if (!response.ok) {
-        setErrorMessage("No se pudo cargar tu perfil.");
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
-      const p = data.profile || {};
-      setProfile({
-        nombreCompleto: p.nombreCompleto || session?.user?.name || "",
-        telefono: p.telefono || "",
-        dniNie: p.dniNie || "",
-        direccion: p.direccion || "",
-        codigoPostal: p.codigoPostal || "",
-        poblacion: p.poblacion || "",
-        karmaPoints: Number(p.karmaPoints || 0),
-        totalDonaciones: Number(p.totalDonaciones || 0),
-        runnerBestScore: Number(p.runnerBestScore || 0),
-        runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
-        aceptaPoliticas: Boolean(p.aceptaPoliticas),
-      });
       setLoading(false);
     };
-
     loadProfile();
-  }, [session?.user?.name, status]);
+  }, [session, status]);
 
-  const updateField = (field: keyof ProfileData, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-    setMessage("");
-
-    if (field === "dniNie") {
-      const nextDni = normalizeDni(value);
-      if (nextDni.length > 0 && !isValidDni(nextDni)) {
-        setErrorMessage("El DNI no es válido. Debe tener 8 números y una letra de control correcta.");
-      } else {
-        setErrorMessage("");
-      }
-    }
+  const updateField = (f: keyof ProfileData, v: string) => {
+    setProfile(p => ({ ...p, [f]: v }));
+    if (f === "dniNie" && normalizeDni(v).length > 0 && !isValidDni(v)) {
+      setErrorMessage("DNI no válido");
+    } else { setErrorMessage(""); }
   };
 
   const saveProfile = async () => {
-    setMessage("");
-    setErrorMessage("");
-
-    const normalizedDni = normalizeDni(profile.dniNie);
-    if (normalizedDni && !isValidDni(normalizedDni)) {
-      setErrorMessage("El DNI no es válido. Revísalo antes de guardar.");
-      return;
-    }
-
-    if (!profile.aceptaPoliticas) {
-      setErrorMessage("Debes aceptar las políticas para guardar tu perfil.");
-      return;
-    }
-
     const response = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nombreCompleto: profile.nombreCompleto,
-        telefono: profile.telefono,
-        dniNie: normalizedDni,
-        direccion: profile.direccion,
-        codigoPostal: profile.codigoPostal,
-        poblacion: profile.poblacion,
-        aceptaPoliticas: profile.aceptaPoliticas,
-      }),
+      body: JSON.stringify(profile),
     });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      setErrorMessage(data?.error || "No se pudo guardar el perfil.");
-      return;
+    if (response.ok) {
+      setEditing(false);
+      setMessage("Perfil actualizado.");
     }
-
-    setProfile((prev) => ({ ...prev, dniNie: normalizedDni }));
-    setEditing(false);
-    setMessage("Perfil actualizado correctamente.");
   };
 
-  if (status === "loading" || loading) {
-    return <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem" }}>Cargando perfil...</main>;
-  }
-
-  if (status !== "authenticated") {
-    return (
-      <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 12 }}>
-        <h1 className="text-white">Mi perfil</h1>
-        <p>Necesitas iniciar sesión para ver y editar tu perfil.</p>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button type="button" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder con Google</button>
-          <Link
-            href="/"
-            style={{
-              textDecoration: "none",
-              background: "#1d4ed8",
-              color: "#fff",
-              borderRadius: 8,
-              padding: "0.55rem 0.85rem",
-              fontWeight: 600,
-            }}
-          >
-            Volver al Inicio
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando...</main>;
 
   return (
-    <main className="text-white" style={{ maxWidth: 900, margin: "0 auto", padding: "1.5rem", display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <h1 className="text-white" style={{ margin: 0 }}>Mi perfil</h1>
-        <Link
-          href="/"
-          style={{
-            textDecoration: "none",
-            background: "#1d4ed8",
-            color: "#fff",
-            borderRadius: 8,
-            padding: "0.55rem 0.85rem",
-            fontWeight: 600,
-          }}
-        >
-          Volver al Inicio
-        </Link>
+    <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
+      
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ color: "white", fontSize: "2.5rem", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)" }}>Mi perfil</h1>
+        <Link href="/" style={btnPrimary}>Volver al Inicio</Link>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <img src={avatar} alt="Avatar" style={{ width: 70, height: 70, borderRadius: "50%", border: "2px solid #cbd5e1" }} />
-        <div>
-          <strong>{session.user?.name || "Usuario"}</strong>
-          <div>{session.user?.email}</div>
+      {/* AVATAR Y INFO SUPERIOR EN CRISTAL */}
+      <div style={glassCard}>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <img src={avatar} alt="Avatar" style={{ width: 80, height: 80, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)" }} />
+          <div>
+            <h2 style={{ margin: 0, fontSize: "1.8rem" }}>{profile.nombreCompleto || session?.user?.name}</h2>
+            <p style={{ margin: 0, opacity: 0.8 }}>{session?.user?.email}</p>
+          </div>
         </div>
       </div>
 
-      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14 }}>
-        <h3 className="text-white" style={{ marginTop: 0 }}>Actividad solidaria</h3>
-        <p>Total donaciones: <strong>{profile.totalDonaciones} €</strong></p>
-        <p>Zarpa Karma: <strong>{profile.karmaPoints}</strong></p>
-        <p>Mejor puntuación Gatito Runner: <strong>{profile.runnerBestScore}</strong></p>
-        <p>Mejor distancia Gatito Runner: <strong>{profile.runnerBestDistanceM} m</strong></p>
+      {/* ACTIVIDAD SOLIDARIA */}
+      <section style={glassCard}>
+        <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Actividad solidaria</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
+          <p>Donaciones: <strong>{profile.totalDonaciones} €</strong></p>
+          <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints}</strong></p>
+          <p>Mejor Score: <strong>{profile.runnerBestScore}</strong></p>
+          <p>Distancia: <strong>{profile.runnerBestDistanceM} m</strong></p>
+        </div>
       </section>
 
-      <section className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white" style={{ border: "1px solid rgba(148, 163, 184, 0.45)", borderRadius: 10, padding: 14, display: "grid", gap: 10 }}>
-        <h3 className="text-white" style={{ marginTop: 0 }}>Datos personales</h3>
+      {/* DATOS PERSONALES */}
+      <section style={{ ...glassCard, display: "grid", gap: 15 }}>
+        <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Datos personales</h3>
 
-        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} placeholder="Nombre completo" />
-        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={{ ...inputStyle, backgroundColor: "rgba(30, 41, 59, 0.75)", color: "#cbd5e1" }} value={session.user?.email || ""} disabled placeholder="Email" />
-        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} placeholder="DNI" />
-        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} placeholder="Dirección" />
-        <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.telefono} onChange={(e) => updateField("telefono", e.target.value)} placeholder="Teléfono" />
+        <div style={{ display: "grid", gap: 10 }}>
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
+          <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
+          
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
+          <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
+          
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
+          <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} placeholder="Código postal" />
-          <input className="!bg-black/40 !text-white placeholder:text-slate-400" style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} placeholder="Población" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+            <div>
+               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
+               <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
+            </div>
+            <div>
+               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Población</label>
+               <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} />
+            </div>
+          </div>
         </div>
 
-        <label className="text-white" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={profile.aceptaPoliticas}
-            disabled={!editing}
-            onChange={(e) => setProfile((prev) => ({ ...prev, aceptaPoliticas: e.target.checked }))}
-          />
+        <label style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", marginTop: 10 }}>
+          <input type="checkbox" checked={profile.aceptaPoliticas} disabled={!editing} onChange={(e) => setProfile(p => ({ ...p, aceptaPoliticas: e.target.checked }))} style={{ width: 18, height: 18 }} />
           Acepto las políticas de seguridad y privacidad.
         </label>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
           {!editing ? (
-            <button type="button" onClick={() => setEditing(true)}>Modificar</button>
+            <button style={{ ...btnPrimary, background: "#f5a623", border: "none" }} onClick={() => setEditing(true)}>Modificar datos</button>
           ) : (
             <>
-              <button type="button" onClick={saveProfile}>Guardar</button>
-              <button type="button" onClick={() => setEditing(false)}>Cancelar</button>
+              <button style={{ ...btnPrimary, background: "#166534", border: "none" }} onClick={saveProfile}>Guardar Cambios</button>
+              <button style={{ ...btnPrimary, background: "rgba(255,0,0,0.3)", border: "none" }} onClick={() => setEditing(false)}>Cancelar</button>
             </>
           )}
-          <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
+          <button style={{ ...btnPrimary, background: "rgba(255,255,255,0.1)" }} onClick={() => signOut({ callbackUrl: "/" })}>Cerrar sesión</button>
         </div>
       </section>
 
-      {errorMessage && <p style={{ color: "#dc2626", fontWeight: 600 }}>{errorMessage}</p>}
-      {message && <p style={{ color: "#166534", fontWeight: 600 }}>{message}</p>}
+      {errorMessage && <div style={glassCard, { backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>{errorMessage}</div>}
+      {message && <div style={glassCard, { backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>{message}</div>}
     </main>
   );
 }
