@@ -11,87 +11,96 @@ const FEEDS = [
 export default function NoticiasGatocan() {
   const [news, setNews] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<'loading' | 'error' | 'ready'>('loading');
 
   useEffect(() => {
-    async function fetchNews() {
-      setLoading(true);
-      let allNews: any[] = [];
-      
-      for (const feed of FEEDS) {
-        try {
-          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`);
-          const data = await res.json();
-          if (data?.contents) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.contents, "text/xml");
-            const items = Array.from(xml.querySelectorAll("item")).slice(0, 5);
+    async function load() {
+      try {
+        setStatus('loading');
+        const allResults: any[] = [];
 
-            items.forEach(item => {
-              const title = item.querySelector("title")?.textContent || "";
-              const link = item.querySelector("link")?.textContent || "";
-              const desc = item.querySelector("description")?.textContent || "";
-              
-              if (title && link) {
-                allNews.push({
-                  title, link,
-                  source: feed.name,
-                  description: desc.replace(/<[^>]*>?/gm, '').substring(0, 130) + "..."
-                });
-              }
-            });
-          }
-        } catch (e) { console.error("Error en fuente:", feed.name); }
+        // Usamos una técnica más conservadora: una por una
+        for (const feed of FEEDS) {
+          try {
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`);
+            const data = await res.json();
+            
+            if (data && data.contents) {
+              const parser = new DOMParser();
+              const xml = parser.parseFromString(data.contents, "text/xml");
+              const items = Array.from(xml.querySelectorAll("item")).slice(0, 4);
+
+              items.forEach(item => {
+                const title = item.querySelector("title")?.textContent || "";
+                if (title) {
+                  allResults.push({
+                    title: title,
+                    link: item.querySelector("link")?.textContent || "#",
+                    source: feed.name,
+                    desc: (item.querySelector("description")?.textContent || "").replace(/<[^>]*>?/gm, '').substring(0, 100) + "..."
+                  });
+                }
+              });
+            }
+          } catch (e) { console.warn("Fallo en una fuente"); }
+        }
+
+        if (allResults.length > 0) {
+          setNews(allResults.sort(() => Math.random() - 0.5));
+          setStatus('ready');
+        } else {
+          setStatus('error');
+        }
+      } catch (err) {
+        setStatus('error');
       }
-      // Mezclamos para que no salga solo un periódico
-      setNews(allNews.sort(() => Math.random() - 0.5));
-      setLoading(false);
     }
-    fetchNews();
+    load();
   }, []);
 
-  if (loading) return <div className="p-4 text-center text-slate-400 text-xs animate-pulse">Cargando prensa...</div>;
-  if (news.length === 0) return null;
+  // --- RENDERIZADO SEGURO ---
 
+  // 1. Estado de carga
+  if (status === 'loading') {
+    return <div style={{padding: '40px', textAlign: 'center', background: '#f8fafc', borderRadius: '24px', border: '1px solid #e2e8f0', color: '#64748b'}}>Cargando prensa local...</div>;
+  }
+
+  // 2. Estado de error (Si el servidor nos bloquea)
+  if (status === 'error' || news.length === 0) {
+    return (
+      <div style={{padding: '40px', textAlign: 'center', background: '#fff1f2', borderRadius: '24px', border: '1px solid #fecaca', color: '#b91c1c'}}>
+        <p style={{fontWeight: 'bold', margin: 0}}>Pausa temporal</p>
+        <p style={{fontSize: '12px', marginTop: '8px'}}>El servidor de noticias está descansando. Prueba a refrescar en 2 minutos.</p>
+      </div>
+    );
+  }
+
+  // 3. Estado normal
   const current = news[currentIndex];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm min-h-[220px] flex flex-col justify-between text-left">
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded">
-            {current.source}
-          </span>
-          <span className="text-[10px] font-mono text-slate-400">{currentIndex + 1} / {news.length}</span>
-        </div>
-
-        <h3 className="text-slate-900 font-bold text-base leading-tight mb-2">
-          {current.title}
-        </h3>
-        <p className="text-slate-600 text-xs leading-relaxed line-clamp-3">
-          {current.description}
-        </p>
+    <div style={{
+      background: 'white',
+      border: '1px solid #e2e8f0',
+      borderRadius: '28px',
+      padding: '24px',
+      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)',
+      fontFamily: 'system-ui, sans-serif'
+    }}>
+      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '16px'}}>
+        <span style={{fontSize: '10px', fontWeight: '900', color: '#2563eb', textTransform: 'uppercase', background: '#eff6ff', padding: '4px 10px', borderRadius: '10px'}}>{current.source}</span>
+        <span style={{fontSize: '10px', color: '#94a3b8', fontWeight: 'bold'}}>{currentIndex + 1} / {news.length}</span>
       </div>
 
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
-        <a href={current.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold text-[11px] hover:underline">
-          Leer noticia completa
-        </a>
+      <h3 style={{fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 10px 0', lineHeight: '1.2'}}>{current.title}</h3>
+      <p style={{fontSize: '14px', color: '#475569', lineHeight: '1.5', margin: '0 0 20px 0'}}>{current.desc}</p>
+
+      <div style={{textAlign: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '20px'}}>
+        <a href={current.link} target="_blank" rel="noopener noreferrer" style={{color: '#2563eb', fontWeight: 'bold', fontSize: '13px', textDecoration: 'none'}}>LEER NOTICIA ↗</a>
         
-        {/* BOTONES DE TEXTO PURO: No pueden hacerse gigantes */}
-        <div className="flex gap-2">
-          <button 
-            onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} 
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
-          >
-            <span style={{ fontSize: '18px', lineHeight: '0' }}>‹</span>
-          </button>
-          <button 
-            onClick={() => setCurrentIndex(i => (i + 1) % news.length)} 
-            className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 bg-white hover:bg-slate-50"
-          >
-            <span style={{ fontSize: '18px', lineHeight: '0' }}>›</span>
-          </button>
+        <div style={{display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px'}}>
+          <button onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} style={{width: '48px', height: '48px', borderRadius: '14px', border: '1px solid #e2e8f0', background: 'white', fontSize: '20px', cursor: 'pointer'}}>‹</button>
+          <button onClick={() => setCurrentIndex(i => (i + 1) % news.length)} style={{width: '48px', height: '48px', borderRadius: '14px', border: '1px solid #e2e8f0', background: 'white', fontSize: '20px', cursor: 'pointer'}}>›</button>
         </div>
       </div>
     </div>
