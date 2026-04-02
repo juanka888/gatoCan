@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 const FEEDS = [
   { name: 'La Región', url: 'https://www.laregion.es/rss' },
-  { name: 'La Voz de Galicia', url: 'https://www.lavoz degalicia.es/sociedad/index.xml' },
+  { name: 'La Voz de Galicia', url: 'https://www.lavozdegalicia.es/sociedad/index.xml' },
   { name: '20 Minutos', url: 'https://www.20minutos.es/rss/animales/' },
   { name: 'Europa Press', url: 'https://www.europapress.es/rss/rss.aspx?ch=00066' }
 ];
@@ -14,81 +14,103 @@ export default function NoticiasGatocan() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        let results: any[] = [];
-        
-        for (const feed of FEEDS) {
-          try {
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`);
-            const data = await res.json();
-            if (data?.contents) {
-              const parser = new DOMParser();
-              const xml = parser.parseFromString(data.contents, "text/xml");
-              const items = Array.from(xml.querySelectorAll("item")).slice(0, 5);
-              
-              items.forEach(item => {
-                results.push({
-                  title: item.querySelector("title")?.textContent || "",
-                  link: item.querySelector("link")?.textContent || "",
-                  source: feed.name,
-                  description: (item.querySelector("description")?.textContent || "").replace(/<[^>]*>?/gm, '').substring(0, 100) + "..."
-                });
-              });
-            }
-          } catch (e) { console.error("Error en fuente"); }
+    async function fetchAllNews() {
+      setLoading(true);
+      
+      // Lanzamos todas las peticiones a la vez (Paralelo)
+      const newsPromises = FEEDS.map(async (feed) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5 segundos máximo por fuente
+
+          const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`, {
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          
+          const data = await res.json();
+          if (data?.contents) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data.contents, "text/xml");
+            return Array.from(xml.querySelectorAll("item")).slice(0, 6).map(item => ({
+              title: item.querySelector("title")?.textContent || "",
+              link: item.querySelector("link")?.textContent || "",
+              source: feed.name,
+              description: (item.querySelector("description")?.textContent || "")
+                .replace(/<[^>]*>?/gm, '').substring(0, 120) + "..."
+            }));
+          }
+        } catch (e) {
+          console.error(`Error en ${feed.name}`);
         }
-        setNews(results);
-      } finally {
-        setLoading(false);
-      }
+        return [];
+      });
+
+      const results = await Promise.all(newsPromises);
+      const combined = results.flat().sort(() => Math.random() - 0.5); // Mezcla total
+      
+      setNews(combined);
+      setLoading(false);
     }
-    fetchData();
+    fetchAllNews();
   }, []);
 
-  if (loading) return <div style={{padding: '20px', textAlign: 'center'}}>Cargando prensa...</div>;
-  if (news.length === 0) return <div style={{padding: '20px', textAlign: 'center'}}>No hay noticias disponibles.</div>;
+  if (loading) return (
+    <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+      <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
+      <p className="text-slate-400 text-xs font-medium">Sincronizando prensa local...</p>
+    </div>
+  );
+
+  if (news.length === 0) return null;
 
   const current = news[currentIndex];
 
   return (
-    <div style={{
-      background: 'white',
-      border: '2px solid #f1f5f9',
-      borderRadius: '20px',
-      padding: '20px',
-      fontFamily: 'sans-serif',
-      boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
-        <span style={{fontSize: '10px', fontWeight: 'bold', color: '#2563eb', textTransform: 'uppercase'}}>{current.source}</span>
-        <span style={{fontSize: '10px', color: '#94a3b8'}}>{currentIndex + 1} / {news.length}</span>
+    <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow min-h-[280px] flex flex-col justify-between">
+      <div>
+        <div className="flex justify-between items-center mb-5">
+          <span className="text-[10px] font-extrabold text-blue-700 uppercase bg-blue-50 px-3 py-1 rounded-full tracking-wider">
+            {current.source}
+          </span>
+          <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded">
+            {currentIndex + 1} / {news.length}
+          </span>
+        </div>
+
+        <h3 className="text-slate-900 font-bold text-lg md:text-xl leading-tight mb-3">
+          {current.title}
+        </h3>
+        <p className="text-slate-500 text-sm leading-relaxed line-clamp-3">
+          {current.description}
+        </p>
       </div>
 
-      <h3 style={{fontSize: '16px', margin: '0 0 10px 0', color: '#1e293b'}}>{current.title}</h3>
-      <p style={{fontSize: '13px', color: '#64748b', lineHeight: '1.4'}}>{current.description}</p>
-
-      <div style={{marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #f1f5f9', textAlign: 'center'}}>
-        <a href={current.link} target="_blank" rel="noopener noreferrer" style={{color: '#2563eb', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'block', marginBottom: '15px'}}>
-          LEER NOTICIA COMPLETA ↗
+      <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
+        <a 
+          href={current.link} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-600 font-bold text-xs hover:text-blue-800 transition-colors"
+        >
+          Leer noticia completa →
         </a>
-
-        <div style={{display: 'flex', justifyContent: 'center', gap: '20px'}}>
+        
+        <div className="flex gap-2">
           <button 
-            onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)}
-            style={{width: '45px', height: '45px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '20px'}}
+            onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} 
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 active:scale-95 transition-all"
           >
-            ‹
+            <span className="text-2xl leading-none" style={{ marginTop: '-4px' }}>‹</span>
           </button>
           <button 
-            onClick={() => setCurrentIndex(i => (i + 1) % news.length)}
-            style={{width: '45px', height: '45px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '20px'}}
+            onClick={() => setCurrentIndex(i => (i + 1) % news.length)} 
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 active:scale-95 transition-all"
           >
-            ›
+            <span className="text-2xl leading-none" style={{ marginTop: '-4px' }}>›</span>
           </button>
         </div>
       </div>
     </div>
   );
-  }
+}
