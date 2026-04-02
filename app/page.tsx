@@ -493,17 +493,78 @@ export default function HomePage() {
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
-      <section style={card}>
-        <h3>Apóyanos también desde Teaming</h3>
-        <p>Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.</p>
-        <div className="teaming-widget" aria-label="Widget de Teaming">
-          <iframe
-            src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
-            loading="lazy"
-            title="Widget Teaming GatoCan"
-          />
-        </div>
-      </section>
+      <section id="teaming" style={{ ...card, borderColor: "#3b82f6", overflow: "hidden" }}>
+  <div style={{ textAlign: "center", marginBottom: "20px" }}>
+    <h3 style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", color: "#1e40af" }}>
+      <span>🐾</span> Apóyanos con 1€ al mes en Teaming
+    </h3>
+    <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "600px", margin: "0 auto" }}>
+      Tu euro mensual se destina íntegramente a comida, tratamientos y urgencias veterinarias de nuestras colonias.
+    </p>
+  </div>
+
+  <div className="teaming-container" style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+    <style>{`
+      /* Por defecto mostramos el de PC y ocultamos el de móvil */
+      .teaming-pc { display: block; width: 100%; maxWidth: 800px; }
+      .teaming-mobile { display: none; width: 100%; }
+
+      /* Si la pantalla es pequeña (Móvil), invertimos la visibilidad */
+      @media (max-width: 768px) {
+        .teaming-pc { display: none; }
+        .teaming-mobile { display: block; }
+      }
+    `}</style>
+
+    {/* WIDGET PARA PC (Apaisado / Medium) */}
+    <div className="teaming-pc">
+      <iframe
+        src="https://www.teaming.net/widgets/tfg-asociaciongatocan/medium?lang=es_ES"
+        width="100%"
+        height="450"
+        frameBorder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Teaming GatoCan Desktop"
+      />
+    </div>
+
+    {/* WIDGET PARA MÓVIL (Compacto / Small) */}
+    <div className="teaming-mobile">
+      <iframe
+        src="https://www.teaming.net/widgets/tfg-asociaciongatocan/small?lang=es_ES"
+        width="100%"
+        height="220"
+        frameBorder="0"
+        scrolling="no"
+        loading="lazy"
+        title="Teaming GatoCan Móvil"
+      />
+    </div>
+  </div>
+
+  {/* Botón de apoyo adicional por si el iframe falla o tarda en cargar */}
+  <div style={{ textAlign: "center", marginTop: "15px" }}>
+    <a 
+      href="https://www.teaming.net/tfg-asociaciongatocan" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      style={{ 
+        display: "inline-block", 
+        padding: "10px 25px", 
+        background: "#2563eb", 
+        color: "#fff", 
+        borderRadius: "12px", 
+        textDecoration: "none", 
+        fontWeight: "bold",
+        fontSize: "14px"
+      }}
+    >
+      Unirse al grupo directamente ↗
+    </a>
+  </div>
+</section>
+      
 
       <section id="contacto" style={card} className="contact-card">
         <h3>Contacta con Gatocan Natura Rural</h3>
