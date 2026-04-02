@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 
 const FEEDS = [
-  { name: 'La Voz de Galicia', url: 'https://www.lavozdegalicia.es/sociedad/index.xml' },
+  { name: 'La Voz de Galicia', url: 'https://www.lavozdegalicia.es/sociedad/index.xml' }
+  { name: 'La Región', url: 'https://www.laregion.es/rss/section/1' },
   { name: '20 Minutos Animales', url: 'https://www.20minutos.es/rss/animales/' },
   { name: 'Europa Press', url: 'https://www.europapress.es/rss/rss.aspx?ch=00066' }
 ];
