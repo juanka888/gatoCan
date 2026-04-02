@@ -494,73 +494,52 @@ export default function HomePage() {
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       
-      <section id="teaming" style={{ ...card, borderColor: "#3b82f6", overflow: "hidden" }}>
-  <div style={{ textAlign: "center", marginBottom: "15px" }}>
-    <h3 style={{ color: "#1e40af", marginBottom: "5px" }}>🐾 Colabora con 1€ al mes</h3>
-    <p style={{ fontSize: "14px", color: "#64748b" }}>Únete a nuestro grupo de Teaming, es seguro y automático.</p>
-  </div>
 
-  <div className="teaming-responsive-container" style={{ width: "100%" }}>
-    <style>{`
-      /* OCULTAR/MOSTRAR SEGÚN PANTALLA */
-      .teaming-desktop { display: block; }
-      .teaming-mobile { display: none; }
+<section id="teaming" style={{ ...card, padding: "20px", textAlign: "center" }}>
+  <style>{`
+    /* Configuración de visibilidad */
+    .t-desktop { display: block; }
+    .t-mobile { display: none; }
 
-      @media (max-width: 768px) {
-        .teaming-desktop { display: none; }
-        .teaming-mobile { display: block; }
-      }
+    @media (max-width: 768px) {
+      .t-desktop { display: none; }
+      .t-mobile { display: block; }
+    }
+  `}</style>
 
-      /* ESTILO PARA QUE LOS IFRAMES NO TENGAN BORDES FEOS */
-      .teaming-iframe {
-        width: 100%;
-        border: none;
-        display: block;
-        margin: 0 auto;
-      }
-    `}</style>
+  <h3 style={{ marginBottom: "15px" }}>Apóyanos también desde Teaming</h3>
+  <p style={{ marginBottom: "20px", fontSize: "14px", color: "#64748b" }}>
+    Con solo 1 € al mes puedes ayudarnos a cubrir comida, tratamientos y urgencias veterinarias.
+  </p>
 
-    {/* VERSIÓN PC (Horizontal / Apaisado) */}
-    <div className="teaming-desktop">
+  <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+    
+    {/* VERSIÓN HORIZONTAL (PC) */}
+    <div className="t-desktop">
       <iframe
-        className="teaming-iframe"
         src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true"
-        height="250"
+        width="696"
+        height="315"
+        frameBorder="0"
         scrolling="no"
-        title="Teaming Horizontal PC"
+        style={{ overflow: "hidden", maxWidth: "100%" }}
+        title="Teaming Horizontal"
       />
     </div>
 
-    {/* VERSIÓN MÓVIL (Vertical / Estrecho) */}
-    <div className="teaming-mobile">
+    {/* VERSIÓN VERTICAL (MÓVIL) */}
+    <div className="t-mobile">
       <iframe
-        className="teaming-iframe"
-        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/3?lang=es_ES&TM=true"
-        height="450"
+        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true"
+        width="305"
+        height="567"
+        frameBorder="0"
         scrolling="no"
-        title="Teaming Vertical Móvil"
+        style={{ overflow: "hidden" }}
+        title="Teaming Vertical"
       />
     </div>
-  </div>
 
-  <div style={{ textAlign: "center", marginTop: "15px" }}>
-    <a 
-      href="https://www.teaming.net/tfg-asociaciongatocan" 
-      target="_blank" 
-      rel="noopener noreferrer"
-      style={{ 
-        display: "inline-block", 
-        padding: "10px 20px", 
-        background: "#2563eb", 
-        color: "#fff", 
-        borderRadius: "10px", 
-        textDecoration: "none", 
-        fontWeight: "bold",
-        fontSize: "13px"
-      }}
-    >
-      Unirse directamente en Teaming.net ↗
-    </a>
   </div>
 </section>
 
