@@ -12,7 +12,10 @@ export async function GET() {
       nombreCompleto: true,
       email: true,
       runnerBestScore: true,
+      // AÑADIMOS ESTA LÍNEA PARA QUE EL RANKING LEA LOS METROS
+      runnerBestDistanceM: true, 
     },
+    // Lo ordenamos por Score para el ranking principal
     orderBy: { runnerBestScore: "desc" },
     take: 10,
   });
