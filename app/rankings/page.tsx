@@ -80,7 +80,7 @@ export default function RankingsPage() {
         className="bg-white/70 backdrop-blur-md border border-white/20 rounded-xl p-6 text-white shadow-2xl"
         style={{ borderRadius: 10 }}
       >
-        <h2 className="text-white border-b border-white/10 pb-2 mb-4 font-semibold">Top Gatito Runner</h2>
+        <h2 className="!text-white border-b border-white/10 pb-2 mb-4 font-semibold">Top Gatito Runner</h2>
         {runnerLoading && <p className="text-slate-300">Cargando ranking de runner...</p>}
         {runnerError && <p className="text-red-400">No se pudo cargar el ranking de runner.</p>}
         {!runnerLoading && !runnerError && (
