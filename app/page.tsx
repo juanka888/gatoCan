@@ -598,43 +598,42 @@ const [indiceGato, setIndiceGato] = useState(0);
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
+<section id="teaming" style={{ ...card, textAlign: "center" }}>
+  <h3>Apóyanos en Teaming</h3>
+  <p>Con solo 1€ al mes nos ayudas a salvar vidas.</p>
+  
+  <div className="teaming-container" style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+    {/* VERSIÓN PC */}
+    <div className="t-desktop">
+      <iframe 
+        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true" 
+        width="696" 
+        height="315" 
+        frameBorder="0" 
+        scrolling="no" 
+        style={{ border: "none" }} 
+      />
+    </div>
 
-      <section id="teaming" style={{ ...card, textAlign: "center" }}>
-        <h3>Apóyanos en Teaming</h3>
-        <p>Con solo 1€ al mes nos ayudas a salvar vidas.</p>
-        
-        <div className="teaming-container">
-          {/* VERSIÓN PC (HORIZONTAL) */}
-          <div className="t-desktop">
-            <iframe 
-              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true" 
-              width="696" 
-              height="315" 
-              frameBorder="0" 
-              scrolling="no" 
-              style={{ overflow: "hidden" }} 
-            />
-          </div>
+    {/* VERSIÓN MÓVIL */}
+    <div className="t-mobile">
+      <iframe 
+        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true" 
+        width="305" 
+        height="567" 
+        frameBorder="0" 
+        scrolling="no" 
+        style={{ border: "none" }} 
+      />
+    </div>
+  </div>
 
-          {/* VERSIÓN MÓVIL (VERTICAL) */}
-          <div className="t-mobile">
-            <iframe 
-              src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true" 
-              width="305" 
-              height="567" 
-              frameBorder="0" 
-              scrolling="no" 
-              style={{ overflow: "hidden" }} 
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: "20px" }}>
-          <a href="https://www.teaming.net/asociaciongatocannaturarural" target="_blank" className="btn btn-primary">
-            Unirse al Grupo de Teaming
-          </a>
-        </div>
-      </section>
+  <div style={{ marginTop: "20px" }}>
+    <a href="https://www.teaming.net/asociaciongatocannaturarural" target="_blank" className="btn btn-primary">
+      Unirse al Grupo de Teaming
+    </a>
+  </div>
+</section>
 
 
       <section id="contacto" style={card} className="contact-card">

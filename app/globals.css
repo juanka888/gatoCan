@@ -28,6 +28,27 @@ body {
     background-size: cover;
 }
 
+/* Por defecto, ocultamos la versión de móvil */
+.t-mobile {
+  display: none;
+}
+
+/* Mostramos la de PC por defecto */
+.t-desktop {
+  display: block;
+}
+
+/* Cuando la pantalla sea pequeña (Móvil) */
+@media (max-width: 768px) {
+  .t-desktop {
+    display: none; /* Ocultamos PC */
+  }
+  .t-mobile {
+    display: flex; /* Mostramos Móvil */
+    justify-content: center;
+  }
+}
+
 .site-header {
     position: relative;
     padding: 1rem 2rem 2.5rem;
