@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState, Suspense } from "react"; // Añadido Suspense
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 
@@ -35,7 +35,7 @@ const emptyProfile: ProfileData = {
   aceptaPoliticas: false,
 };
 
-// --- ESTILOS DE CRISTAL (Definidos fuera para evitar errores de referencia) ---
+// --- ESTILOS DE CRISTAL ---
 const glassCard: CSSProperties = {
   backgroundColor: 'rgba(255, 255, 255, 0.12)',
   backdropFilter: 'blur(16px)',
@@ -78,7 +78,8 @@ function isValidDni(v: string) {
   return dni[8] === dniLetters[Number(dni.slice(0, 8)) % 23];
 }
 
-export default function PerfilPage() {
+// --- SUBCOMPONENTE CON LA LÓGICA (Para evitar el error de Suspense) ---
+function PerfilContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   
@@ -94,7 +95,6 @@ export default function PerfilPage() {
     [session]
   );
 
-  // --- LÓGICA DE ÉXITO STRIPE ---
   useEffect(() => {
     if (searchParams.get("success") === "true") {
       setShowSuccessBanner(true);
@@ -159,27 +159,18 @@ export default function PerfilPage() {
 
   return (
     <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
-      
-      {/* BANNER DE ÉXITO STRIPE */}
       {showSuccessBanner && (
-        <div style={{
-          ...glassCard,
-          backgroundColor: 'rgba(46, 204, 113, 0.25)',
-          border: '1px solid #2ecc71',
-          textAlign: 'center'
-        }}>
+        <div style={{ ...glassCard, backgroundColor: 'rgba(46, 204, 113, 0.25)', border: '1px solid #2ecc71', textAlign: 'center' }}>
           <h2 style={{ margin: '0 0 10px 0', color: '#2ecc71' }}>¡Gracias por tu donación! 🐾</h2>
           <p style={{ margin: 0 }}>Tu apoyo directo a las colonias ha sido procesado. Tus <strong>Zarpa Karma</strong> se verán reflejados en breve.</p>
         </div>
       )}
 
-      {/* HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ color: "white", fontSize: "2.5rem", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)" }}>Mi perfil</h1>
         <Link href="/" style={btnPrimary}>Volver al Inicio</Link>
       </div>
 
-      {/* AVATAR Y INFO SUPERIOR */}
       <div style={glassCard}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <img src={avatar} alt="Avatar" style={{ width: 80, height: 80, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)" }} />
@@ -190,7 +181,6 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* ACTIVIDAD SOLIDARIA */}
       <section style={glassCard}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Actividad solidaria</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
@@ -201,20 +191,15 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {/* DATOS PERSONALES */}
       <section style={{ ...glassCard, display: "grid", gap: 15 }}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Datos personales</h3>
-        
         <div style={{ display: "grid", gap: 10 }}>
            <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
            <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
-           
            <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
            <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
-           
            <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
            <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
-
            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
              <div>
                 <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
@@ -245,17 +230,17 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {/* MENSAJES DE ERROR/ÉXITO */}
-      {errorMessage && (
-        <div style={{ ...glassCard, backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>
-          {errorMessage}
-        </div>
-      )}
-      {message && (
-        <div style={{ ...glassCard, backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>
-          {message}
-        </div>
-      )}
+      {errorMessage && <div style={{ ...glassCard, backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>{errorMessage}</div>}
+      {message && <div style={{ ...glassCard, backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>{message}</div>}
     </main>
+  );
+}
+
+// --- COMPONENTE PRINCIPAL QUE EXPORTA NEXT.JS ---
+export default function PerfilPage() {
+  return (
+    <Suspense fallback={<main style={{ padding: "2rem", color: "white" }}>Cargando página...</main>}>
+      <PerfilContent />
+    </Suspense>
   );
 }
