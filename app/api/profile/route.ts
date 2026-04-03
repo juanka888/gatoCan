@@ -2,7 +2,9 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@lib/prisma";
+import { prisma } from "@/lib/prisma"; // Asegúrate de que la ruta sea correcta (@/lib/prisma)
+
+export const dynamic = 'force-dynamic';
 
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
 
@@ -11,10 +13,7 @@ function normalizeDni(value: string): string {
 }
 
 function isValidDni(value: string): boolean {
-  if (!/^\d{8}[A-Z]$/.test(value)) {
-    return false;
-  }
-
+  if (!/^\d{8}[A-Z]$/.test(value)) return false;
   const dniNumber = Number(value.slice(0, 8));
   const expectedLetter = dniLetters[dniNumber % 23];
   return value[8] === expectedLetter;
@@ -24,28 +23,13 @@ function normalizeOptionalField(value: unknown): string | null {
   if (typeof value !== "string") {
     return value == null ? null : String(value);
   }
-
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    return `Prisma error ${error.code}: ${error.message}`;
-  }
-
-  if (error instanceof Prisma.PrismaClientInitializationError) {
-    return `Prisma initialization error: ${error.message}`;
-  }
-
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    return `Prisma validation error: ${error.message}`;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+  if (error instanceof Prisma.PrismaClientKnownRequestError) return `Error de datos (${error.code})`;
+  if (error instanceof Error) return error.message;
   return "Error desconocido al guardar el perfil";
 }
 
@@ -53,32 +37,33 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     const sessionEmail = session?.user?.email?.trim().toLowerCase();
-    if (!sessionEmail) {
+
+    if (!sessionEmail || !session?.user) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
-    const email = sessionEmail;
-
+    // Upsert del usuario para asegurar que existe
     const user = await prisma.user.upsert({
-      where: { email },
+      where: { email: sessionEmail },
       update: {
         name: session.user.name ?? undefined,
         image: session.user.image ?? undefined,
       },
       create: {
-        email,
+        email: sessionEmail,
         name: session.user.name,
         image: session.user.image,
       },
       include: { profile: true },
     });
 
+    // Upsert del perfil
     const profile = await prisma.profile.upsert({
       where: { userId: user.id },
-      update: { email },
+      update: { email: sessionEmail },
       create: {
         userId: user.id,
-        email,
+        email: sessionEmail,
         nombreCompleto: session.user.name ?? null,
         aceptaPoliticas: false,
       },
@@ -86,18 +71,8 @@ export async function GET() {
 
     return NextResponse.json({ user, profile });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma known request error en profile GET:", {
-        code: error.code,
-        message: error.message,
-        meta: error.meta,
-      });
-    } else {
-      console.error("Error en base de datos (profile GET):", error);
-    }
-
-    const message = getErrorMessage(error);
-    return NextResponse.json({ error: message, message }, { status: 500 });
+    console.error("Error en GET /api/profile:", error);
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -105,108 +80,71 @@ export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const sessionEmail = session?.user?.email?.trim().toLowerCase();
-    if (!sessionEmail) {
+
+    if (!sessionEmail || !session?.user) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
     const body = await req.json();
-    console.log("Datos recibidos en API:", body);
+    const normalizedDniVal = body?.dniNie ? normalizeDni(body.dniNie) : "";
 
-    const email = sessionEmail;
-    const mappedScore = Number(body?.score ?? 0);
-    const mappedDistance = Number(body?.distance ?? 0);
-
-    const normalizedDni = body?.dniNie ? normalizeDni(body.dniNie) : "";
-    const telefono = normalizeOptionalField(body?.telefono);
-    const direccion = normalizeOptionalField(body?.direccion);
-    const codigoPostal = normalizeOptionalField(body?.codigoPostal);
-    const poblacion = normalizeOptionalField(body?.poblacion);
-    const nombreCompleto = normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? null;
-
-    if (normalizedDni && !isValidDni(normalizedDni)) {
+    if (normalizedDniVal && !isValidDni(normalizedDniVal)) {
       return NextResponse.json({ error: "El DNI no es válido" }, { status: 400 });
     }
 
+    // 1. Obtener o crear usuario
     const user = await prisma.user.upsert({
-      where: { email },
-      update: {
-        name: session.user.name ?? undefined,
-        image: session.user.image ?? undefined,
-      },
+      where: { email: sessionEmail },
+      update: {},
       create: {
-        email,
+        email: sessionEmail,
         name: session.user.name,
         image: session.user.image,
       },
     });
 
+    // 2. Lógica de récords (comparar con lo existente)
     const currentProfile = await prisma.profile.findUnique({ where: { userId: user.id } });
+    
+    const incomingScore = Number(body?.runnerBestScore || 0);
+    const incomingDistance = Number(body?.runnerBestDistanceM || 0);
 
-    const finalScore = Math.max(
-      Number.isFinite(mappedScore) ? mappedScore : 0,
-      currentProfile?.runnerBestScore || 0
-    );
-    const finalDistance = Math.max(
-      Number.isFinite(mappedDistance) ? mappedDistance : 0,
-      currentProfile?.runnerBestDistanceM || 0
-    );
-    console.log("Guardando récord: Score " + finalScore + ", Distancia " + finalDistance);
+    const finalScore = Math.max(incomingScore, currentProfile?.runnerBestScore || 0);
+    const finalDistance = Math.max(incomingDistance, currentProfile?.runnerBestDistanceM || 0);
 
+    // 3. Preparar datos
     const dataToUpdate = {
+      nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? null,
+      telefono: normalizeOptionalField(body?.telefono),
+      dniNie: normalizedDniVal || null,
+      direccion: normalizeOptionalField(body?.direccion),
+      codigoPostal: normalizeOptionalField(body?.codigoPostal),
+      poblacion: normalizeOptionalField(body?.poblacion),
+      aceptaPoliticas: body.aceptaPoliticas === true,
       runnerBestScore: finalScore,
       runnerBestDistanceM: finalDistance,
-      email,
-      nombreCompleto,
-      telefono,
-      dniNie: normalizedDni || null,
-      direccion,
-      codigoPostal,
-      poblacion,
-      aceptaPoliticas: body.aceptaPoliticas === true,
+      email: sessionEmail,
     };
 
-    let profile;
-    try {
-      profile = await prisma.profile.upsert({
+    // 4. Actualizar Perfil y Usuario
+    const [updatedProfile] = await prisma.$transaction([
+      prisma.profile.upsert({
         where: { userId: user.id },
         update: dataToUpdate,
-        create: {
-          userId: user.id,
-          ...dataToUpdate,
+        create: { userId: user.id, ...dataToUpdate },
+      }),
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          runnerBestScore: finalScore,
+          runnerBestDistance: finalDistance, // Verifica que el campo en User se llame así
         },
-      });
-    } catch (error) {
-      console.error("Error detallado de Prisma:", error);
-      throw error;
-    }
+      }),
+    ]);
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        runnerBestScore: dataToUpdate.runnerBestScore,
-        runnerBestDistance: dataToUpdate.runnerBestDistanceM,
-      },
-    });
-
-    return NextResponse.json({
-      profile,
-      records: {
-        bestScore: dataToUpdate.runnerBestScore,
-        bestDistanceM: dataToUpdate.runnerBestDistanceM,
-      },
-    });
+    return NextResponse.json({ profile: updatedProfile });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("Prisma known request error en profile PUT:", {
-        code: error.code,
-        message: error.message,
-        meta: error.meta,
-      });
-    } else {
-      console.error("Error en base de datos (profile PUT):", error);
-    }
-
-    const message = getErrorMessage(error);
-    return NextResponse.json({ error: message, message }, { status: 500 });
+    console.error("Error en PUT /api/profile:", error);
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
