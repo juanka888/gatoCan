@@ -234,16 +234,22 @@ export default function HomePage() {
     localStorage.setItem("gatocanColaboradoresClicks", JSON.stringify(next));
   };
 
-  const donationTotal = gatosColonia.reduce((total, cat) => {
-    return total + donationOptions.reduce((subtotal, option) => {
-      return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.price : subtotal;
-    }, 0);
+  const donationTotal = Object.keys(donationSelections).reduce((acc, key) => {
+    if (donationSelections[key]) {
+      const optionId = key.split("-")[1];
+      const option = donationOptions.find((o) => o.id === optionId);
+      return acc + (option ? option.price : 0);
+    }
+    return acc;
   }, 0);
 
-  const karmaTotal = gatosColonia.reduce((total, cat) => {
-    return total + donationOptions.reduce((subtotal, option) => {
-      return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.karma : subtotal;
-    }, 0);
+  const karmaTotal = Object.keys(donationSelections).reduce((acc, key) => {
+    if (donationSelections[key]) {
+      const optionId = key.split("-")[1];
+      const option = donationOptions.find((o) => o.id === optionId);
+      return acc + (option ? option.karma : 0);
+    }
+    return acc;
   }, 0);
 
   const btnPagoStyle = {
@@ -549,7 +555,6 @@ const [indiceGato, setIndiceGato] = useState(0);
       <section id="donar" style={card} className="donation-card">
         <h3>Apoya nuestro trabajo con una donación</h3>
         <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
-        <a href="#contacto" className="btn btn-primary">Quiero donar</a>
         <h3>Haz tu aporte gatuno 🐾</h3>
         <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
 
@@ -596,8 +601,26 @@ const [indiceGato, setIndiceGato] = useState(0);
           <p id="saveDonationScoreMsg" className="auth-message" aria-live="polite"></p>
         </div>
 
-        <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
-      </section>
+      <button 
+        className="btn btn-primary" 
+        style={{ 
+          marginTop: '20px', 
+          width: '100%',
+          opacity: donationTotal > 0 ? 1 : 0.6, // Se ve un poco más transparente si es 0
+          cursor: donationTotal > 0 ? 'pointer' : 'not-allowed'
+        }}
+        disabled={donationTotal === 0} // Desactiva el clic si no hay nada seleccionado
+        onClick={() => {
+          handlePayment("Donación conjunta Colonias", donationTotal);
+        }}
+      >
+        {donationTotal > 0 
+          ? `Quiero confirmar mi aportación de ${donationTotal} €` 
+          : "Selecciona una ayuda para continuar"}
+      </button>
+
+    </section>
+
 <section id="teaming" style={{ ...card, textAlign: "center" }}>
   <h3>Apóyanos en Teaming</h3>
   <p>Con solo 1€ al mes nos ayudas a salvar vidas.</p>
