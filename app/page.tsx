@@ -171,26 +171,38 @@ const handlePayment = async (nombreItem: string, precio: number) => {
 };
 
 export default function HomePage() {
-  // --- 1. AÑADIMOS EL ESTADO DE MONTAJE JUNTO A LOS DEMÁS ---
-  const [mounted, setMounted] = useState(false); 
+  // 1. Estado de montaje (debe ser el primero)
+  const [mounted, setMounted] = useState(false);
+
+  // 2. Inicializamos los estados con valores neutros/vacíos 
+  // para que no den error de "null" en el servidor de Vercel
   const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState<GalleryCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
-  const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
+  
+  // Usamos una cadena vacía o null inicialmente para evitar leer el array en el servidor
+  const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(""); 
+  
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const { status } = useSession();
   const [indiceGato, setIndiceGato] = useState(0);
+  const [indiceInicio, setIndiceInicio] = useState(0);
 
-  // --- 2. AÑADIMOS EL EFECTO DE MONTAJE ---
+  // 3. Efecto de montaje
   useEffect(() => {
     setMounted(true);
+    // Una vez montado en el cliente, establecemos el ID por defecto si es necesario
+    if (gatosColonia.length > 0) {
+      setOpenDonationCatId(gatosColonia[0].id);
+    }
   }, []);
 
+  // 4. Memos y efectos (se mantienen igual)
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
     [filter],
@@ -207,9 +219,7 @@ export default function HomePage() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isLightboxOpen || visibleImages.length === 0) return;
-      if (event.key === "Escape") {
-        setIsLightboxOpen(false);
-      }
+      if (event.key === "Escape") setIsLightboxOpen(false);
       if (event.key === "ArrowLeft") {
         setCurrentIndex((index) => (index - 1 + visibleImages.length) % visibleImages.length);
       }
@@ -217,17 +227,9 @@ export default function HomePage() {
         setCurrentIndex((index) => (index + 1) % visibleImages.length);
       }
     };
-
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isLightboxOpen, visibleImages.length]);
-
-  const openLightbox = (index: number) => {
-    setCurrentIndex(index);
-    setIsLightboxOpen(true);
-  };
-
-  const activeImage = visibleImages[currentIndex] || galleryImages[0];
 
   useEffect(() => {
     const stored = localStorage.getItem("gatocanColaboradoresClicks");
@@ -236,12 +238,18 @@ export default function HomePage() {
     }
   }, []);
 
-  // --- 3. EL MURO DE SEGURIDAD PARA VERCEL (Añádelo aquí) ---
-  // Si no está montado, devolvemos un div vacío para que Vercel no de error al compilar
+  // --- EL MURO DE SEGURIDAD MEJORADO ---
+  // Si no está montado (fase de Build en Vercel), devolvemos una estructura mínima
+  // Esto evita que Next.js intente renderizar componentes complejos que usan hooks
   if (!mounted) {
-    return <div style={{ background: '#000', minHeight: '100vh' }} />;
+    return (
+      <div style={{ background: '#000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+        <p>Cargando GatoCan...</p>
+      </div>
+    );
   }
 
+  // A partir de aquí, el código solo se ejecuta en el NAVEGADOR del usuario
   const registerColabClick = (id: string) => {
     const next = { ...colabClicks, [id]: Number(colabClicks[id] || 0) + 1 };
     setColabClicks(next);
@@ -266,69 +274,19 @@ export default function HomePage() {
     return acc;
   }, 0);
 
-  const btnPagoStyle = {
-    backgroundColor: '#ff4757',
-    color: 'white',
-    border: 'none',
-    borderRadius: '20px',
-    padding: '5px 12px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '0.8rem',
-    marginTop: 'auto', 
-    marginBottom: '10px'
-  };
-
-  const [indiceInicio, setIndiceInicio] = useState(0);
-
-  const siguienteGato = () => {
-    if (indiceInicio + 3 < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
-  };
-
-  const anteriorGato = () => {
-    if (indiceInicio > 0) setIndiceInicio(indiceInicio - 1);
-  };
-
   const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
 
-  const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!contactForm.privacidad) {
-      setContactStatus({ type: "error", message: "Debes aceptar las políticas de privacidad para continuar." });
-      return;
-    }
-
-    setIsSubmittingContact(true);
-    setContactStatus(null);
-
-    try {
-      const response = await fetch("/api/contacto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: contactForm.nombre,
-          email: contactForm.email,
-          mensaje: contactForm.mensaje,
-          privacidad: contactForm.privacidad,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("No se pudo enviar el mensaje");
-      }
-
-      setContactForm({ nombre: "", email: "", mensaje: "", privacidad: false });
-      setContactStatus({ type: "success", message: "¡Mensaje enviado con éxito!" });
-    } catch (error) {
-      console.error(error);
-      setContactStatus({ type: "error", message: "No hemos podido enviar el mensaje. Inténtalo de nuevo en unos minutos." });
-    } finally {
-      setIsSubmittingContact(false);
-    }
+  const openLightbox = (index: number) => {
+    setCurrentIndex(index);
+    setIsLightboxOpen(true);
   };
 
+  const activeImage = visibleImages[currentIndex] || galleryImages[0];
+
+  // (Aquí siguen tus funciones handlePayment, siguienteGato, etc. que ya tenías)
+  
   return (
+    // Tu JSX final
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
       <header id="inicio" className="site-header">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
