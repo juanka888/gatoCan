@@ -31,6 +31,17 @@ interface Gato {
   };
 }
 
+const gatosColonia = [
+  { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años" } },
+  { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años" } },
+  { id: 3, nombre: "Rayo", colonia: "Fonteboa", imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Lesión ocular", tratamiento: "Colirio", edad: "7 años" } },
+  { id: 4, nombre: "Luna", colonia: "Parque Central", imagen: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Revisión", edad: "3 años" } },
+  { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años" } },
+  { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año" } },
+  { id: 7, nombre: "Misu", colonia: "Río Norte", imagen: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "2 años" } },
+  { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años" } }
+];
+
 const galleryImages: GalleryImage[] = [
   {
     src: "/img/foto-01.jpg",
@@ -93,32 +104,6 @@ const donationOptions: DonationOption[] = [
   { id: "sponsor", label: "Apadrina este gato — 15 €/mes", price: 15, karma: 18, icon: "♥", iconClassName: "icon-love" },
 ];
 
- const donationCats = [
-  {
-    id: "luna",
-    image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop",
-    alt: "Gato Luna",
-    name: "Luna (Pincha para apadrinar)",
-  },
-  {
-    id: "misu",
-    image: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop",
-    alt: "Gato Misu",
-    name: "Misu (Pincha para apadrinar)",
-  },
-  {
-    id: "bigotes",
-    image: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop",
-    alt: "Gato Bigotes",
-    name: "Bigotes (Pincha para apadrinar)",
-  },
-  {
-    id: "nube",
-    image: "https://images.unsplash.com/photo-1533733358354-6e99c2c6e0a9?q=80&w=500&auto=format&fit=crop",
-    alt: "Gato Nube",
-    name: "Nube (Pincha para apadrinar)",
-  }
-];
 const flechaProStyle = {
   background: 'rgba(255, 71, 87, 0.1)', // Fondo rosado muy suave y elegante
   border: 'none',
@@ -190,7 +175,7 @@ export default function HomePage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
-  const [openDonationCatId, setOpenDonationCatId] = useState<string>(donationCats[0]?.id ?? "");
+  const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
@@ -249,13 +234,13 @@ export default function HomePage() {
     localStorage.setItem("gatocanColaboradoresClicks", JSON.stringify(next));
   };
 
-  const donationTotal = donationCats.reduce((total, cat) => {
+  const donationTotal = gatosColonia.reduce((total, cat) => {
     return total + donationOptions.reduce((subtotal, option) => {
       return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.price : subtotal;
     }, 0);
   }, 0);
 
-  const karmaTotal = donationCats.reduce((total, cat) => {
+  const karmaTotal = gatosColonia.reduce((total, cat) => {
     return total + donationOptions.reduce((subtotal, option) => {
       return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.karma : subtotal;
     }, 0);
@@ -274,14 +259,7 @@ export default function HomePage() {
     marginBottom: '10px'
 };
   // 1. Array de datos (asegúrate de que esté ANTES de gatosVisibles)
-  const gatosColonia = [
-    { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años" } },
-    { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años" } },
-    { id: 3, nombre: "Rayo", colonia: "Fonteboa", imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Lesión ocular", tratamiento: "Colirio", edad: "7 años" } },
-    { id: 4, nombre: "Luna", colonia: "Parque Central", imagen: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Revisión", edad: "3 años" } },
-    { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años" } },
-    { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año" } }
-  ];
+
 
   // 2. Estado y Funciones
   const [indiceInicio, setIndiceInicio] = useState(0);
@@ -575,7 +553,7 @@ const [indiceGato, setIndiceGato] = useState(0);
         <h3>Haz tu aporte gatuno 🐾</h3>
         <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
 
-        {donationCats.map((cat) => (
+        {gatosColonia.map((cat) => (
           <details key={cat.id} className="donation-panel" open={openDonationCatId === cat.id}>
             <summary
               onClick={(event) => {
@@ -584,8 +562,8 @@ const [indiceGato, setIndiceGato] = useState(0);
               }}
             >
               <span className="cat-summary">
-                <img src={cat.image} alt={cat.alt} />
-                <span>{cat.name}</span>
+                <img src={cat.imagen} alt={cat.nombre} />
+                <span>{cat.nombre}</span>
               </span>
             </summary>
             <div className="cat-options">
@@ -620,7 +598,8 @@ const [indiceGato, setIndiceGato] = useState(0);
 
         <a href="#contacto" className="btn btn-primary">Quiero confirmar mi aportación</a>
       </section>
-            <section id="teaming" style={{ ...card, textAlign: "center" }}>
+
+      <section id="teaming" style={{ ...card, textAlign: "center" }}>
         <h3>Apóyanos en Teaming</h3>
         <p>Con solo 1€ al mes nos ayudas a salvar vidas.</p>
         
