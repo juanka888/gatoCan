@@ -119,19 +119,22 @@ const donationOptions: DonationOption[] = [
     name: "Nube (Pincha para apadrinar)",
   }
 ];
-const flechaStyle = {
-  background: 'rgba(255, 71, 87, 0.1)', // Un fondo rojizo muy suave
+const flechaProStyle = {
+  background: 'rgba(255, 71, 87, 0.1)', // Fondo rosado muy suave y elegante
   border: 'none',
   fontSize: '2rem',
   cursor: 'pointer',
   padding: '10px 15px',
-  borderRadius: '50%',
+  borderRadius: '50%', // Lo hace circular
   color: '#ff4757',
-  transition: '0.3s',
+  transition: 'all 0.3s ease', // Animación suave
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  userSelect: 'none' as const // Para que no se seleccione el texto al hacer muchos clics
+  userSelect: 'none' as const, // Evita que se seleccione el emoji como texto
+  width: '50px', // Tamaño fijo para que sea un círculo perfecto
+  height: '50px',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.05)' // Una sombra casi invisible para dar relieve
 };
 const botonCaraFrontal = {
     backgroundColor: '#ff4757',
@@ -488,7 +491,7 @@ const [indiceGato, setIndiceGato] = useState(0);
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
     
     {/* Flecha Izquierda */}
-    <button onClick={() => setIndiceGato(prev => prev > 0 ? prev - 1 : prev)} style={flechaStyle}>⬅️</button>
+    <button onClick={() => setIndiceGato(prev => prev > 0 ? prev - 1 : prev)} style={flechaProStyle}>⬅️</button>
 
     <div className="flip-grid">
       {/* Solo mostramos el gato que corresponde al índice actual */}
