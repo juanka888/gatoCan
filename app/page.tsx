@@ -30,7 +30,7 @@ interface Gato {
     caracter: string;
   };
 }
-
+const [loading, setLoading] = useState(false);
 const gatosColonia = [
   { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años" } },
   { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años" } },
@@ -602,22 +602,59 @@ const [indiceGato, setIndiceGato] = useState(0);
         </div>
 
       <button 
-        className="btn btn-primary" 
-        style={{ 
-          marginTop: '20px', 
-          width: '100%',
-          opacity: donationTotal > 0 ? 1 : 0.6, // Se ve un poco más transparente si es 0
-          cursor: donationTotal > 0 ? 'pointer' : 'not-allowed'
-        }}
-        disabled={donationTotal === 0} // Desactiva el clic si no hay nada seleccionado
-        onClick={() => {
-          handlePayment("Donación conjunta Colonias", donationTotal);
-        }}
-      >
-        {donationTotal > 0 
-          ? `Quiero confirmar mi aportación de ${donationTotal} €` 
-          : "Selecciona una ayuda para continuar"}
-      </button>
+  className="btn btn-primary" 
+  style={{ 
+    marginTop: '20px', 
+    width: '100%',
+    padding: '15px',
+    fontSize: '1.1rem',
+    fontWeight: 'bold',
+    position: 'relative',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '10px',
+    opacity: (donationTotal === 0 || loading) ? 0.7 : 1,
+    cursor: (donationTotal === 0 || loading) ? 'not-allowed' : 'pointer'
+  }}
+  disabled={donationTotal === 0 || loading}
+  onClick={async () => {
+    setLoading(true); // 1. Empezamos a cargar
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: "Donación conjunta Colonias", 
+          amount: donationTotal 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url; // 2. Saltamos a Stripe
+      } else {
+        setLoading(false); // Si hay error, liberamos el botón
+        throw new Error(data.error || "Error al crear la sesión");
+      }
+    } catch (err) {
+      setLoading(false); // Si hay error, liberamos el botón
+      console.error(err);
+      alert("No se pudo iniciar el pago. Revisa tu conexión.");
+    }
+  }}
+>
+  {loading ? (
+    <>
+      <span className="spinner"></span> Procesando...
+    </>
+  ) : (
+    donationTotal > 0 
+      ? `Confirmar aportación de ${donationTotal} €` 
+      : "Selecciona una ayuda para continuar"
+  )}
+</button>
 
     </section>
 

@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import confetti from "canvas-confetti";
 
+// --- TIPOS ---
 type ProfileData = {
   nombreCompleto: string;
   telefono: string;
@@ -32,7 +35,7 @@ const emptyProfile: ProfileData = {
   aceptaPoliticas: false,
 };
 
-// --- ESTILOS DE CRISTAL UNIFICADOS ---
+// --- ESTILOS DE CRISTAL (Definidos fuera para evitar errores de referencia) ---
 const glassCard: CSSProperties = {
   backgroundColor: 'rgba(255, 255, 255, 0.12)',
   backdropFilter: 'blur(16px)',
@@ -66,7 +69,7 @@ const btnPrimary: CSSProperties = {
   backdropFilter: "blur(10px)"
 };
 
-// Lógica de DNI omitida por brevedad, mantenla igual que la tienes...
+// --- LÓGICA DNI ---
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
 function normalizeDni(v: string) { return v.replace(/\s|-/g, "").toUpperCase(); }
 function isValidDni(v: string) {
@@ -77,16 +80,34 @@ function isValidDni(v: string) {
 
 export default function PerfilPage() {
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  
   const [profile, setProfile] = useState<ProfileData>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   const avatar = useMemo(() => 
     session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
     [session]
   );
+
+  // --- LÓGICA DE ÉXITO STRIPE ---
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setShowSuccessBanner(true);
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FFD700', '#FFFFFF', '#2ecc71']
+      });
+      const timer = setTimeout(() => setShowSuccessBanner(false), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -130,6 +151,7 @@ export default function PerfilPage() {
     if (response.ok) {
       setEditing(false);
       setMessage("Perfil actualizado.");
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -138,13 +160,26 @@ export default function PerfilPage() {
   return (
     <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
       
+      {/* BANNER DE ÉXITO STRIPE */}
+      {showSuccessBanner && (
+        <div style={{
+          ...glassCard,
+          backgroundColor: 'rgba(46, 204, 113, 0.25)',
+          border: '1px solid #2ecc71',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ margin: '0 0 10px 0', color: '#2ecc71' }}>¡Gracias por tu donación! 🐾</h2>
+          <p style={{ margin: 0 }}>Tu apoyo directo a las colonias ha sido procesado. Tus <strong>Zarpa Karma</strong> se verán reflejados en breve.</p>
+        </div>
+      )}
+
       {/* HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ color: "white", fontSize: "2.5rem", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)" }}>Mi perfil</h1>
         <Link href="/" style={btnPrimary}>Volver al Inicio</Link>
       </div>
 
-      {/* AVATAR Y INFO SUPERIOR EN CRISTAL */}
+      {/* AVATAR Y INFO SUPERIOR */}
       <div style={glassCard}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <img src={avatar} alt="Avatar" style={{ width: 80, height: 80, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)" }} />
@@ -160,7 +195,7 @@ export default function PerfilPage() {
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Actividad solidaria</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
           <p>Donaciones: <strong>{profile.totalDonaciones} €</strong></p>
-          <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints}</strong></p>
+          <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints} ✨</strong></p>
           <p>Mejor Score: <strong>{profile.runnerBestScore}</strong></p>
           <p>Distancia: <strong>{profile.runnerBestDistanceM} m</strong></p>
         </div>
@@ -169,27 +204,27 @@ export default function PerfilPage() {
       {/* DATOS PERSONALES */}
       <section style={{ ...glassCard, display: "grid", gap: 15 }}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Datos personales</h3>
-
+        
         <div style={{ display: "grid", gap: 10 }}>
-          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
-          <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
-          
-          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
-          <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
-          
-          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
-          <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
+           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
+           <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
+           
+           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
+           <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
+           
+           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
+           <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-            <div>
-               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
-               <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
-            </div>
-            <div>
-               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Población</label>
-               <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} />
-            </div>
-          </div>
+           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+             <div>
+                <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
+                <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
+             </div>
+             <div>
+                <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Población</label>
+                <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} />
+             </div>
+           </div>
         </div>
 
         <label style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", marginTop: 10 }}>
@@ -210,8 +245,17 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {errorMessage && <div style={glassCard, { backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>{errorMessage}</div>}
-      {message && <div style={glassCard, { backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>{message}</div>}
+      {/* MENSAJES DE ERROR/ÉXITO */}
+      {errorMessage && (
+        <div style={{ ...glassCard, backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>
+          {errorMessage}
+        </div>
+      )}
+      {message && (
+        <div style={{ ...glassCard, backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>
+          {message}
+        </div>
+      )}
     </main>
   );
 }
