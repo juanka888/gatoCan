@@ -6,6 +6,9 @@ import { signIn, useSession } from "next-auth/react";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
+
+export const dynamic = 'force-dynamic';
+
 type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones";
 
 type GalleryImage = {
@@ -167,8 +170,9 @@ const handlePayment = async (nombreItem: string, precio: number) => {
   }
 };
 
-
 export default function HomePage() {
+  // --- 1. AÑADIMOS EL ESTADO DE MONTAJE JUNTO A LOS DEMÁS ---
+  const [mounted, setMounted] = useState(false); 
   const [menuOpen, setMenuOpen] = useState(false);
   const [filter, setFilter] = useState<GalleryCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -182,11 +186,15 @@ export default function HomePage() {
   const { status } = useSession();
   const [indiceGato, setIndiceGato] = useState(0);
 
+  // --- 2. AÑADIMOS EL EFECTO DE MONTAJE ---
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
     [filter],
   );
-
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -228,6 +236,12 @@ export default function HomePage() {
     }
   }, []);
 
+  // --- 3. EL MURO DE SEGURIDAD PARA VERCEL (Añádelo aquí) ---
+  // Si no está montado, devolvemos un div vacío para que Vercel no de error al compilar
+  if (!mounted) {
+    return <div style={{ background: '#000', minHeight: '100vh' }} />;
+  }
+
   const registerColabClick = (id: string) => {
     const next = { ...colabClicks, [id]: Number(colabClicks[id] || 0) + 1 };
     setColabClicks(next);
@@ -261,13 +275,10 @@ export default function HomePage() {
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '0.8rem',
-    marginTop: 'auto', // Lo empuja hacia abajo
+    marginTop: 'auto', 
     marginBottom: '10px'
-};
-  // 1. Array de datos (asegúrate de que esté ANTES de gatosVisibles)
+  };
 
-
-  // 2. Estado y Funciones
   const [indiceInicio, setIndiceInicio] = useState(0);
 
   const siguienteGato = () => {
@@ -278,7 +289,6 @@ export default function HomePage() {
     if (indiceInicio > 0) setIndiceInicio(indiceInicio - 1);
   };
 
-  // 3. Selección de los 3 que se muestran
   const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
 
   const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
