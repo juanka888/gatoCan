@@ -273,50 +273,29 @@ export default function HomePage() {
     marginTop: 'auto', // Lo empuja hacia abajo
     marginBottom: '10px'
 };
+  // 1. Array de datos (asegúrate de que esté ANTES de gatosVisibles)
   const gatosColonia = [
-  {
-    id: 1,
-    nombre: "Nube",
-    colonia: "Río Norte",
-    imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg",
-    detalles: {
-      esterilizacion: "Hecha ✅",
-      enfermedad: "Gingivitis leve",
-      tratamiento: "Antiinflamatorio + revisión mensual",
-      desaparicion: "No",
-      edad: "4 años",
-      caracter: "Sociable y tranquila"
-    }
-  },
-  {
-    id: 2,
-    nombre: "Menta",
-    colonia: "Mirador",
-    imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg",
-    detalles: {
-      esterilizacion: "Pendiente ⏳",
-      enfermedad: "Sin diagnóstico actual",
-      tratamiento: "Desparasitación preventiva",
-      desaparicion: "No",
-      edad: "2 años",
-      caracter: "Curiosa y algo tímida"
-    }
-  },
-  {
-    id: 3,
-    nombre: "Rayo",
-    colonia: "Fonteboa",
-    imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
-    detalles: {
-      esterilizacion: "Hecha ✅",
-      enfermedad: "Lesión ocular antigua",
-      tratamiento: "Colirio en brotes",
-      desaparicion: "Aviso activo (Feb 2026)",
-      edad: "7 años",
-      caracter: "Independiente"
-    }
-  }
-];
+    { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años" } },
+    { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años" } },
+    { id: 3, nombre: "Rayo", colonia: "Fonteboa", imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Lesión ocular", tratamiento: "Colirio", edad: "7 años" } },
+    { id: 4, nombre: "Luna", colonia: "Parque Central", imagen: "https://images.pexels.com/photos/2071873/pexels-photo-2071873.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Revisión", edad: "3 años" } },
+    { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años" } },
+    { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año" } }
+  ];
+
+  // 2. Estado y Funciones
+  const [indiceInicio, setIndiceInicio] = useState(0);
+
+  const siguienteGato = () => {
+    if (indiceInicio + 3 < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
+  };
+
+  const anteriorGato = () => {
+    if (indiceInicio > 0) setIndiceInicio(indiceInicio - 1);
+  };
+
+  // 3. Selección de los 3 que se muestran
+  const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
 
   const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -485,57 +464,82 @@ export default function HomePage() {
 const [indiceGato, setIndiceGato] = useState(0);
 
 // 2. En tu sección de fichas:
-<section id="fichas" style={card} className="flip-card-section">
-  <h3>Fichas de gatos de colonia</h3>
-  
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-    
-    {/* Flecha Izquierda */}
-    <button onClick={() => setIndiceGato(prev => prev > 0 ? prev - 1 : prev)} style={flechaProStyle}>⬅️</button>
+<section id="fichas" style={{ ...card, padding: '20px 0' }} className="flip-card-section">
+  <h3 style={{ textAlign: 'center' }}>Fichas de gatos de colonia</h3>
+  <p style={{ textAlign: 'center', marginBottom: '20px' }}>Usa las flechas para descubrir más casos.</p>
 
-    <div className="flip-grid">
-      {/* Solo mostramos el gato que corresponde al índice actual */}
-      {gatosColonia.slice(indiceGato, indiceGato + 1).map((cat) => (
-        <label className="flip-card" key={cat.id}>
-          <input type="checkbox" className="flip-toggle" />
-          <span className="flip-card-inner">
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+    
+    {/* Botón Izquierda */}
+    <button 
+      onClick={anteriorGato} 
+      disabled={indiceInicio === 0}
+      style={{ 
+        ...flechaStyle, 
+        opacity: indiceInicio === 0 ? 0.3 : 1, 
+        cursor: indiceInicio === 0 ? 'default' : 'pointer' 
+      }}
+    >
+      ⬅️
+    </button>
+
+    {/* Contenedor de las 3 tarjetas */}
+    <div className="flip-grid" style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(3, 1fr)', 
+      gap: '15px',
+      perspective: '1000px'
+    }}>
+      {gatosVisibles.map((gato) => (
+        <div className="flip-card" key={gato.id}>
+          <label className="flip-card-inner">
+            <input type="checkbox" className="flip-toggle" />
             
             {/* CARA FRONTAL */}
-            <span className="flip-face flip-front">
-              <img src={cat.imagen} alt={cat.nombre} />
-              <strong>{cat.nombre}</strong>
-              <small>{cat.colonia}</small>
+            <div className="flip-face flip-front">
+              <img src={gato.imagen} alt={gato.nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px' }} />
+              <strong style={{ display: 'block', marginTop: '10px' }}>{gato.nombre}</strong>
+              <small>{gato.colonia}</small>
               <button 
-                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${cat.nombre}`, 10); }}
+                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${gato.nombre}`, 10); }}
                 style={botonCaraFrontal}
               >
                 Apadrinar 10€
               </button>
-            </span>
+            </div>
 
             {/* CARA TRASERA */}
-            <span className="flip-face flip-back">
-              <h4>Estado de {cat.nombre}</h4>
-              <ul style={{ textAlign: 'left', fontSize: '0.8rem' }}>
-                <li><strong>Esterilización:</strong> {cat.detalles.esterilizacion}</li>
-                <li><strong>Enfermedad:</strong> {cat.detalles.enfermedad}</li>
-                <li><strong>Edad:</strong> {cat.detalles.edad}</li>
+            <div className="flip-face flip-back">
+              <h4 style={{ margin: '5px 0' }}>{gato.nombre}</h4>
+              <ul style={{ textAlign: 'left', fontSize: '0.75rem', padding: '0 10px', listStyle: 'none' }}>
+                <li><strong>Esteril:</strong> {gato.detalles.esterilizacion}</li>
+                <li><strong>Salud:</strong> {gato.detalles.enfermedad}</li>
+                <li><strong>Edad:</strong> {gato.detalles.edad}</li>
               </ul>
               <button 
-                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${cat.nombre}`, 10); }}
-                style={botonCaraFrontal}
+                onClick={(e) => { e.preventDefault(); handlePayment(`Ayudar a ${gato.nombre}`, 10); }}
+                style={{ ...botonCaraFrontal, backgroundColor: '#2ed573' }}
               >
-                ❤️ Ayudar a {cat.nombre}
+                ❤️ Ayudar
               </button>
-            </span>
-
-          </span>
-        </label>
+            </div>
+          </label>
+        </div>
       ))}
     </div>
 
-    {/* Flecha Derecha */}
-    <button onClick={() => setIndiceGato(prev => prev < gatosColonia.length - 1 ? prev + 1 : prev)} style={flechaStyle}>➡️</button>
+    {/* Botón Derecha */}
+    <button 
+      onClick={siguienteGato} 
+      disabled={indiceInicio + 3 >= gatosColonia.length}
+      style={{ 
+        ...flechaStyle, 
+        opacity: indiceInicio + 3 >= gatosColonia.length ? 0.3 : 1, 
+        cursor: indiceInicio + 3 >= gatosColonia.length ? 'default' : 'pointer' 
+      }}
+    >
+      ➡️
+    </button>
   </div>
 </section>
       <section id="minijuego" style={card}>
