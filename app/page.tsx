@@ -16,6 +16,21 @@ type GalleryImage = {
   caption: string;
 };
 
+interface Gato {
+  id: number;
+  nombre: string;
+  colonia: string;
+  imagen: string;
+  detalles: {
+    esterilizacion: string;
+    enfermedad: string;
+    tratamiento: string;
+    desaparicion: string;
+    edad: string;
+    caracter: string;
+  };
+}
+
 const galleryImages: GalleryImage[] = [
   {
     src: "/img/foto-01.jpg",
@@ -104,7 +119,65 @@ const donationOptions: DonationOption[] = [
     name: "Nube (Pincha para apadrinar)",
   }
 ];
+const flechaStyle = {
+  background: 'rgba(255, 71, 87, 0.1)', // Un fondo rojizo muy suave
+  border: 'none',
+  fontSize: '2rem',
+  cursor: 'pointer',
+  padding: '10px 15px',
+  borderRadius: '50%',
+  color: '#ff4757',
+  transition: '0.3s',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  userSelect: 'none' as const // Para que no se seleccione el texto al hacer muchos clics
+};
+const botonCaraFrontal = {
+    backgroundColor: '#ff4757',
+    color: 'white',
+    padding: '8px 12px',
+    borderRadius: '20px',
+    border: 'none',
+    fontWeight: 'bold' as const,
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    marginTop: '10px'
+  };
 
+  const flechaStyle = {
+    background: 'none',
+    border: 'none',
+    fontSize: '2rem',
+    cursor: 'pointer',
+    color: '#ff4757'
+  };
+
+const handlePayment = async (nombreItem: string, precio: number) => {
+  try {
+    // 1. Llamamos a nuestra API local
+    const response = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: nombreItem,
+        amount: precio, // Euros (el route.ts ya lo multiplica por 100)
+      }),
+    });
+
+    const data = await response.json();
+
+    // 2. Si todo va bien, Stripe nos da una URL y saltamos a ella
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Error al conectar con la pasarela de pago");
+    }
+  } catch (error) {
+    console.error("Error en el pago:", error);
+    alert("Hubo un fallo en la conexión");
+  }
+};
 
 
 export default function HomePage() {
@@ -119,11 +192,13 @@ export default function HomePage() {
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const { status } = useSession();
+  const [indiceGato, setIndiceGato] = useState(0);
 
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
     [filter],
   );
+
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -182,6 +257,63 @@ export default function HomePage() {
       return donationSelections[`${cat.id}-${option.id}`] ? subtotal + option.karma : subtotal;
     }, 0);
   }, 0);
+
+  const btnPagoStyle = {
+    backgroundColor: '#ff4757',
+    color: 'white',
+    border: 'none',
+    borderRadius: '20px',
+    padding: '5px 12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.8rem',
+    marginTop: 'auto', // Lo empuja hacia abajo
+    marginBottom: '10px'
+};
+  const gatosColonia = [
+  {
+    id: 1,
+    nombre: "Nube",
+    colonia: "Río Norte",
+    imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg",
+    detalles: {
+      esterilizacion: "Hecha ✅",
+      enfermedad: "Gingivitis leve",
+      tratamiento: "Antiinflamatorio + revisión mensual",
+      desaparicion: "No",
+      edad: "4 años",
+      caracter: "Sociable y tranquila"
+    }
+  },
+  {
+    id: 2,
+    nombre: "Menta",
+    colonia: "Mirador",
+    imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg",
+    detalles: {
+      esterilizacion: "Pendiente ⏳",
+      enfermedad: "Sin diagnóstico actual",
+      tratamiento: "Desparasitación preventiva",
+      desaparicion: "No",
+      edad: "2 años",
+      caracter: "Curiosa y algo tímida"
+    }
+  },
+  {
+    id: 3,
+    nombre: "Rayo",
+    colonia: "Fonteboa",
+    imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg",
+    detalles: {
+      esterilizacion: "Hecha ✅",
+      enfermedad: "Lesión ocular antigua",
+      tratamiento: "Colirio en brotes",
+      desaparicion: "Aviso activo (Feb 2026)",
+      edad: "7 años",
+      caracter: "Independiente"
+    }
+  }
+];
 
   const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -346,81 +478,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="fichas" style={card} className="flip-card-section">
-        <h3>Fichas de gatos de colonia</h3>
-        <p>Pincha o toca cada tarjeta para girarla y ver el estado del caso.</p>
+// 1. Añade este estado arriba con tus otros useState
+const [indiceGato, setIndiceGato] = useState(0);
 
-        <div className="flip-grid">
-          <label className="flip-card">
-            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Nube" />
-            <span className="flip-card-inner">
-              <span className="flip-face flip-front">
-                <img src="https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg" alt="Gato Nube mirando de frente" />
-                <strong>Nube</strong>
-                <small>Colonia Río Norte</small>
-                <em>Pincha para ver ficha</em>
-              </span>
-              <span className="flip-face flip-back">
-                <h4>Estado de Nube</h4>
-                <ul>
-                  <li><strong>Esterilización:</strong> Hecha ✅</li>
-                  <li><strong>Enfermedad:</strong> Gingivitis leve</li>
-                  <li><strong>Tratamiento:</strong> Antiinflamatorio + revisión mensual</li>
-                  <li><strong>Desaparición:</strong> No</li>
-                  <li><strong>Edad aprox.:</strong> 4 años</li>
-                  <li><strong>Carácter:</strong> Sociable y tranquila</li>
-                </ul>
-              </span>
-            </span>
-          </label>
+// 2. En tu sección de fichas:
+<section id="fichas" style={card} className="flip-card-section">
+  <h3>Fichas de gatos de colonia</h3>
+  
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+    
+    {/* Flecha Izquierda */}
+    <button onClick={() => setIndiceGato(prev => prev > 0 ? prev - 1 : prev)} style={flechaStyle}>⬅️</button>
 
-          <label className="flip-card">
-            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Menta" />
-            <span className="flip-card-inner">
-              <span className="flip-face flip-front">
-                <img src="https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg" alt="Gata Menta sobre la hierba" />
-                <strong>Menta</strong>
-                <small>Colonia Mirador</small>
-                <em>Pincha para ver ficha</em>
-              </span>
-              <span className="flip-face flip-back">
-                <h4>Estado de Menta</h4>
-                <ul>
-                  <li><strong>Esterilización:</strong> Pendiente ⏳</li>
-                  <li><strong>Enfermedad:</strong> Sin diagnóstico actual</li>
-                  <li><strong>Tratamiento:</strong> Desparasitación preventiva</li>
-                  <li><strong>Desaparición:</strong> No</li>
-                  <li><strong>Edad aprox.:</strong> 2 años</li>
-                  <li><strong>Carácter:</strong> Curiosa y algo tímida</li>
-                </ul>
-              </span>
+    <div className="flip-grid">
+      {/* Solo mostramos el gato que corresponde al índice actual */}
+      {gatosColonia.slice(indiceGato, indiceGato + 1).map((cat) => (
+        <label className="flip-card" key={cat.id}>
+          <input type="checkbox" className="flip-toggle" />
+          <span className="flip-card-inner">
+            
+            {/* CARA FRONTAL */}
+            <span className="flip-face flip-front">
+              <img src={cat.imagen} alt={cat.nombre} />
+              <strong>{cat.nombre}</strong>
+              <small>{cat.colonia}</small>
+              <button 
+                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${cat.nombre}`, 10); }}
+                style={botonCaraFrontal}
+              >
+                Apadrinar 10€
+              </button>
             </span>
-          </label>
 
-          <label className="flip-card">
-            <input type="checkbox" className="flip-toggle" aria-label="Girar ficha de Rayo" />
-            <span className="flip-card-inner">
-              <span className="flip-face flip-front">
-                <img src="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg" alt="Gato Rayo tumbado" />
-                <strong>Rayo</strong>
-                <small>Colonia Fonteboa</small>
-                <em>Pincha para ver ficha</em>
-              </span>
-              <span className="flip-face flip-back">
-                <h4>Estado de Rayo</h4>
-                <ul>
-                  <li><strong>Esterilización:</strong> Hecha ✅</li>
-                  <li><strong>Enfermedad:</strong> Lesión ocular antigua</li>
-                  <li><strong>Tratamiento:</strong> Colirio en brotes</li>
-                  <li><strong>Desaparición:</strong> Aviso activo desde febrero 2026</li>
-                  <li><strong>Edad aprox.:</strong> 7 años</li>
-                  <li><strong>Carácter:</strong> Independiente, acepta comida a distancia</li>
-                </ul>
-              </span>
+            {/* CARA TRASERA */}
+            <span className="flip-face flip-back">
+              <h4>Estado de {cat.nombre}</h4>
+              <ul style={{ textAlign: 'left', fontSize: '0.8rem' }}>
+                <li><strong>Esterilización:</strong> {cat.detalles.esterilizacion}</li>
+                <li><strong>Enfermedad:</strong> {cat.detalles.enfermedad}</li>
+                <li><strong>Edad:</strong> {cat.detalles.edad}</li>
+              </ul>
+              <button 
+                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${cat.nombre}`, 10); }}
+                style={botonCaraFrontal}
+              >
+                ❤️ Ayudar a {cat.nombre}
+              </button>
             </span>
-          </label>
-        </div>
-      </section>
+
+          </span>
+        </label>
+      ))}
+    </div>
+
+    {/* Flecha Derecha */}
+    <button onClick={() => setIndiceGato(prev => prev < gatosColonia.length - 1 ? prev + 1 : prev)} style={flechaStyle}>➡️</button>
+  </div>
+</section>
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>

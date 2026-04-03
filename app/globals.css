@@ -754,15 +754,18 @@ footer {
 }
 
 .flip-grid {
-    display: grid;
-    gap: 0.9rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    display: flex;          /* Cambiamos grid por flex para centrar un solo gato */
+    justify-content: center;
+    align-items: center;
+    min-height: 450px;      /* Altura fija para que la web no "salte" al girar */
     margin-top: 0.9rem;
+    perspective: 1000px;    /* Importante para que el giro se vea en 3D */
 }
 
+/* Si quieres que la tarjeta mantenga el tamaño que tenías antes */
 .flip-card {
-    perspective: 1000px;
-    min-height: 320px;
+    width: 250px;           /* Un poco más de los 220px que tenías para que luzca más */
+    height: 380px;
     cursor: pointer;
 }
 
