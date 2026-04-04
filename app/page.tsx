@@ -43,6 +43,13 @@ const gatosColonia = [
   { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años" } }
 ];
 
+const { data: session, status } = useSession();
+
+// Pegamos tu lógica aquí para que esté disponible
+const avatar = useMemo(() => 
+  session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
+  [session]
+);
 const galleryImages: GalleryImage[] = [
   {
     src: "/img/foto-01.jpg",
@@ -334,17 +341,15 @@ export default function HomePage() {
   {status === "authenticated" ? (
     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
       <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center" }}>
-        {session?.user?.image && (
-          <img 
-            src={session.user.image} 
-            alt="Avatar" 
-            style={{ width: "20px", height: "20px", borderRadius: "50%", marginRight: "8px", verticalAlign: "middle" }} 
-          />
-        )}
+        {/* Usamos tu constante avatar aquí */}
+        <img 
+          src={avatar} 
+          alt="Avatar" 
+          style={{ width: "24px", height: "24px", borderRadius: "50%", marginRight: "8px", verticalAlign: "middle" }} 
+        />
         Ir a mi perfil
       </Link>
-      
-      {/* Botón Salir - Asegúrate de tener signOut en el import de arriba */}
+
       <button 
         type="button" 
         className="btn btn-secondary" 
@@ -356,13 +361,8 @@ export default function HomePage() {
     </div>
   ) : (
     <>
-      {/* Estos Links ahora llevan a tus nuevas páginas de Login y Registro */}
-      <Link href="/login" className="btn btn-secondary">
-        Acceder
-      </Link>
-      <Link href="/register" className="btn btn-secondary">
-        Crear cuenta
-      </Link>
+      <Link href="/login" className="btn btn-secondary">Acceder</Link>
+      <Link href="/register" className="btn btn-secondary">Crear cuenta</Link>
     </>
   )}
 
