@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { type CSSProperties, useEffect, useMemo, useState, Suspense } from "react"; // Añadido Suspense
+import { type CSSProperties, useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
+
+// 1. Añadimos esta línea para que Vercel no intente pre-renderizar estáticamente
+export const dynamic = 'force-dynamic';
 
 // --- TIPOS ---
 type ProfileData = {
@@ -66,7 +69,9 @@ const btnPrimary: CSSProperties = {
   fontWeight: 600,
   border: "1px solid rgba(255, 255, 255, 0.3)",
   cursor: "pointer",
-  backdropFilter: "blur(10px)"
+  backdropFilter: "blur(10px)",
+  textDecoration: "none", // Añadido para los links
+  display: "inline-block"
 };
 
 // --- LÓGICA DNI ---
@@ -78,7 +83,7 @@ function isValidDni(v: string) {
   return dni[8] === dniLetters[Number(dni.slice(0, 8)) % 23];
 }
 
-// --- SUBCOMPONENTE CON LA LÓGICA (Para evitar el error de Suspense) ---
+// --- SUBCOMPONENTE CON LA LÓGICA ---
 function PerfilContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
@@ -96,7 +101,7 @@ function PerfilContent() {
   );
 
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
+    if (searchParams?.get("success") === "true") {
       setShowSuccessBanner(true);
       confetti({
         particleCount: 150,
@@ -111,26 +116,34 @@ function PerfilContent() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (status !== "authenticated") { setLoading(false); return; }
-      const res = await fetch("/api/profile");
-      if (res.ok) {
-        const data = await res.json();
-        const p = data.profile || {};
-        setProfile({
-          nombreCompleto: p.nombreCompleto || session?.user?.name || "",
-          telefono: p.telefono || "",
-          dniNie: p.dniNie || "",
-          direccion: p.direccion || "",
-          codigoPostal: p.codigoPostal || "",
-          poblacion: p.poblacion || "",
-          karmaPoints: Number(p.karmaPoints || 0),
-          totalDonaciones: Number(p.totalDonaciones || 0),
-          runnerBestScore: Number(p.runnerBestScore || 0),
-          runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
-          aceptaPoliticas: Boolean(p.aceptaPoliticas),
-        });
+      if (status !== "authenticated") { 
+        if (status === "unauthenticated") setLoading(false);
+        return; 
       }
-      setLoading(false);
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          const p = data.profile || {};
+          setProfile({
+            nombreCompleto: p.nombreCompleto || session?.user?.name || "",
+            telefono: p.telefono || "",
+            dniNie: p.dniNie || "",
+            direccion: p.direccion || "",
+            codigoPostal: p.codigoPostal || "",
+            poblacion: p.poblacion || "",
+            karmaPoints: Number(p.karmaPoints || 0),
+            totalDonaciones: Number(p.totalDonaciones || 0),
+            runnerBestScore: Number(p.runnerBestScore || 0),
+            runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
+            aceptaPoliticas: Boolean(p.aceptaPoliticas),
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando perfil:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     loadProfile();
   }, [session, status]);
@@ -155,14 +168,15 @@ function PerfilContent() {
     }
   };
 
-  if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando...</main>;
+  if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando perfil...</main>;
+  if (status === "unauthenticated") return <main style={{ padding: "2rem", color: "white" }}>Por favor, inicia sesión.</main>;
 
   return (
     <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
       {showSuccessBanner && (
         <div style={{ ...glassCard, backgroundColor: 'rgba(46, 204, 113, 0.25)', border: '1px solid #2ecc71', textAlign: 'center' }}>
           <h2 style={{ margin: '0 0 10px 0', color: '#2ecc71' }}>¡Gracias por tu donación! 🐾</h2>
-          <p style={{ margin: 0 }}>Tu apoyo directo a las colonias ha sido procesado. Tus <strong>Zarpa Karma</strong> se verán reflejados en breve.</p>
+          <p style={{ margin: 0 }}>Tu apoyo directo a las colonias ha sido procesado.</p>
         </div>
       )}
 
