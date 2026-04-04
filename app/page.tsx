@@ -475,8 +475,6 @@ export default function HomePage() {
         </div>
       </section>
 
-const [indiceGato, setIndiceGato] = useState(0);
-
 // 2. En tu sección de fichas:
 <section id="fichas" style={{ ...card, padding: '20px 0' }} className="flip-card-section">
   <h3 style={{ textAlign: 'center' }}>Fichas de gatos de colonia</h3>
