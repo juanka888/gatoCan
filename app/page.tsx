@@ -330,23 +330,56 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-            {status === "authenticated" ? (
-              <a href="/perfil" className="btn btn-secondary">Ir a mi perfil</a>
-            ) : (
-              <>
-                <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-                <a href="/register" className="btn btn-secondary">Crear cuenta</a>
-              </>
-            )}
-            <a
-              href="https://www.teaming.net/proyectogatonaturanrural"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-            >
-              Teaming 1€
-            </a>
-          </div>
+  {status === "loading" ? (
+    <button className="btn btn-secondary" disabled>Cargando...</button>
+  ) : session ? (
+    // ESTADO: USUARIO LOGUEADO
+    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 15px" }}>
+        {session.user?.image ? (
+          <img 
+            src={session.user.image} 
+            alt="Avatar" 
+            style={{ width: "24px", height: "24px", borderRadius: "50%" }} 
+          />
+        ) : (
+          <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "inline-grid", placeItems: "center", fontSize: "12px" }}>
+            {session.user?.name?.charAt(0) || "U"}
+          </span>
+        )}
+        Ir a mi perfil
+      </Link>
+      
+      {/* Botón opcional de salir si quieres que aparezca en el Hero también */}
+      <button 
+        onClick={() => signOut({ callbackUrl: "/" })}
+        style={{ background: "none", border: "none", color: "white", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
+      >
+        Salir
+      </button>
+    </div>
+  ) : (
+    // ESTADO: USUARIO NO LOGUEADO
+    <>
+      {/* Ahora este botón lleva a tu página intermedia /login */}
+      <Link href="/login" className="btn btn-secondary">
+        Acceder
+      </Link>
+      <Link href="/register" className="btn btn-secondary">
+        Crear cuenta
+      </Link>
+    </>
+  )}
+
+  <a
+    href="https://www.teaming.net/proyectogatonaturanrural"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="btn btn-primary"
+  >
+    Teaming 1€
+  </a>
+</div>
         </div>
 
         <button
