@@ -23,7 +23,7 @@ export default function RankingsPage() {
     WebkitBackdropFilter: 'blur(16px)',
     border: '1px solid rgba(255, 255, 255, 0.25)',
     borderRadius: '24px',
-    padding: '2rem',
+    padding: 'clamp(1rem, 4vw, 2rem)',
     marginBottom: '2rem',
     boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
     color: '#FFFFFF'
@@ -32,6 +32,9 @@ export default function RankingsPage() {
   const rowStyle = {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap',
     padding: '12px 16px',
     background: 'rgba(255, 255, 255, 0.08)',
     borderRadius: '12px',
@@ -40,10 +43,10 @@ export default function RankingsPage() {
   };
 
   return (
-    <main style={{ maxWidth: '850px', margin: '0 auto', padding: '2rem', minHeight: '100vh' }}>
+    <main style={{ maxWidth: '850px', margin: '0 auto', padding: 'clamp(1rem, 4vw, 2rem)', minHeight: '100vh' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-        <h1 style={{ color: '#FFFFFF', fontSize: '2.5rem', fontWeight: '800', margin: 0, textShadow: '2px 4px 8px rgba(0,0,0,0.3)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '12px' }}>
+        <h1 style={{ color: '#FFFFFF', fontSize: 'clamp(2rem, 8vw, 2.5rem)', fontWeight: '800', margin: 0, textShadow: '2px 4px 8px rgba(0,0,0,0.3)' }}>
           Rankings Solidarios
         </h1>
         <Link href="/" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', padding: '10px 20px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold', backdropFilter: 'blur(10px)' }}>
@@ -59,8 +62,8 @@ export default function RankingsPage() {
         <div>
           {donations.length === 0 ? <p>Cargando podio...</p> : donations.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span><strong style={{ color: '#FFD700', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
-              <span style={{ fontWeight: '800' }}>{row.karmaPoints} pts</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#FFD700', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.karmaPoints} pts</span>
             </div>
           ))}
         </div>
@@ -74,8 +77,8 @@ export default function RankingsPage() {
         <div>
           {runnerScore.length === 0 ? <p>Cargando datos...</p> : runnerScore.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span><strong style={{ color: '#70d6ff', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
-              <span style={{ fontWeight: '800' }}>{row.runnerBestScore} pts</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#70d6ff', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.runnerBestScore} pts</span>
             </div>
           ))}
         </div>
@@ -89,8 +92,8 @@ export default function RankingsPage() {
         <div>
           {runnerDistance.length === 0 ? <p>Esperando corredores...</p> : runnerDistance.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span><strong style={{ color: '#a29bfe', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
-              <span style={{ fontWeight: '800' }}>{row.runnerBestDistanceM} metros</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#a29bfe', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.runnerBestDistanceM} metros</span>
             </div>
           ))}
         </div>

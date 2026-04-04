@@ -28,6 +28,12 @@ body {
     background-size: cover;
 }
 
+html,
+body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 /* Por defecto, ocultamos la versión de móvil */
 .t-mobile {
   display: none;
@@ -1276,6 +1282,21 @@ footer {
         top: auto;
         bottom: 1.1rem;
         transform: none;
+    }
+
+    #fichas > div {
+        flex-wrap: wrap;
+    }
+
+    #fichas .flip-grid {
+        grid-template-columns: 1fr !important;
+        width: 100%;
+    }
+
+    #fichas .flip-card {
+        width: 100%;
+        max-width: 280px;
+        margin-inline: auto;
     }
 }
 

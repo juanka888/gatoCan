@@ -136,21 +136,21 @@ export default function PerfilPage() {
   if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando...</main>;
 
   return (
-    <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
+    <main style={{ maxWidth: 850, margin: "0 auto", padding: "clamp(1rem, 4vw, 2rem)", display: "grid", gap: 20 }}>
       
       {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ color: "white", fontSize: "2.5rem", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)" }}>Mi perfil</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <h1 style={{ color: "white", fontSize: "clamp(2rem, 8vw, 2.5rem)", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)", margin: 0 }}>Mi perfil</h1>
         <Link href="/" style={btnPrimary}>Volver al Inicio</Link>
       </div>
 
       {/* AVATAR Y INFO SUPERIOR EN CRISTAL */}
       <div style={glassCard}>
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
           <img src={avatar} alt="Avatar" style={{ width: 80, height: 80, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)" }} />
-          <div>
-            <h2 style={{ margin: 0, fontSize: "1.8rem" }}>{profile.nombreCompleto || session?.user?.name}</h2>
-            <p style={{ margin: 0, opacity: 0.8 }}>{session?.user?.email}</p>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontSize: "clamp(1.8rem, 6vw, 2.4rem)", overflowWrap: "anywhere" }}>{profile.nombreCompleto || session?.user?.name}</h2>
+            <p style={{ margin: 0, opacity: 0.8, overflowWrap: "anywhere" }}>{session?.user?.email}</p>
           </div>
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function PerfilPage() {
       {/* ACTIVIDAD SOLIDARIA */}
       <section style={glassCard}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Actividad solidaria</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 15 }}>
           <p>Donaciones: <strong>{profile.totalDonaciones} €</strong></p>
           <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints}</strong></p>
           <p>Mejor Score: <strong>{profile.runnerBestScore}</strong></p>
@@ -180,7 +180,7 @@ export default function PerfilPage() {
           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
           <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 15 }}>
             <div>
                <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
                <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
@@ -197,7 +197,7 @@ export default function PerfilPage() {
           Acepto las políticas de seguridad y privacidad.
         </label>
 
-        <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
           {!editing ? (
             <button style={{ ...btnPrimary, background: "#f5a623", border: "none" }} onClick={() => setEditing(true)}>Modificar datos</button>
           ) : (
