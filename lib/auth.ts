@@ -6,31 +6,43 @@ import { prisma } from "@/lib/prisma";
 
 const providers = [
   CredentialsProvider({
-    name: "Credentials",
-    credentials: {
-      email: { label: "Email", type: "text" },
-      password: { label: "Password", type: "password" },
-    },
-    async authorize(credentials) {
-      if (!credentials?.email || !credentials?.password) return null;
+  name: "Credentials",
+  credentials: {
+    email: { label: "Email", type: "text" },
+    password: { label: "Password", type: "password" },
+  },
+  async authorize(credentials) {
+    // 1. Verificación básica
+    if (!credentials?.email || !credentials?.password) {
+      throw new Error("Por favor, introduce tus datos");
+    }
 
-      const user = await prisma.user.findUnique({
-        where: { email: credentials.email.toLowerCase() },
-      });
+    // 2. Buscar usuario (con minúsculas para evitar fallos de escritura)
+    const user = await prisma.user.findUnique({
+      where: { email: credentials.email.toLowerCase() },
+    });
 
-      if (!user?.password) return null;
+    // 3. Si no existe o se registró con Google (y no tiene password)
+    if (!user || !user.password) {
+      throw new Error("No existe una cuenta con este email o debe entrar con Google");
+    }
 
-      const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
-      if (!isPasswordCorrect) return null;
+    // 4. Comparar contraseñas
+    const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
+    
+    if (!isPasswordCorrect) {
+      throw new Error("Contraseña incorrecta");
+    }
 
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-      };
-    },
-  }),
+    // 5. Devolver el objeto de usuario (NextAuth lo guardará en el Token)
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      image: user.image,
+    };
+  },
+}),
 ];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
