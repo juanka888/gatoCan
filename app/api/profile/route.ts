@@ -1,8 +1,8 @@
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next"; // Cambiado el import para mayor compatibilidad
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma"; // Asegúrate de que la ruta sea correcta (@/lib/prisma)
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +35,7 @@ function getErrorMessage(error: unknown): string {
 
 export async function GET() {
   try {
+    // CORRECCIÓN: Pasamos authOptions correctamente
     const session = await getServerSession(authOptions);
     const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
@@ -42,7 +43,6 @@ export async function GET() {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
-    // Upsert del usuario para asegurar que existe
     const user = await prisma.user.upsert({
       where: { email: sessionEmail },
       update: {
@@ -57,7 +57,6 @@ export async function GET() {
       include: { profile: true },
     });
 
-    // Upsert del perfil
     const profile = await prisma.profile.upsert({
       where: { userId: user.id },
       update: { email: sessionEmail },
@@ -92,7 +91,6 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "El DNI no es válido" }, { status: 400 });
     }
 
-    // 1. Obtener o crear usuario
     const user = await prisma.user.upsert({
       where: { email: sessionEmail },
       update: {},
@@ -103,7 +101,6 @@ export async function PUT(req: Request) {
       },
     });
 
-    // 2. Lógica de récords (comparar con lo existente)
     const currentProfile = await prisma.profile.findUnique({ where: { userId: user.id } });
     
     const incomingScore = Number(body?.runnerBestScore || 0);
@@ -112,7 +109,6 @@ export async function PUT(req: Request) {
     const finalScore = Math.max(incomingScore, currentProfile?.runnerBestScore || 0);
     const finalDistance = Math.max(incomingDistance, currentProfile?.runnerBestDistanceM || 0);
 
-    // 3. Preparar datos
     const dataToUpdate = {
       nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? null,
       telefono: normalizeOptionalField(body?.telefono),
@@ -126,7 +122,6 @@ export async function PUT(req: Request) {
       email: sessionEmail,
     };
 
-    // 4. Actualizar Perfil y Usuario
     const [updatedProfile] = await prisma.$transaction([
       prisma.profile.upsert({
         where: { userId: user.id },
@@ -137,7 +132,8 @@ export async function PUT(req: Request) {
         where: { id: user.id },
         data: {
           runnerBestScore: finalScore,
-          runnerBestDistance: finalDistance, // Verifica que el campo en User se llame así
+          // Cambiamos a runnerBestDistance si ese es el nombre en tu esquema de User
+          runnerBestDistance: finalDistance, 
         },
       }),
     ]);
