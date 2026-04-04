@@ -1,18 +1,7 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-const FEEDS = [
-  { name: 'La Región', url: 'https://www.laregion.es/rss' },
-  { name: 'La Voz de Galicia', url: 'https://www.lavozdegalicia.es/sociedad/index.xml' },
-  { name: '20 Minutos', url: 'https://www.20minutos.es/rss/animales/' },
-  { name: 'Europa Press', url: 'https://www.europapress.es/rss/rss.aspx?ch=00066' },
-  // NUEVAS FUENTES AÑADIDAS
-  { name: 'ABC Natural', url: 'https://www.abc.es/rss/2.0/natural/biodiversidad/' },
-  { name: 'EFE Verde', url: 'https://efe示范verde.com/feed/' }, // Nota: EFE a veces requiere proxy robusto
-  { name: 'Faro de Vigo', url: 'https://www.farodevigo.es/rss/section/13214' }
-];
-
-// LISTA BLANCA EXPANDIDA (Más relevancia)
+// Filtros de relevancia para que el banner sea 100% temático
 const WHITE_LIST = [
   'gato', 'animal', 'perro', 'mascota', 'ourense', 'galicia', 'protectora', 
   'felino', 'adopta', 'canino', 'cachorro', 'veterinario', 'fauna', 
@@ -25,57 +14,64 @@ export default function NoticiasGatocan() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Función para avanzar slide (memorizada para el auto-play)
+  const nextSlide = useCallback(() => {
+    setNews((currentNews) => {
+      if (currentNews.length === 0) return [];
+      setCurrentIndex((prev) => (prev + 1) % currentNews.length);
+      return currentNews;
+    });
+  }, []);
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + news.length) % news.length);
+  };
+
   useEffect(() => {
     async function loadNews() {
-      setLoading(true);
-      const allItems: any[] = [];
+      try {
+        setLoading(true);
+        // Consumimos tu propia API de Vercel
+        const response = await fetch('/api/noticias', { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en API");
+        
+        const data = await response.json();
 
-      for (const feed of FEEDS) {
-        try {
-          const proxy = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feed.url)}`;
-          const response = await fetch(proxy);
-          const xmlText = await response.text();
-          
-          const parser = new DOMParser();
-          const xml = parser.parseFromString(xmlText, "text/xml");
-          
-          // Aumentamos a 20 para analizar más profundidad en cada periódico
-          const items = Array.from(xml.querySelectorAll("item")).slice(0, 20);
+        // Filtramos por palabras clave y limpiamos el HTML residual
+        const filtered = data
+          .filter((item: any) => {
+            const searchContent = (item.title + (item.description || "")).toLowerCase();
+            return WHITE_LIST.some(word => searchContent.includes(word));
+          })
+          .map((item: any) => ({
+            ...item,
+            title: item.title?.replace(/&lt;.*?&gt;/g, "").replace(/&quot;/g, '"'),
+            desc: item.description?.replace(/<[^>]*>?/gm, '').substring(0, 180) + "..."
+          }));
 
-          items.forEach(item => {
-            const title = item.querySelector("title")?.textContent || "";
-            const link = item.querySelector("link")?.textContent || "";
-            const rawDesc = item.querySelector("description")?.textContent || "";
-            const cleanDesc = rawDesc.replace(/<[^>]*>?/gm, '');
-
-            // Filtro de relevancia mejorado
-            const isRelevant = WHITE_LIST.some(word => 
-              title.toLowerCase().includes(word) || cleanDesc.toLowerCase().includes(word)
-            );
-
-            if (title && link && isRelevant) {
-              allItems.push({
-                title, link, source: feed.name,
-                desc: cleanDesc.substring(0, 250) + "..."
-              });
-            }
-          });
-        } catch (e) {
-          console.log("Fallo en fuente:", feed.name);
-        }
+        // Mezcla aleatoria para que el banner siempre parezca nuevo
+        setNews(filtered.sort(() => Math.random() - 0.5));
+      } catch (e) {
+        console.error("Fallo al cargar el banner de noticias:", e);
+      } finally {
+        setLoading(false);
       }
-
-      // Mezclamos y eliminamos duplicados por título si los hubiera
-      const uniqueItems = Array.from(new Map(allItems.map(item => [item.title, item])).values());
-      setNews(uniqueItems.sort(() => Math.random() - 0.5));
-      setLoading(false);
     }
     loadNews();
   }, []);
 
+  // Efecto de Auto-play: cambia cada 6 segundos
+  useEffect(() => {
+    if (news.length === 0 || loading) return;
+    const interval = setInterval(nextSlide, 6000);
+    return () => clearInterval(interval);
+  }, [news.length, loading, nextSlide]);
+
   if (loading) return (
     <div style={{padding: '40px', textAlign: 'center', background: 'white', borderRadius: '24px', border: '1px solid #eee'}}>
-      <p style={{color: '#666', fontSize: '14px', fontWeight: '500'}}>Rastreando noticias en Galicia y redes animales...</p>
+      <p style={{color: '#666', fontSize: '14px', fontWeight: '500', animation: 'pulse 1.5s infinite'}}>
+        🐾 Rastreando últimas noticias animales...
+      </p>
     </div>
   );
 
@@ -84,27 +80,120 @@ export default function NoticiasGatocan() {
 
   return (
     <div style={{
-      background: 'white', border: '1px solid #e2e8f0', borderRadius: '24px',
-      padding: '20px 24px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', fontFamily: 'sans-serif'
+      background: 'white', 
+      border: '1px solid #e2e8f0', 
+      borderRadius: '24px',
+      padding: '20px 24px', 
+      boxShadow: '0 10px 25px rgba(0,0,0,0.05)', 
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      transition: 'all 0.3s ease'
     }}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px'}}>
+      {/* Cabecera del Banner */}
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-          <span style={{background: '#2563eb', color: 'white', fontSize: '9px', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold'}}>ACTUALIDAD</span>
-          <span style={{fontSize: '11px', color: '#64748b', fontWeight: '600'}}>• {current.source}</span>
+          <span style={{
+            background: '#2563eb', 
+            color: 'white', 
+            fontSize: '10px', 
+            padding: '3px 10px', 
+            borderRadius: '6px', 
+            fontWeight: '800',
+            letterSpacing: '0.5px'
+          }}>
+            ACTUALIDAD
+          </span>
+          <span style={{fontSize: '11px', color: '#64748b', fontWeight: '600'}}>
+            • {current.source || 'GatoCan Informa'}
+          </span>
         </div>
-        <span style={{color: '#cbd5e1', fontSize: '10px', fontWeight: 'bold'}}>{currentIndex + 1}/{news.length}</span>
+        <span style={{color: '#cbd5e1', fontSize: '11px', fontWeight: 'bold'}}>
+          {currentIndex + 1} / {news.length}
+        </span>
       </div>
 
-      <h3 style={{fontSize: '17px', color: '#0f172a', margin: '0 0 8px 0', lineHeight: '1.3', fontWeight: '800'}}>{current.title}</h3>
-      <p style={{fontSize: '13.5px', color: '#475569', lineHeight: '1.4', margin: '0 0 16px 0'}}>{current.desc}</p>
+      {/* Contenido Principal */}
+      <div style={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
+        <h3 style={{
+          fontSize: '18px', 
+          color: '#0f172a', 
+          margin: '0', 
+          lineHeight: '1.3', 
+          fontWeight: '800',
+          cursor: 'pointer'
+        }}>
+          {current.title}
+        </h3>
+        
+        {/* Imagen opcional si el backend la proporciona */}
+        {current.thumbnail && (
+          <div style={{ width: '100%', height: '140px', overflow: 'hidden', borderRadius: '14px' }}>
+            <img 
+              src={current.thumbnail} 
+              alt="" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          </div>
+        )}
 
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid #f1f5f9'}}>
-        <a href={current.link} target="_blank" rel="noopener noreferrer" style={{color: '#2563eb', textDecoration: 'none', fontWeight: 'bold', fontSize: '12px'}}>LEER MÁS ↗</a>
-        <div style={{display: 'flex', gap: '8px'}}>
-          <button onClick={() => setCurrentIndex(i => (i - 1 + news.length) % news.length)} style={{width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b'}}>‹</button>
-          <button onClick={() => setCurrentIndex(i => (i + 1) % news.length)} style={{width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b'}}>›</button>
+        <p style={{fontSize: '14px', color: '#475569', lineHeight: '1.5', margin: '0'}}>
+          {current.desc}
+        </p>
+      </div>
+
+      {/* Footer y Navegación */}
+      <div style={{
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginTop: '18px', 
+        paddingTop: '14px', 
+        borderTop: '1px solid #f1f5f9'
+      }}>
+        <a 
+          href={current.link} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{
+            color: '#2563eb', 
+            textDecoration: 'none', 
+            fontWeight: 'bold', 
+            fontSize: '13px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+        >
+          LEER MÁS <span style={{fontSize: '16px'}}>›</span>
+        </a>
+
+        <div style={{display: 'flex', gap: '10px'}}>
+          <button onClick={prevSlide} style={btnStyle}>‹</button>
+          <button onClick={nextSlide} style={btnStyle}>›</button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes pulse {
+          0% { opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { opacity: 0.6; }
+        }
+      `}</style>
     </div>
   );
 }
+
+const btnStyle = {
+  width: '38px', 
+  height: '38px', 
+  borderRadius: '12px', 
+  border: '1px solid #e2e8f0', 
+  background: '#fff', 
+  cursor: 'pointer', 
+  fontSize: '20px', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  color: '#64748b',
+  transition: 'background 0.2s'
+};
