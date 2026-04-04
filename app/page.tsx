@@ -238,6 +238,20 @@ export default function HomePage() {
     }
   }, []);
 
+  // AÑADE ESTAS FUNCIONES:
+  const anteriorGato = () => {
+    if (indiceInicio > 0) setIndiceInicio(prev => prev - 1);
+  };
+
+  const siguienteGato = () => {
+    if (indiceInicio + 3 < gatosColonia.length) setIndiceInicio(prev => prev + 1);
+  };
+
+  const submitContactForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Formulario enviado");
+    // Aquí iría tu lógica de fetch a la API
+  };
   // --- EL MURO DE SEGURIDAD MEJORADO ---
   // Si no está montado (fase de Build en Vercel), devolvemos una estructura mínima
   // Esto evita que Next.js intente renderizar componentes complejos que usan hooks

@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth/next"; // Cambiado el import para mayor compatibilidad
+import { getServerSession } from "next-auth/next"; 
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
@@ -35,24 +35,28 @@ function getErrorMessage(error: unknown): string {
 
 export async function GET() {
   try {
-    // CORRECCIÓN: Pasamos authOptions correctamente
     const session = await getServerSession(authOptions);
-    const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
-    if (!sessionEmail || !session?.user) {
-      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
+    // --- PROTECCIÓN PARA TYPESCRIPT ---
+    // Si no hay sesión o no hay email, cortamos aquí. Esto quita el error en session.user
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Sesión no encontrada o incompleta" }, { status: 401 });
     }
+
+    const sessionEmail = session.user.email.trim().toLowerCase();
+    const userName = session.user.name ?? "Usuario";
+    const userImage = session.user.image ?? null;
 
     const user = await prisma.user.upsert({
       where: { email: sessionEmail },
       update: {
-        name: session.user.name ?? undefined,
-        image: session.user.image ?? undefined,
+        name: userName,
+        image: userImage,
       },
       create: {
         email: sessionEmail,
-        name: session.user.name,
-        image: session.user.image,
+        name: userName,
+        image: userImage,
       },
       include: { profile: true },
     });
@@ -63,7 +67,7 @@ export async function GET() {
       create: {
         userId: user.id,
         email: sessionEmail,
-        nombreCompleto: session.user.name ?? null,
+        nombreCompleto: userName,
         aceptaPoliticas: false,
       },
     });
@@ -78,12 +82,13 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
-    if (!sessionEmail || !session?.user) {
+    // --- PROTECCIÓN PARA TYPESCRIPT ---
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
+    const sessionEmail = session.user.email.trim().toLowerCase();
     const body = await req.json();
     const normalizedDniVal = body?.dniNie ? normalizeDni(body.dniNie) : "";
 
@@ -96,8 +101,8 @@ export async function PUT(req: Request) {
       update: {},
       create: {
         email: sessionEmail,
-        name: session.user.name,
-        image: session.user.image,
+        name: session.user.name ?? "Usuario",
+        image: session.user.image ?? null,
       },
     });
 
@@ -110,7 +115,7 @@ export async function PUT(req: Request) {
     const finalDistance = Math.max(incomingDistance, currentProfile?.runnerBestDistanceM || 0);
 
     const dataToUpdate = {
-      nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? null,
+      nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? "Usuario",
       telefono: normalizeOptionalField(body?.telefono),
       dniNie: normalizedDniVal || null,
       direccion: normalizeOptionalField(body?.direccion),
@@ -132,7 +137,7 @@ export async function PUT(req: Request) {
         where: { id: user.id },
         data: {
           runnerBestScore: finalScore,
-          // Cambiamos a runnerBestDistance si ese es el nombre en tu esquema de User
+          // Ajustado según tu esquema de base de datos
           runnerBestDistance: finalDistance, 
         },
       }),
