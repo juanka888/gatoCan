@@ -13,10 +13,14 @@ type RssResponse = {
   items?: RssItem[];
 };
 
-// He unido los feeds en una sola consulta para que tu código original los lea de golpe
-// Incluye: El Progreso, La Voz (Lugo), GCiencia y El Español (Mascotas)
-const FEED_URL =
-  "https://api.rss2json.com/v1/api.json?rss_url=https://www.elprogreso.es/rss&rss_url=https://www.lavozgalicia.es/lugo/index.xml&rss_url=https://www.gciencia.com/feed/&rss_url=https://www.elespanol.com/curiosidades/mascotas/rss.xml";
+// He añadido aquí todas las fuentes que me pediste
+const RSS_URLS = [
+  "https://www.elprogreso.es/rss",
+  "https://www.lavozgalicia.es/lugo/index.xml",
+  "https://www.gciencia.com/feed/",
+  "https://www.elespanol.com/curiosidades/mascotas/rss.xml",
+  "https://www.europapress.es/rss/rss.aspx?ch=00647"
+];
 
 export default function NoticiasPage() {
   const [news, setNews] = useState<RssItem[]>([]);
@@ -28,15 +32,27 @@ export default function NoticiasPage() {
       try {
         setError("");
 
-        const response = await fetch(FEED_URL, { cache: "no-store" });
+        // Mapeamos cada URL a una petición fetch individual
+        const requests = RSS_URLS.map(url => 
+          fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`, { cache: "no-store" })
+            .then(res => res.ok ? res.json() : { items: [] })
+            .catch(() => ({ items: [] })) // Si una falla, devolvemos vacío para no romper el resto
+        );
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        // Esperamos a que todas las peticiones terminen
+        const results = await Promise.all(requests);
+        
+        // Juntamos todas las noticias (flat) y las ordenamos por fecha (sort)
+        const allItems = results
+          .flatMap((data: RssResponse) => data.items || [])
+          .sort((a, b) => {
+            const dateA = new Date(a.pubDate || 0).getTime();
+            const dateB = new Date(b.pubDate || 0).getTime();
+            return dateB - dateA; // De más reciente a más antigua
+          });
 
-        const data = (await response.json()) as RssResponse;
-        const items = Array.isArray(data.items) ? data.items : [];
-        setNews(items);
+        // Nos quedamos con las 35 primeras para que el banner sea manejable
+        setNews(allItems.slice(0, 35));
       } catch (err) {
         const message = err instanceof Error ? err.message : "Error desconocido";
         setError(`Error al cargar noticias: ${message}`);
@@ -52,7 +68,7 @@ export default function NoticiasPage() {
   return (
     <main style={{ padding: "1rem", maxWidth: 720, margin: "0 auto" }}>
       <h1 style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)", marginBottom: "1rem" }}>
-        Noticias
+        Noticias Sociales y Locales
       </h1>
 
       {loading && <p>Cargando noticias...</p>}
@@ -123,4 +139,4 @@ export default function NoticiasPage() {
       )}
     </main>
   );
-}
+                }
