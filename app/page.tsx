@@ -180,14 +180,17 @@ export default function HomePage() {
   const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
   const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [indiceGato, setIndiceGato] = useState(0);
 
   const visibleImages = useMemo(
     () => galleryImages.filter((image) => filter === "all" || image.category === filter),
     [filter],
   );
-
+  const avatar = useMemo(() => 
+    session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
+    [session]
+  );
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -331,23 +334,50 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-            {status === "authenticated" ? (
-              <a href="/perfil" className="btn btn-secondary">Ir a mi perfil</a>
-            ) : (
-              <>
-                <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-                <a href="/register" className="btn btn-secondary">Crear cuenta</a>
-              </>
-            )}
-            <a
-              href="https://www.teaming.net/proyectogatonaturanrural"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
+        {status === "loading" ? (
+          <button className="btn btn-secondary" disabled>Cargando...</button>
+        ) : session ? (
+          /* SI ESTÁ LOGUEADO */
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <img 
+                src={avatar} 
+                alt="Avatar" 
+                style={{ width: "24px", height: "24px", borderRadius: "50%" }} 
+              />
+              Ir a mi perfil
+            </Link>
+            
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              style={{ opacity: 0.8 }}
+              onClick={() => signOut({ callbackUrl: "/" })}
             >
-              Teaming 1€
-            </a>
+              Salir
+            </button>
           </div>
+        ) : (
+          /* SI NO ESTÁ LOGUEADO */
+          <>
+            <Link href="/login" className="btn btn-secondary">
+              Acceder
+            </Link>
+            <Link href="/register" className="btn btn-secondary">
+              Crear cuenta
+            </Link>
+          </>
+        )}
+
+        <a
+          href="https://www.teaming.net/proyectogatonaturanrural"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary"
+        >
+          Teaming 1€
+        </a>
+      </div>
         </div>
 
         <button
