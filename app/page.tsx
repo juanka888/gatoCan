@@ -475,16 +475,12 @@ export default function HomePage() {
         </div>
       </section>
 
-// 1. Añade este estado arriba con tus otros useState
 const [indiceGato, setIndiceGato] = useState(0);
 
 // 2. En tu sección de fichas:
 <section id="fichas" style={{ ...card, padding: '20px 0' }} className="flip-card-section">
   <h3 style={{ textAlign: 'center' }}>Fichas de gatos de colonia</h3>
-  <p style={{ textAlign: 'center', marginBottom: '20px' }}>Usa las flechas para descubrir más casos.</p>
-
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
-    
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>  
     {/* Botón Izquierda */}
     <button 
       onClick={anteriorGato} 
