@@ -1,15 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
-import { type CSSProperties, useEffect, useMemo, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import confetti from "canvas-confetti";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
-// 1. Añadimos esta línea para que Vercel no intente pre-renderizar estáticamente
-export const dynamic = 'force-dynamic';
-
-// --- TIPOS ---
 type ProfileData = {
   nombreCompleto: string;
   telefono: string;
@@ -38,7 +32,7 @@ const emptyProfile: ProfileData = {
   aceptaPoliticas: false,
 };
 
-// --- ESTILOS DE CRISTAL ---
+// --- ESTILOS DE CRISTAL UNIFICADOS ---
 const glassCard: CSSProperties = {
   backgroundColor: 'rgba(255, 255, 255, 0.12)',
   backdropFilter: 'blur(16px)',
@@ -69,12 +63,10 @@ const btnPrimary: CSSProperties = {
   fontWeight: 600,
   border: "1px solid rgba(255, 255, 255, 0.3)",
   cursor: "pointer",
-  backdropFilter: "blur(10px)",
-  textDecoration: "none", // Añadido para los links
-  display: "inline-block"
+  backdropFilter: "blur(10px)"
 };
 
-// --- LÓGICA DNI ---
+// Lógica de DNI omitida por brevedad, mantenla igual que la tienes...
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
 function normalizeDni(v: string) { return v.replace(/\s|-/g, "").toUpperCase(); }
 function isValidDni(v: string) {
@@ -83,17 +75,13 @@ function isValidDni(v: string) {
   return dni[8] === dniLetters[Number(dni.slice(0, 8)) % 23];
 }
 
-// --- SUBCOMPONENTE CON LA LÓGICA ---
-function PerfilContent() {
+export default function PerfilPage() {
   const { data: session, status } = useSession();
-  const searchParams = useSearchParams();
-  
   const [profile, setProfile] = useState<ProfileData>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   const avatar = useMemo(() => 
     session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
@@ -101,49 +89,27 @@ function PerfilContent() {
   );
 
   useEffect(() => {
-    if (searchParams?.get("success") === "true") {
-      setShowSuccessBanner(true);
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#FFD700', '#FFFFFF', '#2ecc71']
-      });
-      const timer = setTimeout(() => setShowSuccessBanner(false), 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
     const loadProfile = async () => {
-      if (status !== "authenticated") { 
-        if (status === "unauthenticated") setLoading(false);
-        return; 
+      if (status !== "authenticated") { setLoading(false); return; }
+      const res = await fetch("/api/profile");
+      if (res.ok) {
+        const data = await res.json();
+        const p = data.profile || {};
+        setProfile({
+          nombreCompleto: p.nombreCompleto || session?.user?.name || "",
+          telefono: p.telefono || "",
+          dniNie: p.dniNie || "",
+          direccion: p.direccion || "",
+          codigoPostal: p.codigoPostal || "",
+          poblacion: p.poblacion || "",
+          karmaPoints: Number(p.karmaPoints || 0),
+          totalDonaciones: Number(p.totalDonaciones || 0),
+          runnerBestScore: Number(p.runnerBestScore || 0),
+          runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
+          aceptaPoliticas: Boolean(p.aceptaPoliticas),
+        });
       }
-      try {
-        const res = await fetch("/api/profile");
-        if (res.ok) {
-          const data = await res.json();
-          const p = data.profile || {};
-          setProfile({
-            nombreCompleto: p.nombreCompleto || session?.user?.name || "",
-            telefono: p.telefono || "",
-            dniNie: p.dniNie || "",
-            direccion: p.direccion || "",
-            codigoPostal: p.codigoPostal || "",
-            poblacion: p.poblacion || "",
-            karmaPoints: Number(p.karmaPoints || 0),
-            totalDonaciones: Number(p.totalDonaciones || 0),
-            runnerBestScore: Number(p.runnerBestScore || 0),
-            runnerBestDistanceM: Number(p.runnerBestDistanceM || 0),
-            aceptaPoliticas: Boolean(p.aceptaPoliticas),
-          });
-        }
-      } catch (err) {
-        console.error("Error cargando perfil:", err);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
     loadProfile();
   }, [session, status]);
@@ -164,27 +130,21 @@ function PerfilContent() {
     if (response.ok) {
       setEditing(false);
       setMessage("Perfil actualizado.");
-      setTimeout(() => setMessage(""), 4000);
     }
   };
 
-  if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando perfil...</main>;
-  if (status === "unauthenticated") return <main style={{ padding: "2rem", color: "white" }}>Por favor, inicia sesión.</main>;
+  if (loading) return <main style={{ padding: "2rem", color: "white" }}>Cargando...</main>;
 
   return (
     <main style={{ maxWidth: 850, margin: "0 auto", padding: "2rem", display: "grid", gap: 20 }}>
-      {showSuccessBanner && (
-        <div style={{ ...glassCard, backgroundColor: 'rgba(46, 204, 113, 0.25)', border: '1px solid #2ecc71', textAlign: 'center' }}>
-          <h2 style={{ margin: '0 0 10px 0', color: '#2ecc71' }}>¡Gracias por tu donación! 🐾</h2>
-          <p style={{ margin: 0 }}>Tu apoyo directo a las colonias ha sido procesado.</p>
-        </div>
-      )}
-
+      
+      {/* HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ color: "white", fontSize: "2.5rem", fontWeight: "bold", textShadow: "2px 2px 10px rgba(0,0,0,0.5)" }}>Mi perfil</h1>
         <Link href="/" style={btnPrimary}>Volver al Inicio</Link>
       </div>
 
+      {/* AVATAR Y INFO SUPERIOR EN CRISTAL */}
       <div style={glassCard}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <img src={avatar} alt="Avatar" style={{ width: 80, height: 80, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)" }} />
@@ -195,35 +155,41 @@ function PerfilContent() {
         </div>
       </div>
 
+      {/* ACTIVIDAD SOLIDARIA */}
       <section style={glassCard}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Actividad solidaria</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
           <p>Donaciones: <strong>{profile.totalDonaciones} €</strong></p>
-          <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints} ✨</strong></p>
+          <p>Zarpa Karma: <strong style={{color: '#FFD700'}}>{profile.karmaPoints}</strong></p>
           <p>Mejor Score: <strong>{profile.runnerBestScore}</strong></p>
           <p>Distancia: <strong>{profile.runnerBestDistanceM} m</strong></p>
         </div>
       </section>
 
+      {/* DATOS PERSONALES */}
       <section style={{ ...glassCard, display: "grid", gap: 15 }}>
         <h3 style={{ marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10 }}>Datos personales</h3>
+
         <div style={{ display: "grid", gap: 10 }}>
-           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
-           <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
-           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
-           <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
-           <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
-           <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
-           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-             <div>
-                <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
-                <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
-             </div>
-             <div>
-                <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Población</label>
-                <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} />
-             </div>
-           </div>
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Nombre completo</label>
+          <input style={inputStyle} disabled={!editing} value={profile.nombreCompleto} onChange={(e) => updateField("nombreCompleto", e.target.value)} />
+          
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>DNI / NIE</label>
+          <input style={inputStyle} disabled={!editing} value={profile.dniNie} onChange={(e) => updateField("dniNie", e.target.value)} />
+          
+          <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Dirección</label>
+          <input style={inputStyle} disabled={!editing} value={profile.direccion} onChange={(e) => updateField("direccion", e.target.value)} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+            <div>
+               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>C.P.</label>
+               <input style={inputStyle} disabled={!editing} value={profile.codigoPostal} onChange={(e) => updateField("codigoPostal", e.target.value)} />
+            </div>
+            <div>
+               <label style={{ fontWeight: "bold", fontSize: "0.9rem" }}>Población</label>
+               <input style={inputStyle} disabled={!editing} value={profile.poblacion} onChange={(e) => updateField("poblacion", e.target.value)} />
+            </div>
+          </div>
         </div>
 
         <label style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", marginTop: 10 }}>
@@ -244,17 +210,8 @@ function PerfilContent() {
         </div>
       </section>
 
-      {errorMessage && <div style={{ ...glassCard, backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>{errorMessage}</div>}
-      {message && <div style={{ ...glassCard, backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>{message}</div>}
+      {errorMessage && <div style={glassCard, { backgroundColor: 'rgba(220, 38, 38, 0.2)', padding: '10px', textAlign: 'center' }}>{errorMessage}</div>}
+      {message && <div style={glassCard, { backgroundColor: 'rgba(22, 101, 52, 0.2)', padding: '10px', textAlign: 'center' }}>{message}</div>}
     </main>
-  );
-}
-
-// --- COMPONENTE PRINCIPAL QUE EXPORTA NEXT.JS ---
-export default function PerfilPage() {
-  return (
-    <Suspense fallback={<main style={{ padding: "2rem", color: "white" }}>Cargando página...</main>}>
-      <PerfilContent />
-    </Suspense>
   );
 }
