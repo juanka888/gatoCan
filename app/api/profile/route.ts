@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@lib/prisma";
-export const dynamic = 'force-dynamic'; // Esto soluciona el error de "Uso dinámico del servidor"
+
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
 
 function normalizeDni(value: string): string {
