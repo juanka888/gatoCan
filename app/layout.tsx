@@ -1,9 +1,9 @@
+import "./globals.css";
 import { Inter } from "next/font/google";
-import "@/app/globals.css";
 import type { Metadata } from "next";
 import Providers from "./providers";
 import SessionHeader from "./components/SessionHeader";
-import Script from 'next/script'
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -19,7 +19,6 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-        <Script src="https://js.stripe.com/v3/" strategy="lazyOnload" />
         <Providers>
           <SessionHeader />
           {children}
