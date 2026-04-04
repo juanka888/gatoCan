@@ -2,99 +2,90 @@
 
 import { useEffect, useState } from "react";
 
-type RssItem = {
-  title?: string;
-  link?: string;
-  pubDate?: string;
-  thumbnail?: string;
-  source?: string;
-};
-
-type RssResponse = {
-  status: string;
-  items?: RssItem[];
-};
-
-// URLs corregidas (sin espacios)
+// URLs verificadas y limpias
 const FEEDS = [
-  { name: "El Progreso", url: "https://www.elprogreso.es/rss" },
+  { name: "Lugo (El Progreso)", url: "https://www.elprogreso.es/rss" },
   { name: "La Voz de Galicia", url: "https://www.lavozgalicia.es/lugo/index.xml" },
   { name: "GCiencia", url: "https://www.gciencia.com/feed/" },
-  { name: "El Español", url: "https://www.elespanol.com/curiosidades/mascotas/rss.xml" },
+  { name: "Mascotas (El Español)", url: "https://www.elespanol.com/curiosidades/mascotas/rss.xml" },
   { name: "Europa Press", url: "https://www.europapress.es/rss/rss.aspx?ch=00647" }
 ];
 
 export default function NoticiasPage() {
-  const [news, setNews] = useState<RssItem[]>([]);
+  const [news, setNews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadNews = async () => {
+    const fetchAll = async () => {
       try {
-        setLoading(true);
-        setError("");
+        const allResults = await Promise.all(
+          FEEDS.map(async (f) => {
+            try {
+              // Añadimos un timeout manual de 5 segundos por cada fuente
+              const controller = new AbortController();
+              const id = setTimeout(() => controller.abort(), 5000);
 
-        const fetchPromises = FEEDS.map(async (feed) => {
-          try {
-            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`;
-            const response = await fetch(apiUrl);
-            
-            if (!response.ok) return [];
-            
-            const data = (await response.json()) as RssResponse;
-            if (data.status !== "ok") return [];
+              const res = await fetch(
+                `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}`,
+                { signal: controller.signal }
+              );
+              clearTimeout(id);
 
-            return (data.items || []).map(item => ({ 
-              ...item, 
-              source: feed.name 
-            }));
-          } catch (e) {
-            console.error(`Error cargando ${feed.name}:`, e);
-            return [];
-          }
-        });
+              const data = await res.json();
+              if (data.status === "ok") {
+                return data.items.map((i: any) => ({ ...i, source: f.name }));
+              }
+              return [];
+            } catch (e) {
+              console.warn(`Fallo en ${f.name}:`, e);
+              return [];
+            }
+          })
+        );
 
-        const results = await Promise.all(fetchPromises);
-        const combined = results.flat().sort((a, b) => {
-          const dateA = new Date(a.pubDate || 0).getTime();
-          const dateB = new Date(b.pubDate || 0).getTime();
-          return dateB - dateA;
-        });
+        const merged = allResults
+          .flat()
+          .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+          .slice(0, 20); // Solo las 20 mejores para no saturar
 
-        setNews(combined.slice(0, 30)); // Limitamos a 30 para que no explote el banner
+        setNews(merged);
       } catch (err) {
-        setError("Error de conexión al cargar las fuentes.");
+        console.error("Error crítico:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    void loadNews();
+    fetchAll();
   }, []);
 
+  if (loading) return <p style={{ padding: "1rem" }}>🐾 Buscando últimas noticias...</p>;
+
   return (
-    <main style={{ padding: "1rem", maxWidth: 720, margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>Noticias de la Zona y Animales</h1>
-
-      {loading && <p>Actualizando noticias...</p>}
-      {!loading && error && <p style={{ color: "red" }}>{error}</p>}
-
-      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "1rem" }}>
-        {news.map((item, index) => (
-          <li key={index} style={{ border: "1px solid #eee", padding: "1rem", borderRadius: "8px", position: "relative" }}>
-            <span style={{ fontSize: "0.7rem", background: "#eee", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>
-              {item.source}
-            </span>
-            <h2 style={{ fontSize: "1.1rem", margin: "0.5rem 0" }}>
-              <a href={item.link} target="_blank" rel="noopener" style={{ color: "#0070f3", textDecoration: "none" }}>
-                {item.title}
-              </a>
-            </h2>
-            <p style={{ fontSize: "0.8rem", color: "#666", margin: 0 }}>{item.pubDate}</p>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div style={{ padding: "1rem", maxWidth: "600px", margin: "0 auto", fontFamily: "sans-serif" }}>
+      <h2 style={{ fontSize: "1.2rem", borderBottom: "2px solid #eee", paddingBottom: "10px" }}>
+        Actualidad Protectora
+      </h2>
+      
+      {news.length === 0 ? (
+        <p>No hay noticias recientes disponibles ahora mismo.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+          {news.map((item, idx) => (
+            <div key={idx} style={{ padding: "10px", border: "1px solid #f0f0f0", borderRadius: "8px" }}>
+              <span style={{ fontSize: "0.65rem", fontWeight: "bold", color: "#e63946", textTransform: "uppercase" }}>
+                {item.source}
+              </span>
+              <h3 style={{ margin: "5px 0", fontSize: "0.95rem" }}>
+                <a href={item.link} target="_blank" rel="noreferrer" style={{ textDecoration: "none", color: "#333" }}>
+                  {item.title}
+                </a>
+              </h3>
+              <small style={{ color: "#999" }}>{new Date(item.pubDate).toLocaleDateString()}</small>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
