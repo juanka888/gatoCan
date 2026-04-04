@@ -1,4 +1,4 @@
-import { getServerSession } from "next-auth/next"; 
+import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
@@ -37,15 +37,16 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
-    // --- PROTECCIÓN PARA TYPESCRIPT ---
-    // Si no hay sesión o no hay email, cortamos aquí. Esto quita el error en session.user
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Sesión no encontrada o incompleta" }, { status: 401 });
+    // Forzamos a TypeScript a aceptar que user tiene email y nombre
+    const userSession = session?.user as any;
+
+    if (!userSession?.email) {
+      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
-    const sessionEmail = session.user.email.trim().toLowerCase();
-    const userName = session.user.name ?? "Usuario";
-    const userImage = session.user.image ?? null;
+    const sessionEmail = userSession.email.trim().toLowerCase();
+    const userName = userSession.name ?? "Usuario";
+    const userImage = userSession.image ?? null;
 
     const user = await prisma.user.upsert({
       where: { email: sessionEmail },
@@ -82,13 +83,13 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const userSession = session?.user as any;
 
-    // --- PROTECCIÓN PARA TYPESCRIPT ---
-    if (!session?.user?.email) {
+    if (!userSession?.email) {
       return NextResponse.json({ error: "Sesión no encontrada" }, { status: 401 });
     }
 
-    const sessionEmail = session.user.email.trim().toLowerCase();
+    const sessionEmail = userSession.email.trim().toLowerCase();
     const body = await req.json();
     const normalizedDniVal = body?.dniNie ? normalizeDni(body.dniNie) : "";
 
@@ -101,8 +102,8 @@ export async function PUT(req: Request) {
       update: {},
       create: {
         email: sessionEmail,
-        name: session.user.name ?? "Usuario",
-        image: session.user.image ?? null,
+        name: userSession.name ?? "Usuario",
+        image: userSession.image ?? null,
       },
     });
 
@@ -115,7 +116,7 @@ export async function PUT(req: Request) {
     const finalDistance = Math.max(incomingDistance, currentProfile?.runnerBestDistanceM || 0);
 
     const dataToUpdate = {
-      nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? session.user.name ?? "Usuario",
+      nombreCompleto: normalizeOptionalField(body?.nombreCompleto) ?? userSession.name ?? "Usuario",
       telefono: normalizeOptionalField(body?.telefono),
       dniNie: normalizedDniVal || null,
       direccion: normalizeOptionalField(body?.direccion),
@@ -137,7 +138,6 @@ export async function PUT(req: Request) {
         where: { id: user.id },
         data: {
           runnerBestScore: finalScore,
-          // Ajustado según tu esquema de base de datos
           runnerBestDistance: finalDistance, 
         },
       }),
