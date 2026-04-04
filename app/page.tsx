@@ -156,45 +156,6 @@ export default function HomePage() {
 
   const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
   const activeImage = visibleImages[currentIndex] || galleryImages[0];
-  const submitContactForm = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!contactForm.privacidad) {
-      setContactStatus({ type: "error", message: "Debes aceptar la política de privacidad." });
-      return;
-    }
-    setIsSubmittingContact(true);
-    try {
-      console.log("Enviando formulario:", contactForm);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setContactStatus({ type: "success", message: "¡Mensaje enviado correctamente!" });
-      setContactForm({ nombre: "", email: "", mensaje: "", privacidad: false });
-    } catch (error) {
-      setContactStatus({ type: "error", message: "Error al enviar. Inténtalo de nuevo." });
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
-
-  const donationTotal = Object.keys(donationSelections).reduce((acc, key) => {
-    if (donationSelections[key]) {
-      const optionId = key.split("-")[1];
-      const option = donationOptions.find((o) => o.id === optionId);
-      return acc + (option ? option.price : 0);
-    }
-    return acc;
-  }, 0);
-
-  const karmaTotal = Object.keys(donationSelections).reduce((acc, key) => {
-    if (donationSelections[key]) {
-      const optionId = key.split("-")[1];
-      const option = donationOptions.find((o) => o.id === optionId);
-      return acc + (option ? option.karma : 0);
-    }
-    return acc;
-  }, 0);
-
-  const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
-  const activeImage = visibleImages[currentIndex] || galleryImages[0];
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
