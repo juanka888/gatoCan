@@ -338,18 +338,20 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-  {status === "authenticated" ? (
+  {status === "loading" ? (
+    <button className="btn btn-secondary" disabled>Cargando...</button>
+  ) : session ? (
+    /* ESTADO: USUARIO LOGUEADO */
     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
       <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center" }}>
-        {/* Usamos tu constante avatar aquí */}
         <img 
           src={avatar} 
           alt="Avatar" 
-          style={{ width: "24px", height: "24px", borderRadius: "50%", marginRight: "8px", verticalAlign: "middle" }} 
+          style={{ width: "20px", height: "20px", borderRadius: "50%", marginRight: "8px", verticalAlign: "middle" }} 
         />
         Ir a mi perfil
       </Link>
-
+      
       <button 
         type="button" 
         className="btn btn-secondary" 
@@ -360,6 +362,7 @@ export default function HomePage() {
       </button>
     </div>
   ) : (
+    /* ESTADO: USUARIO NO LOGUEADO */
     <>
       <Link href="/login" className="btn btn-secondary">Acceder</Link>
       <Link href="/register" className="btn btn-secondary">Crear cuenta</Link>
