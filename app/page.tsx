@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "next/link"; // Añade esto
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react"; // Añade signOut aquí
+
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
@@ -330,23 +331,50 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-            {status === "authenticated" ? (
-              <a href="/perfil" className="btn btn-secondary">Ir a mi perfil</a>
-            ) : (
-              <>
-                <button type="button" className="btn btn-secondary" onClick={() => signIn("google", { callbackUrl: "/perfil" })}>Acceder</button>
-                <a href="/register" className="btn btn-secondary">Crear cuenta</a>
-              </>
-            )}
-            <a
-              href="https://www.teaming.net/proyectogatonaturanrural"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-            >
-              Teaming 1€
-            </a>
-          </div>
+  {status === "authenticated" ? (
+    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+      <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center" }}>
+        {session?.user?.image && (
+          <img 
+            src={session.user.image} 
+            alt="Avatar" 
+            style={{ width: "20px", height: "20px", borderRadius: "50%", marginRight: "8px", verticalAlign: "middle" }} 
+          />
+        )}
+        Ir a mi perfil
+      </Link>
+      
+      {/* Botón Salir - Asegúrate de tener signOut en el import de arriba */}
+      <button 
+        type="button" 
+        className="btn btn-secondary" 
+        style={{ opacity: 0.8 }}
+        onClick={() => signOut({ callbackUrl: "/" })}
+      >
+        Salir
+      </button>
+    </div>
+  ) : (
+    <>
+      {/* Estos Links ahora llevan a tus nuevas páginas de Login y Registro */}
+      <Link href="/login" className="btn btn-secondary">
+        Acceder
+      </Link>
+      <Link href="/register" className="btn btn-secondary">
+        Crear cuenta
+      </Link>
+    </>
+  )}
+
+  <a
+    href="https://www.teaming.net/proyectogatonaturanrural"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="btn btn-primary"
+  >
+    Teaming 1€
+  </a>
+</div>
         </div>
 
         <button
