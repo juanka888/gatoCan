@@ -9,37 +9,6 @@ type RssItem = {
   thumbnail?: string;
 };
 
-type RssResponse = {
-  items?: RssItem[];
-};
-
-const RSS_URLS = [
-  "https://www.europapress.es/rss/rss.aspx?ch=00647",
-  "https://www.lavozdegalicia.es/galicia/index.xml",
-  "https://www.gciencia.com/feed/",
-  "https://www.elprogreso.es/rss"
-];
-
-// 🔥 fetch con timeout (CLAVE para que no se quede colgado)
-const fetchWithTimeout = async (url: string, timeout = 6000) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      cache: "no-store"
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch {
-    return { items: [] }; // 👈 si falla, no rompe todo
-  } finally {
-    clearTimeout(id);
-  }
-};
-
 export default function NoticiasPage() {
   const [news, setNews] = useState<RssItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,34 +18,14 @@ export default function NoticiasPage() {
     try {
       setError("");
 
-      // 🔥 Creamos requests controladas
-      const requests = RSS_URLS.map((url) =>
-        fetchWithTimeout(
-          `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`
-        )
-      );
+      const res = await fetch("/api/noticias");
 
-      const results = await Promise.all(requests);
+      if (!res.ok) throw new Error("Error cargando API");
 
-      let allItems = results.flatMap((data: RssResponse) => data.items || []);
-
-      // 🔥 eliminar duplicados por link
-      const unique = Array.from(
-        new Map(allItems.map((item) => [item.link, item])).values()
-      );
-
-      // 🔥 ordenar por fecha
-      unique.sort((a, b) => {
-        const dateA = new Date(a.pubDate || 0).getTime();
-        const dateB = new Date(b.pubDate || 0).getTime();
-        return dateB - dateA;
-      });
-
-      // 🔥 limitar
-      setNews(unique.slice(0, 30));
+      const data = await res.json();
+      setNews(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
-      setError(`Error al cargar noticias: ${message}`);
+      setError("Error cargando noticias");
       setNews([]);
     } finally {
       setLoading(false);
@@ -85,10 +34,6 @@ export default function NoticiasPage() {
 
   useEffect(() => {
     loadNews();
-
-    // 🔥 auto refresh cada 10 min
-    const interval = setInterval(loadNews, 600000);
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -114,13 +59,12 @@ export default function NoticiasPage() {
             const title = item.title || "Sin titular";
             const thumbnail = item.thumbnail;
 
-            // 🔥 fecha bonita
             const formattedDate = item.pubDate
               ? new Date(item.pubDate).toLocaleString("es-ES", {
                   day: "2-digit",
                   month: "short",
                   hour: "2-digit",
-                  minute: "2-digit"
+                  minute: "2-digit",
                 })
               : "Fecha no disponible";
 
@@ -131,7 +75,7 @@ export default function NoticiasPage() {
                   border: "1px solid #ddd",
                   borderRadius: 12,
                   background: "#fff",
-                  padding: "0.85rem"
+                  padding: "0.85rem",
                 }}
               >
                 {thumbnail && (
@@ -146,14 +90,18 @@ export default function NoticiasPage() {
                       width: "100%",
                       maxHeight: 200,
                       objectFit: "cover",
-                      borderRadius: 8
+                      borderRadius: 8,
                     }}
                   />
                 )}
 
                 <h2 style={{ fontSize: "1rem" }}>
                   {item.link ? (
-                    <a href={item.link} target="_blank">
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       {title}
                     </a>
                   ) : (
@@ -171,4 +119,4 @@ export default function NoticiasPage() {
       )}
     </main>
   );
-                      }
+}
