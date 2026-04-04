@@ -16,9 +16,8 @@ type RssResponse = {
 // He añadido aquí todas las fuentes que me pediste
 const RSS_URLS = [
   "https://www.elprogreso.es/rss",
-  "https://www.lavozgalicia.es/lugo/index.xml",
+  "https://www.lavozdegalicia.es/galicia/index.xml",
   "https://www.gciencia.com/feed/",
-  "https://www.elespanol.com/curiosidades/mascotas/rss.xml",
   "https://www.europapress.es/rss/rss.aspx?ch=00647"
 ];
 
