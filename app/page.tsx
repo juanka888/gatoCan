@@ -141,7 +141,21 @@ const botonCaraFrontal = {
     cursor: 'pointer',
     color: '#ff4757'
   };
+const card: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "12px",
+  padding: "1rem",
+  width: "100%",
+  maxWidth: "1200px",
+  margin: "0 auto 2rem auto"
+};
 
+const mainLayout: React.CSSProperties = {
+  backgroundColor: "#f4f7f6",
+  minHeight: "100vh",
+  padding: "40px 10px"
+};
 const handlePayment = async (nombreItem: string, precio: number) => {
   try {
     // 1. Llamamos a nuestra API local
@@ -475,28 +489,12 @@ export default function HomePage() {
         </div>
       </section>
 
-<section id="fichas" style={{ ...card, padding: '20px 0' }} className="flip-card-section">
-  <h3 style={{ textAlign: 'center' }}>Fichas de gatos de colonia</h3>
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>  
-    {/* Botón Izquierda */}
-    <button 
-      onClick={anteriorGato} 
-      disabled={indiceInicio === 0}
-      style={{ 
-        ...flechaStyle, 
-        opacity: indiceInicio === 0 ? 0.3 : 1, 
-        cursor: indiceInicio === 0 ? 'default' : 'pointer' 
-      }}
-    >
-      ⬅️
-    </button>
 
     {/* Contenedor de las 3 tarjetas */}
-{/* SECCIÓN COLONIAS (Igual que arriba) */}
+   {/* GatoCards (le pasamos el estilo "card" directamente) */}
       <section id="colonias" style={card}>
         <GatoCards />
       </section>
-
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
@@ -722,10 +720,3 @@ export default function HomePage() {
     </main>
   );
 }
-
-const card: CSSProperties = {
-  background: "#fff",
-  border: "1px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "1rem",
-};
