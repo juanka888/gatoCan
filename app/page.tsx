@@ -132,32 +132,29 @@ const mainLayout: React.CSSProperties = {
   minHeight: "100vh",
   padding: "40px 10px"
 };
-const handlePayment = async (nombreItem: string, precio: number) => {
+const handlePayment = async (name: string, amount: number) => {
   try {
-    // 1. Llamamos a nuestra API local
-    const response = await fetch("/api/checkout", {
+    // 1. Llamamos a tu API
+    const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: nombreItem,
-        amount: precio, // Euros (el route.ts ya lo multiplica por 100)
-      }),
+      body: JSON.stringify({ name, amount }), // Enviamos nombre y cantidad (en euros)
     });
 
-    const data = await response.json();
+    const data = await res.json();
 
-    // 2. Si todo va bien, Stripe nos da una URL y saltamos a ella
+    // 2. Si la API nos devuelve la URL de Stripe, redirigimos
     if (data.url) {
       window.location.href = data.url;
     } else {
-      alert("Error al conectar con la pasarela de pago");
+      console.error("Error en la respuesta de Stripe:", data.error);
+      alert("No se pudo generar la sesión de pago: " + data.error);
     }
   } catch (error) {
-    console.error("Error en el pago:", error);
-    alert("Hubo un fallo en la conexión");
+    console.error("Error de conexión:", error);
+    alert("Hubo un fallo en la conexión con el servidor de pagos.");
   }
 };
-
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
