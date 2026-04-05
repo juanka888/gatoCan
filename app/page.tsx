@@ -3,7 +3,7 @@
 import Link from "next/link"; // Añade esto
 import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import { signIn, signOut, useSession } from "next-auth/react"; // Añade signOut aquí
-
+import GatoCards from "./components/GatoCards";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
@@ -492,71 +492,11 @@ export default function HomePage() {
     </button>
 
     {/* Contenedor de las 3 tarjetas */}
-    <div className="flip-grid" style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(3, 1fr)', 
-      gap: '15px',
-      perspective: '1000px'
-    }}>
-      {gatosVisibles.map((gato) => (
-        <div className="flip-card" key={gato.id}>
-          <label className="flip-card-inner">
-            <input type="checkbox" className="flip-toggle" />
-            
-            {/* CARA FRONTAL */}
-            <div className="flip-face flip-front">
-              <img src={gato.imagen} alt={gato.nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px' }} />
-              <strong style={{ display: 'block', marginTop: '10px' }}>{gato.nombre}</strong>
-              <small>{gato.colonia}</small>
-              <button 
-                onClick={(e) => { e.preventDefault(); handlePayment(`Apadrinar a ${gato.nombre}`, 10); }}
-                style={botonCaraFrontal}
-              >
-                Apadrinar 10€
-              </button>
-            </div>
+{/* SECCIÓN COLONIAS (Igual que arriba) */}
+      <section id="colonias" style={card}>
+        <GatoCards />
+      </section>
 
-            {/* CARA TRASERA CORREGIDA */}
-            <div className="flip-face flip-back" style={{ padding: '15px' }}>
-              <h4 style={{ margin: '0 0 10px 0', borderBottom: '1px solid #eee', pb: '5px' }}>Estado de {gato.nombre}</h4>
-              <ul style={{ textAlign: 'left', fontSize: '0.8rem', padding: '0', listStyle: 'none', lineHeight: '1.4' }}>
-                <li><strong>● Esterilización:</strong> {gato.detalles.esterilizacion}</li>
-                <li><strong>● Enfermedad:</strong> {gato.detalles.enfermedad}</li>
-                <li><strong>● Tratamiento:</strong> {gato.detalles.tratamiento || "Sin tratamiento"}</li>
-                <li><strong>● Desaparición:</strong> {gato.detalles.desaparicion || "No"}</li>
-                <li><strong>● Edad aprox.:</strong> {gato.detalles.edad}</li>
-                <li><strong>● Carácter:</strong> {gato.detalles.caracter || "Desconocido"}</li>
-              </ul>
-              
-              <button 
-                onClick={(e) => { 
-                  e.stopPropagation(); // Importante para que no se gire la carta al clicar el botón
-                  handlePayment(`Ayudar a ${gato.nombre}`, 10); 
-                }}
-                style={{ ...botonCaraFrontal, backgroundColor: '#2ed573', marginTop: '10px', width: '100%' }}
-              >
-                ❤️ Ayudar
-              </button>
-            </div>
-          </label>
-        </div>
-      ))}
-    </div>
-
-    {/* Botón Derecha */}
-    <button 
-      onClick={siguienteGato} 
-      disabled={indiceInicio + 3 >= gatosColonia.length}
-      style={{ 
-        ...flechaStyle, 
-        opacity: indiceInicio + 3 >= gatosColonia.length ? 0.3 : 1, 
-        cursor: indiceInicio + 3 >= gatosColonia.length ? 'default' : 'pointer' 
-      }}
-    >
-      ➡️
-    </button>
-  </div>
-</section>
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
