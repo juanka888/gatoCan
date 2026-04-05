@@ -9,18 +9,18 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // <--- AÑADIDO
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // --- LÓGICA DE VALIDACIÓN DE SEGURIDAD (AÑADIDO) ---
+  // Lógica de validación de seguridad (Mantiene los 8 carac, Mayús, etc.)
   const passwordValidation = useMemo(() => {
     return {
       hasMinLength: password.length >= 8,
       hasUpperCase: /[A-Z]/.test(password),
       hasNumber: /[0-9]/.test(password),
-      hasSpecial: /[.,+*\-]/.test(password), // Símbolos específicos pedidos
+      hasSpecial: /[.,+*\-]/.test(password),
       match: password === confirmPassword && password !== ""
     };
   }, [password, confirmPassword]);
@@ -29,8 +29,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isPasswordSecure) return; // Doble seguridad
-
+    if (!isPasswordSecure) return;
     setLoading(true);
     setError("");
 
@@ -42,11 +41,7 @@ export default function Register() {
       });
 
       if (res.ok) {
-        await signIn("credentials", {
-          email,
-          password,
-          callbackUrl: "/perfil",
-        });
+        await signIn("credentials", { email, password, callbackUrl: "/perfil" });
       } else {
         const data = await res.json();
         setError(data.message || "Error al crear la cuenta");
@@ -67,11 +62,11 @@ export default function Register() {
         
         <h1 style={{ margin: "1rem 0 0.5rem", color: "#333" }}>Crear cuenta</h1>
         <p style={{ color: "#666", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-          Únete a Gatocan. La contraseña debe ser segura.
+          Regístrate en Gatocan. La contraseña debe ser segura.
         </p>
 
         {error && (
-          <div style={{ color: "white", background: "#ff4757", padding: "0.8rem", borderRadius: "8px", marginBottom: "1rem", fontSize: "0.85rem" }}>
+          <div style={{ color: "white", background: "#ff4757", padding: "0.8rem", borderRadius: "8px", marginBottom: "1rem", fontSize: "0.85rem", textAlign: "center" }}>
             {error}
           </div>
         )}
@@ -96,7 +91,7 @@ export default function Register() {
               placeholder="••••••••" 
               required 
             />
-            {/* INDICADORES DE REQUISITOS (AÑADIDO) */}
+            {/* INDICADORES VISUALES DE REQUISITOS */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", marginTop: "5px" }}>
               <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasMinLength ? "#27ae60" : "#999" }}>● Mín. 8 carac.</p>
               <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasUpperCase ? "#27ae60" : "#999" }}>● Mayúscula</p>
@@ -145,7 +140,7 @@ export default function Register() {
   );
 }
 
-// --- ESTILOS ACTUALIZADOS ---
+// --- ESTILOS (Asegúrate de copiar hasta la última llave) ---
 const containerStyle: React.CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: "1rem", backgroundImage: "url('/img/foto-05.jpg')", backgroundSize: "cover", backgroundPosition: "center", fontFamily: "sans-serif" };
 const cardStyle: React.CSSProperties = { background: "rgba(255, 255, 255, 0.98)", padding: "2rem 2.5rem", borderRadius: "16px", width: "100%", maxWidth: "420px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", backdropFilter: "blur(5px)" };
 const inputGroup: React.CSSProperties = { display: "grid", gap: "0.3rem" };
@@ -153,4 +148,4 @@ const labelStyle: React.CSSProperties = { fontSize: "0.85rem", fontWeight: "bold
 const inputStyle: React.CSSProperties = { padding: "0.75rem", borderRadius: "8px", border: "1px solid #ddd", fontSize: "1rem", outline: "none" };
 const btnPrimary: React.CSSProperties = { padding: "0.8rem", background: "#2ecc71", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "1rem" };
 const btnGoogle: React.CSSProperties = { padding: "0.75rem", background: "white", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontWeight: "500", color: "#555" };
-const separator: React.CSSProperties = { textAlign: "center", borderBottom: "1px solid #eee", lineHeight: "0.
+const separator: React.CSSProperties = { textAlign: "center", borderBottom: "1px solid #eee", lineHeight: "0.1em", margin: "15px 0 25px" };
