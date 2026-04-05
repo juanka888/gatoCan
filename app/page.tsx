@@ -33,14 +33,14 @@ interface Gato {
 }
 
 const gatosColonia = [
-  { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años" } },
-  { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años" } },
-  { id: 3, nombre: "Rayo", colonia: "Fonteboa", imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Lesión ocular", tratamiento: "Colirio", edad: "7 años" } },
-  { id: 4, nombre: "Luna", colonia: "Parque Central", imagen: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Revisión", edad: "3 años" } },
-  { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años" } },
-  { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año" } },
-  { id: 7, nombre: "Misu", colonia: "Río Norte", imagen: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "2 años" } },
-  { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años" } }
+  { id: 1, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años", desaparicion: "No", caracter: "Miedoso pero dulce" } },
+  { id: 2, nombre: "Menta", colonia: "Mirador", imagen: "https://images.pexels.com/photos/617278/pexels-photo-617278.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Ninguna", tratamiento: "Preventivo", edad: "2 años", desaparicion: "No", caracter: "Muy sociable" } },
+  { id: 3, nombre: "Rayo", colonia: "Fonteboa", imagen: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Lesión ocular", tratamiento: "Colirio", edad: "7 años", desaparicion: "No", caracter: "Tranquilo y observador" } },
+  { id: 4, nombre: "Luna", colonia: "Parque Central", imagen: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Revisión", edad: "3 años", desaparicion: "No", caracter: "Algo territorial" } },
+  { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años", desaparicion: "No", caracter: "Líder de grupo" } },
+  { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año", desaparicion: "No", caracter: "Muy juguetón" } },
+  { id: 7, nombre: "Misu", colonia: "Río Norte", imagen: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "2 años", desaparicion: "No", caracter: "Esquivo" } },
+  { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años", desaparicion: "No", caracter: "Cariñoso" } }
 ];
 
 const galleryImages: GalleryImage[] = [
@@ -475,7 +475,6 @@ export default function HomePage() {
         </div>
       </section>
 
-// 2. En tu sección de fichas:
 <section id="fichas" style={{ ...card, padding: '20px 0' }} className="flip-card-section">
   <h3 style={{ textAlign: 'center' }}>Fichas de gatos de colonia</h3>
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>  
@@ -517,17 +516,24 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* CARA TRASERA */}
-            <div className="flip-face flip-back">
-              <h4 style={{ margin: '5px 0' }}>{gato.nombre}</h4>
-              <ul style={{ textAlign: 'left', fontSize: '0.75rem', padding: '0 10px', listStyle: 'none' }}>
-                <li><strong>Esteril:</strong> {gato.detalles.esterilizacion}</li>
-                <li><strong>Salud:</strong> {gato.detalles.enfermedad}</li>
-                <li><strong>Edad:</strong> {gato.detalles.edad}</li>
+            {/* CARA TRASERA CORREGIDA */}
+            <div className="flip-face flip-back" style={{ padding: '15px' }}>
+              <h4 style={{ margin: '0 0 10px 0', borderBottom: '1px solid #eee', pb: '5px' }}>Estado de {gato.nombre}</h4>
+              <ul style={{ textAlign: 'left', fontSize: '0.8rem', padding: '0', listStyle: 'none', lineHeight: '1.4' }}>
+                <li><strong>● Esterilización:</strong> {gato.detalles.esterilizacion}</li>
+                <li><strong>● Enfermedad:</strong> {gato.detalles.enfermedad}</li>
+                <li><strong>● Tratamiento:</strong> {gato.detalles.tratamiento || "Sin tratamiento"}</li>
+                <li><strong>● Desaparición:</strong> {gato.detalles.desaparicion || "No"}</li>
+                <li><strong>● Edad aprox.:</strong> {gato.detalles.edad}</li>
+                <li><strong>● Carácter:</strong> {gato.detalles.caracter || "Desconocido"}</li>
               </ul>
+              
               <button 
-                onClick={(e) => { e.preventDefault(); handlePayment(`Ayudar a ${gato.nombre}`, 10); }}
-                style={{ ...botonCaraFrontal, backgroundColor: '#2ed573' }}
+                onClick={(e) => { 
+                  e.stopPropagation(); // Importante para que no se gire la carta al clicar el botón
+                  handlePayment(`Ayudar a ${gato.nombre}`, 10); 
+                }}
+                style={{ ...botonCaraFrontal, backgroundColor: '#2ed573', marginTop: '10px', width: '100%' }}
               >
                 ❤️ Ayudar
               </button>
