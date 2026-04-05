@@ -466,7 +466,7 @@ export default function HomePage() {
     {/* Contenedor de las 3 tarjetas */}
    {/* GatoCards (le pasamos el estilo "card" directamente) */}
       <section id="colonias" style={card}>
-        <GatoCards />
+        <GatoCards onPay={handlePayment} />
       </section>
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>

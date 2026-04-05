@@ -819,7 +819,10 @@ footer {
 .flip-card:focus-within .flip-card-inner {
     transform: rotateY(180deg);
 }
-
+/* Giro bloqueado por el clic de React */
+.flip-card.is-flipped .flip-card-inner {
+  transform: rotateY(180deg) !important;
+}
 .flip-face {
     position: absolute;
     inset: 0;
