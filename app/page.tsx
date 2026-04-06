@@ -10,7 +10,7 @@ import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
 import GaleriaActuaciones from "./components/GaleriaActuaciones";
-
+import TeamingWidget from "./components/TeamingWidget";
 
 type DonationOption = {
   id: string;
@@ -365,42 +365,8 @@ export default function HomePage() {
 
     </section>
 
-<section id="teaming" style={{ ...card, textAlign: "center" }}>
-  <h3>Apóyanos en Teaming</h3>
-  <p>Con solo 1€ al mes nos ayudas a salvar vidas.</p>
-  
-  <div className="teaming-container" style={{ display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
-    {/* VERSIÓN PC */}
-    <div className="t-desktop">
-      <iframe 
-        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/6?lang=es_ES&TM=true" 
-        width="696" 
-        height="315" 
-        frameBorder="0" 
-        scrolling="no" 
-        style={{ border: "none" }} 
-      />
-    </div>
-
-    {/* VERSIÓN MÓVIL */}
-    <div className="t-mobile">
-      <iframe 
-        src="https://www.teaming.net/group/spread/widgets/vhhzRoTGtqKuuLnVWB2kVKfrWgONnGQd06Cg6Uu6MSVJh/7?lang=es_ES&TM=true" 
-        width="305" 
-        height="567" 
-        frameBorder="0" 
-        scrolling="no" 
-        style={{ border: "none" }} 
-      />
-    </div>
-  </div>
-
-  <div style={{ marginTop: "20px" }}>
-    <a href="https://www.teaming.net/asociaciongatocannaturarural" target="_blank" className="btn btn-primary">
-      Unirse al Grupo de Teaming
-    </a>
-  </div>
-</section>
+{/* Antes había 30 líneas de código aquí, ahora solo una */}
+<TeamingWidget />
 
 {/* CONTACTO */}
       <section id="contacto" style={card}>
