@@ -9,6 +9,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@prisma/client": "^5.10.0",
     "@stripe/stripe-js": "^9.0.1",
     "@supabase/supabase-js": "^2.39.0",
@@ -19,6 +20,7 @@
     "next-auth": "^4.24.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "resend": "^6.10.0",
     "rss-parser": "^3.13.0",
     "stripe": "^22.0.0"
   },

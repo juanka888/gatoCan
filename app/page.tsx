@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from
 import { signIn, signOut, useSession } from "next-auth/react"; // Añade signOut aquí
 import GatoCards from "./components/GatoCards";
 import { gatosColonia } from "@/lib/gatos"; 
-
+import ContactoForm from "./components/ContactoForm";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
@@ -600,67 +600,9 @@ export default function HomePage() {
   </div>
 </section>
 
-
-      <section id="contacto" style={card} className="contact-card">
-        <h3>Contacta con Gatocan Natura Rural</h3>
-        <form className="contact-form" onSubmit={submitContactForm}>
-          <label htmlFor="nombre">Nombre completo:</label>
-          <input
-            type="text"
-            id="nombre"
-            name="nombre"
-            required
-            placeholder="Tu nombre..."
-            value={contactForm.nombre}
-            onChange={(event) => setContactForm((prev) => ({ ...prev, nombre: event.target.value }))}
-          />
-
-          <label htmlFor="email">Correo electrónico:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            placeholder="tu@email.com"
-            value={contactForm.email}
-            onChange={(event) => setContactForm((prev) => ({ ...prev, email: event.target.value }))}
-          />
-
-          <label htmlFor="mensaje">Tu mensaje:</label>
-          <textarea
-            id="mensaje"
-            name="mensaje"
-            rows={5}
-            required
-            placeholder="Cuéntanos..."
-            value={contactForm.mensaje}
-            onChange={(event) => setContactForm((prev) => ({ ...prev, mensaje: event.target.value }))}
-          />
-
-          <div className="legal">
-            <input
-              type="checkbox"
-              id="privacidad"
-              name="privacidad"
-              checked={contactForm.privacidad}
-              onChange={(event) => setContactForm((prev) => ({ ...prev, privacidad: event.target.checked }))}
-              required
-            />
-            <label htmlFor="privacidad">
-              Acepto las condiciones y la <Link href="/politicas">política de privacidad</Link>.
-            </label>
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-enviar" disabled={isSubmittingContact}>
-            {isSubmittingContact ? "Enviando..." : "Enviar mensaje"}
-          </button>
-          {contactStatus && (
-            <p style={{ margin: 0, color: contactStatus.type === "success" ? "#166534" : "#b91c1c", fontWeight: 600 }} role="status">
-              {contactStatus.message}
-            </p>
-          )}
-        </form>
-      </section>
+  <section id="contacto" style={card} className="contact-card">
+    <ContactoForm />
+  </section>
 
       {isLightboxOpen && (
         <div
