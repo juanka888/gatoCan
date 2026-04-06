@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { galleryImages, type GalleryCategory } from "@/lib/gatos";
 
 export default function GaleriaActuaciones() {
@@ -13,7 +13,31 @@ export default function GaleriaActuaciones() {
     [filter]
   );
 
+  // Resetear índice al cambiar filtro
   useEffect(() => { setCurrentIndex(0); }, [filter]);
+
+  // Funciones de navegación
+  const nextImage = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % visibleImages.length);
+  }, [visibleImages.length]);
+
+  const prevImage = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + visibleImages.length) % visibleImages.length);
+  }, [visibleImages.length]);
+
+  // Manejo de teclado (Flechas y Escape)
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+      if (e.key === "Escape") setIsLightboxOpen(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLightboxOpen, nextImage, prevImage]);
 
   const activeImage = visibleImages[currentIndex] || galleryImages[0];
 
@@ -31,7 +55,8 @@ export default function GaleriaActuaciones() {
               border: "1px solid #ddd",
               background: filter === cat ? "#111" : "#fff",
               color: filter === cat ? "#fff" : "#111",
-              cursor: "pointer"
+              cursor: "pointer",
+              fontSize: "0.9rem"
             }}
           >
             {cat === "all" ? "Todas" : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -42,24 +67,62 @@ export default function GaleriaActuaciones() {
       {/* Rejilla de Fotos */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
         {visibleImages.map((img, index) => (
-          <div key={index} onClick={() => { setCurrentIndex(index); setIsLightboxOpen(true); }} style={{ cursor: "pointer" }}>
-            <img src={img.src} alt={img.alt} style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px" }} />
-            <span style={{ fontSize: "0.75rem", color: "#666" }}>{img.tag}</span>
+          <div 
+            key={index} 
+            onClick={() => { setCurrentIndex(index); setIsLightboxOpen(true); }} 
+            style={{ cursor: "pointer", textAlign: "center" }}
+          >
+            <img 
+              src={img.src} 
+              alt={img.alt} 
+              style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px", transition: "transform 0.2s" }} 
+              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
+              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            />
+            <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "4px" }}>{img.tag}</div>
           </div>
         ))}
       </div>
 
-      {/* Visor / Lightbox */}
+      {/* Visor / Lightbox mejorado con FLECHAS */}
       {isLightboxOpen && (
         <div 
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "grid", placeItems: "center", zIndex: 9999 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
           onClick={() => setIsLightboxOpen(false)}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: "90%", color: "#fff", textAlign: "center" }}>
-            <img src={activeImage.src} alt={activeImage.alt} style={{ maxHeight: "80vh", borderRadius: "8px" }} />
-            <p style={{ marginTop: "1rem" }}>{activeImage.caption}</p>
-            <button onClick={() => setIsLightboxOpen(false)} style={{ marginTop: "10px", padding: "5px 15px" }}>Cerrar</button>
+          {/* Botón Cerrar (Esquina superior derecha) */}
+          <button 
+            onClick={() => setIsLightboxOpen(false)}
+            style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", color: "white", fontSize: "2.5rem", cursor: "pointer" }}
+          >
+            ×
+          </button>
+
+          {/* Flecha Izquierda */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); prevImage(); }}
+            style={{ position: "absolute", left: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            ‹
+          </button>
+
+          {/* Contenedor Imagen */}
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: "80%", textAlign: "center" }}>
+            <img 
+              src={activeImage.src} 
+              alt={activeImage.alt} 
+              style={{ maxHeight: "80vh", maxWidth: "100%", borderRadius: "8px", boxShadow: "0 0 20px rgba(0,0,0,0.5)" }} 
+            />
+            <p style={{ marginTop: "1rem", color: "white", fontSize: "1.1rem" }}>{activeImage.caption}</p>
           </div>
+
+          {/* Flecha Derecha */}
+          <button 
+            onClick={(e) => { e.stopPropagation(); nextImage(); }}
+            style={{ position: "absolute", right: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            ›
+          </button>
         </div>
       )}
     </div>

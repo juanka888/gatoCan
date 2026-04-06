@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { gatosColonia } from "@/lib/gatos";
 
 interface GatoCardsProps {
@@ -10,11 +10,21 @@ interface GatoCardsProps {
 export default function GatoCards({ onPay }: GatoCardsProps) {
   const [indiceInicio, setIndiceInicio] = useState(0);
   const [bloqueadas, setBloqueadas] = useState<{ [key: number]: boolean }>({});
+  const [isMobile, setIsMobile] = useState(false);
 
-  const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
+  // Detectar si es móvil para mostrar 1 o 3 gatos
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const numGatosVisible = isMobile ? 1 : 3;
+  const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + numGatosVisible);
 
   const siguienteGato = () => {
-    if (indiceInicio + 3 < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
+    if (indiceInicio + numGatosVisible < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
   };
 
   const anteriorGato = () => {
@@ -26,31 +36,39 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h2 style={tituloSeccion}>🐾 Gatocan: Colonias Felinas</h2>
+    <div style={{ textAlign: "center", padding: "0 10px" }}>
+      <h2 style={tituloSeccion}>🐾 Gatocan: Colonias</h2>
 
       <div style={carouselWrapper}>
-        <button onClick={anteriorGato} disabled={indiceInicio === 0} style={flechaStyle}>⬅️</button>
+        <button 
+          onClick={anteriorGato} 
+          disabled={indiceInicio === 0} 
+          style={{...flechaStyle, opacity: indiceInicio === 0 ? 0.3 : 1}}
+        >
+          ⬅️
+        </button>
 
-        <div className="flip-grid" style={gridStyle}>
+        <div style={{
+          ...gridStyle, 
+          gridTemplateColumns: `repeat(${numGatosVisible}, 1fr)`,
+          maxWidth: isMobile ? "300px" : "100%" 
+        }}>
           {gatosVisibles.map((gato) => (
             <div 
               key={gato.id} 
               className={`flip-card ${bloqueadas[gato.id] ? "is-flipped" : ""}`} 
               onClick={() => toggleBloqueo(gato.id)}
+              style={{ height: "380px" }} // Altura fija para que no salte el layout
             >
               <div className="flip-card-inner">
                 
                 {/* CARA FRONTAL */}
                 <div className="flip-face flip-front" style={faceContentStyle}>
                   <img src={gato.imagen} alt={gato.nombre} style={imgStyle} />
-                  
-                  {/* Este contenedor ocupa todo el espacio sobrante empujando el botón abajo */}
                   <div style={infoWrapperStyle}>
                     <strong style={nombreStyle}>{gato.nombre}</strong>
                     <small style={coloniaStyle}>{gato.colonia}</small>
                   </div>
-
                   <button 
                     onClick={(e) => {
                       e.stopPropagation(); 
@@ -67,8 +85,8 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                   <div style={{ padding: "15px", height: "100%", display: "flex", flexDirection: "column" }}>
                     <h4 style={backTitle}>Estado de {gato.nombre}</h4>
                     <ul style={listStyle}>
-                      <li><strong>● Esterilización:</strong> {gato.detalles.esterilizacion}</li>
-                      <li><strong>● Enfermedad:</strong> {gato.detalles.enfermedad}</li>
+                      <li><strong>● Esteril.:</strong> {gato.detalles.esterilizacion}</li>
+                      <li><strong>● Salud:</strong> {gato.detalles.enfermedad}</li>
                       <li><strong>● Edad:</strong> {gato.detalles.edad}</li>
                       <li><strong>● Carácter:</strong> {gato.detalles.caracter}</li>
                     </ul>
@@ -77,7 +95,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                         e.stopPropagation();
                         onPay(`Ayuda médica para ${gato.nombre}`, 10);
                       }} 
-                      style={{ ...botonStyle, backgroundColor: "#2ed573", marginTop: "auto" }}
+                      style={{ ...botonStyle, backgroundColor: "#2ed573", borderRadius: "0 0 12px 12px" }}
                     >
                       ❤️ Ayudar
                     </button>
@@ -89,17 +107,42 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
           ))}
         </div>
 
-        <button onClick={siguienteGato} disabled={indiceInicio + 3 >= gatosColonia.length} style={flechaStyle}>➡️</button>
+        <button 
+          onClick={siguienteGato} 
+          disabled={indiceInicio + numGatosVisible >= gatosColonia.length} 
+          style={{...flechaStyle, opacity: (indiceInicio + numGatosVisible >= gatosColonia.length) ? 0.3 : 1}}
+        >
+          ➡️
+        </button>
       </div>
     </div>
   );
 }
 
-// --- ESTILOS MEJORADOS ---
+// --- ESTILOS ADAPTADOS ---
 
-const tituloSeccion: React.CSSProperties = { fontSize: "2.2rem", color: "#2c3e50", marginBottom: "30px", fontWeight: "800" };
-const carouselWrapper: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" };
-const gridStyle: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px", flex: 1, perspective: "1000px" };
+const tituloSeccion: React.CSSProperties = { 
+  fontSize: "1.8rem", 
+  color: "#2c3e50", 
+  marginBottom: "20px", 
+  fontWeight: "800" 
+};
+
+const carouselWrapper: React.CSSProperties = { 
+  display: "flex", 
+  alignItems: "center", 
+  justifyContent: "center", 
+  gap: "5px",
+  width: "100%"
+};
+
+const gridStyle: React.CSSProperties = { 
+  display: "grid", 
+  gap: "15px", 
+  flex: 1, 
+  perspective: "1000px",
+  margin: "0 auto"
+};
 
 const faceContentStyle: React.CSSProperties = {
   display: "flex",
@@ -107,39 +150,39 @@ const faceContentStyle: React.CSSProperties = {
   height: "100%",
   backgroundColor: "white",
   borderRadius: "12px",
+  border: "1px solid #eee",
   overflow: "hidden"
 };
 
 const imgStyle: React.CSSProperties = { 
   width: "100%", 
-  height: "160px", 
-  objectFit: "cover", 
-  flexShrink: 0 // Evita que la imagen se encoja si hay mucho texto
+  height: "180px", 
+  objectFit: "cover",
+  flexShrink: 0
 };
 
 const infoWrapperStyle: React.CSSProperties = {
-  flexGrow: 1, // Esto hace que este div "empuje" al botón hacia abajo
+  flexGrow: 1,
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
   padding: "10px"
 };
 
-const nombreStyle: React.CSSProperties = { display: "block", fontSize: "1.2rem", color: "#333" };
-const coloniaStyle: React.CSSProperties = { display: "block", color: "#666", fontSize: "0.9rem" };
+const nombreStyle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: "bold", color: "#333" };
+const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.85rem" };
 
 const botonStyle: React.CSSProperties = { 
   background: "#ff4757", 
   color: "white", 
   border: "none", 
   padding: "12px", 
-  borderRadius: "0 0 12px 12px", // Botón pegado al borde inferior
+  borderRadius: "0 0 12px 12px",
   fontWeight: "bold", 
   cursor: "pointer", 
-  width: "100%",
-  flexShrink: 0
+  width: "100%"
 };
 
-const backTitle: React.CSSProperties = { margin: "0 0 10px 0", borderBottom: "1px solid #eee", paddingBottom: "5px", color: "#333" };
-const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.85rem", padding: "0", listStyle: "none", lineHeight: "1.6", color: "#444", flexGrow: 1 };
-const flechaStyle: React.CSSProperties = { background: "none", border: "none", fontSize: "2.5rem", cursor: "pointer" };
+const backTitle: React.CSSProperties = { fontSize: "1rem", margin: "0 0 10px 0", borderBottom: "1px solid #eee", paddingBottom: "5px" };
+const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.8rem", padding: "0", listStyle: "none", lineHeight: "1.5", color: "#444", flexGrow: 1 };
+const flechaStyle: React.CSSProperties = { background: "none", border: "none", fontSize: "1.8rem", cursor: "pointer", padding: "5px" };
