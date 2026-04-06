@@ -22,6 +22,7 @@ body {
     margin: 0;
     color: var(--text);
     line-height: 1.6;
+    max-width: 100vw;
     background:
         linear-gradient(rgba(9, 29, 36, 0.6), rgba(9, 29, 36, 0.75)),
         url("https://images.pexels.com/photos/11104120/pexels-photo-11104120.jpeg") no-repeat center center fixed;
@@ -49,6 +50,13 @@ section, main {
 }
 
 
+
+img,
+video,
+canvas,
+iframe {
+    max-width: 100%;
+}
 
 /* Por defecto, ocultamos la versión de móvil */
 .t-mobile {
@@ -831,13 +839,19 @@ footer {
 .flip-toggle:checked + .flip-card-inner {
     transform: rotateY(180deg);
 }
-.flip-card:hover .flip-card-inner,
-.flip-card:focus-within .flip-card-inner {
-    transform: rotateY(180deg);
-}
-/* Giro bloqueado por el clic de React */
 .flip-card.is-flipped .flip-card-inner {
-  transform: rotateY(180deg) !important;
+  transform: rotateY(180deg);
+}
+
+.flip-card.is-front-locked .flip-card-inner {
+  transform: rotateY(0deg) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flip-card:hover .flip-card-inner,
+  .flip-card:focus-within .flip-card-inner {
+      transform: rotateY(180deg);
+  }
 }
 .flip-face {
     position: absolute;

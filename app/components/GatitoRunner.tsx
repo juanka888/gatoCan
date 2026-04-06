@@ -86,7 +86,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       distance: 0,
       speed: 4,
       gravity: 0.7,
-      cat: { x: 50, y: 170, w: 34, h: 28, vy: 0, onGround: true },
+      cat: { x: 50, y: 0, w: 34, h: 28, vy: 0, onGround: true },
       groundY: 170,
       width: 860,
       height: 260,
@@ -102,10 +102,13 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       const dpr = window.devicePixelRatio || 1;
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = false;
       game.width = rect.width;
       game.height = rect.height;
       game.groundY = game.height - 50;
+      game.cat.y = game.groundY;
     };
 
     const overlap = (a: any, b: any) =>
@@ -149,6 +152,9 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       game.speed = 4;
       game.obstacles = [];
       game.mice = [];
+      game.cat.y = game.groundY;
+      game.cat.vy = 0;
+      game.cat.onGround = true;
       scoreRef.current = 0;
       distanceRef.current = 0;
       setScore(0);
