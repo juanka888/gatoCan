@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 // Inicializamos Resend con tu clave secreta del .env
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Por esto (para que no de error al compilar):
+const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy_key");
 
 type ContactPayload = {
   nombre?: string;
