@@ -9,60 +9,8 @@ import ContactoForm from "./components/ContactoForm";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import NoticiasGatocan from "./components/NoticiasGatocan";
-type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones";
+import GaleriaActuaciones from "./components/GaleriaActuaciones";
 
-type GalleryImage = {
-  src: string;
-  alt: string;
-  category: Exclude<GalleryCategory, "all">;
-  tag: string;
-  caption: string;
-};
-
-const galleryImages: GalleryImage[] = [
-  {
-    src: "/img/foto-01.jpg",
-    alt: "Gato negro en jaula humanitaria",
-    category: "capturas",
-    tag: "Capturas",
-    caption: "Captura segura en jaula humanitaria.",
-  },
-  {
-    src: "/img/foto-02.jpg",
-    alt: "Gato en jaula verde de captura",
-    category: "capturas",
-    tag: "Capturas",
-    caption: "Preparación y revisión durante el traslado.",
-  },
-  {
-    src: "/img/foto-03.jpg",
-    alt: "Gato en jaula cubierta en clínica",
-    category: "capturas",
-    tag: "Capturas",
-    caption: "Zona de espera para minimizar estrés.",
-  },
-  {
-    src: "/img/foto-04.jpg",
-    alt: "Gato en jaula sobre mesa clínica",
-    category: "esterilizaciones",
-    tag: "Esterilizaciones",
-    caption: "Ingreso para revisión previa veterinaria.",
-  },
-  {
-    src: "/img/foto-05.jpg",
-    alt: "Gato blanco en jaula de observación",
-    category: "colonias",
-    tag: "Colonias",
-    caption: "Control individualizado por colonia.",
-  },
-  {
-    src: "/img/foto-06.jpg",
-    alt: "Gata tricolor en transportín de captura",
-    category: "actuaciones",
-    tag: "Actuaciones",
-    caption: "Actuación coordinada para caso urgente.",
-  },
-];
 
 type DonationOption = {
   id: string;
@@ -158,73 +106,29 @@ const handlePayment = async (name: string, amount: number) => {
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [filter, setFilter] = useState<GalleryCategory>("all");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
-  const [contactForm, setContactForm] = useState({ nombre: "", email: "", mensaje: "", privacidad: false });
-  const [contactStatus, setContactStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const { data: session, status } = useSession();
-  const [indiceGato, setIndiceGato] = useState(0);
 
-  const visibleImages = useMemo(
-    () => galleryImages.filter((image) => filter === "all" || image.category === filter),
-    [filter],
-  );
+  // Avatar dinámico
   const avatar = useMemo(() => 
     session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
     [session]
   );
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [filter]);
-
+  // Cerrar menú al cambiar login
   useEffect(() => {
     setMenuOpen(false);
   }, [status]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!isLightboxOpen || visibleImages.length === 0) return;
-      if (event.key === "Escape") {
-        setIsLightboxOpen(false);
-      }
-      if (event.key === "ArrowLeft") {
-        setCurrentIndex((index) => (index - 1 + visibleImages.length) % visibleImages.length);
-      }
-      if (event.key === "ArrowRight") {
-        setCurrentIndex((index) => (index + 1) % visibleImages.length);
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isLightboxOpen, visibleImages.length]);
-
-  const openLightbox = (index: number) => {
-    setCurrentIndex(index);
-    setIsLightboxOpen(true);
-  };
-
-  const activeImage = visibleImages[currentIndex] || galleryImages[0];
-
+  // Cargar clicks de colaboradores
   useEffect(() => {
     const stored = localStorage.getItem("gatocanColaboradoresClicks");
-    if (stored) {
-      setColabClicks(JSON.parse(stored));
-    }
+    if (stored) setColabClicks(JSON.parse(stored));
   }, []);
 
-  const registerColabClick = (id: string) => {
-    const next = { ...colabClicks, [id]: Number(colabClicks[id] || 0) + 1 };
-    setColabClicks(next);
-    localStorage.setItem("gatocanColaboradoresClicks", JSON.stringify(next));
-  };
-
+  // Cálculos de donaciones
   const donationTotal = Object.keys(donationSelections).reduce((acc, key) => {
     if (donationSelections[key]) {
       const optionId = key.split("-")[1];
@@ -242,72 +146,6 @@ export default function HomePage() {
     }
     return acc;
   }, 0);
-
-  const btnPagoStyle = {
-    backgroundColor: '#ff4757',
-    color: 'white',
-    border: 'none',
-    borderRadius: '20px',
-    padding: '5px 12px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '0.8rem',
-    marginTop: 'auto', // Lo empuja hacia abajo
-    marginBottom: '10px'
-};
-  // 1. Array de datos (asegúrate de que esté ANTES de gatosVisibles)
-
-
-  // 2. Estado y Funciones
-  const [indiceInicio, setIndiceInicio] = useState(0);
-
-  const siguienteGato = () => {
-    if (indiceInicio + 3 < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
-  };
-
-  const anteriorGato = () => {
-    if (indiceInicio > 0) setIndiceInicio(indiceInicio - 1);
-  };
-
-  // 3. Selección de los 3 que se muestran
-  const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + 3);
-
-  const submitContactForm = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!contactForm.privacidad) {
-      setContactStatus({ type: "error", message: "Debes aceptar las políticas de privacidad para continuar." });
-      return;
-    }
-
-    setIsSubmittingContact(true);
-    setContactStatus(null);
-
-    try {
-      const response = await fetch("/api/contacto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: contactForm.nombre,
-          email: contactForm.email,
-          mensaje: contactForm.mensaje,
-          privacidad: contactForm.privacidad,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("No se pudo enviar el mensaje");
-      }
-
-      setContactForm({ nombre: "", email: "", mensaje: "", privacidad: false });
-      setContactStatus({ type: "success", message: "¡Mensaje enviado con éxito!" });
-    } catch (error) {
-      console.error(error);
-      setContactStatus({ type: "error", message: "No hemos podido enviar el mensaje. Inténtalo de nuevo en unos minutos." });
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
@@ -419,47 +257,11 @@ export default function HomePage() {
       <section id="mision" style={card}><h3>Misión y valores</h3><p>Trabajamos para proteger, esterilizar y cuidar a los gatos de colonias felinas mediante acciones coordinadas con personas voluntarias, clínicas veterinarias y administraciones locales.</p></section>
       <section id="colonias" style={card}><h3>Colonias felinas</h3><p>Realizamos seguimiento sanitario, alimentación controlada y campañas de sensibilización para garantizar colonias estables, saludables y bien gestionadas.</p></section>
 
+      {/* SECCIÓN GALERÍA (La parte que hemos extraído) */}
       <section id="galeria" style={card}>
         <h3>Galería de actuaciones</h3>
-        <p>Recorrido visual de colonias, capturas y esterilizaciones. Puedes abrir cualquier miniatura y pasar fotos con teclado o botones.</p>
-        <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", marginBottom: ".8rem" }}>
-          {[
-            ["all", "Todas"],
-            ["colonias", "Colonias"],
-            ["capturas", "Capturas"],
-            ["esterilizaciones", "Esterilizaciones"],
-            ["actuaciones", "Actuaciones"],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setFilter(value as GalleryCategory)}
-              style={{
-                border: "1px solid #cbd5e1",
-                borderRadius: 999,
-                padding: "0.35rem .8rem",
-                background: filter === value ? "#111827" : "#fff",
-                color: filter === value ? "#fff" : "#111827",
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "0.75rem" }}>
-          {visibleImages.map((image, index) => (
-            <button
-              key={image.src}
-              type="button"
-              onClick={() => openLightbox(index)}
-              style={{ margin: 0, textAlign: "left", border: 0, background: "transparent", padding: 0, cursor: "pointer" }}
-            >
-              <img src={image.src} alt={image.alt} style={{ width: "100%", height: 140, objectFit: "cover", borderRadius: 8 }} />
-              <span>{image.tag}</span>
-            </button>
-          ))}
-        </div>
+        <p>Recorrido visual de nuestro trabajo en las colonias.</p>
+        <GaleriaActuaciones />
       </section>
 
 
@@ -600,38 +402,10 @@ export default function HomePage() {
   </div>
 </section>
 
-  <section id="contacto" style={card} className="contact-card">
-    <ContactoForm />
-  </section>
-
-      {isLightboxOpen && (
-        <div
-          role="dialog"
-          aria-label="Visor de imágenes"
-          onClick={() => setIsLightboxOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.8)",
-            display: "grid",
-            placeItems: "center",
-            zIndex: 1000,
-            padding: "1rem",
-          }}
-        >
-          <div onClick={(event) => event.stopPropagation()} style={{ maxWidth: 860, width: "100%", color: "#fff" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: ".5rem" }}>
-              <button type="button" onClick={() => setIsLightboxOpen(false)}>Cerrar ×</button>
-              <div style={{ display: "flex", gap: ".5rem" }}>
-                <button type="button" onClick={() => setCurrentIndex((index) => (index - 1 + visibleImages.length) % visibleImages.length)}>‹ Anterior</button>
-                <button type="button" onClick={() => setCurrentIndex((index) => (index + 1) % visibleImages.length)}>Siguiente ›</button>
-              </div>
-            </div>
-            <img src={activeImage.src} alt={activeImage.alt} style={{ width: "100%", maxHeight: "75vh", objectFit: "contain" }} />
-            <p style={{ marginTop: ".5rem" }}>{activeImage.caption}</p>
-          </div>
-        </div>
-      )}
+{/* CONTACTO */}
+      <section id="contacto" style={card}>
+        <ContactoForm />
+      </section>
     </main>
   );
 }
