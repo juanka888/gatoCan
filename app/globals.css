@@ -33,6 +33,21 @@ body {
     max-width: 100%;
     overflow-x: hidden;
 }
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* Añade esto para que las secciones no se desborden */
+section, main {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden; 
+}
 
 /* Por defecto, ocultamos la versión de móvil */
 .t-mobile {
