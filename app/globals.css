@@ -30,29 +30,25 @@ body {
 
 /* --- CORRECCIÓN DEL SCROLL --- */
 
+/* Limpieza total de desbordes */
 html, body {
-  max-width: 100vw;
-  overflow-x: hidden; /* Oculta solo el ancho sobrante */
-  overflow-y: auto;   /* ASEGURA que el scroll vertical exista */
   margin: 0;
   padding: 0;
   width: 100%;
+  overflow-x: hidden; /* Evita baile lateral */
+  overflow-y: auto;   /* Permite scroll normal vertical */
+  height: auto;       /* IMPORTANTE: deja que el contenido mande */
 }
 
-/* Cambiamos 'hidden' por 'visible' o simplemente quitamos la línea */
+/* Para que nada corte el scroll vertical */
 section, main {
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
-  /* overflow: hidden;  <-- BORRA ESTA LÍNEA O CAMBIALA POR: */
   overflow: visible; 
+  display: block;
 }
 
-/* Un truco extra por si las moscas: */
-body {
-  position: relative;
-  min-height: 100vh;
-}
+
 
 /* Por defecto, ocultamos la versión de móvil */
 .t-mobile {

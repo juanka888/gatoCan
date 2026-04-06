@@ -21,7 +21,6 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Evita errores de hidratación: no renderiza hasta que el cliente está listo
   if (!mounted) return null;
 
   const numGatosVisible = isMobile ? 1 : 3;
@@ -42,7 +41,8 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
   };
 
   const handleCardClick = (id: number) => {
-    setFlippedId(flippedId === id ? null : id);
+    // Cambia el estado: si es la misma id, vuelve a null (frente). Si es otra, gira esa.
+    setFlippedId(prevId => (prevId === id ? null : id));
   };
 
   return (
@@ -61,7 +61,9 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
         <div style={{
           ...gridStyle, 
           gridTemplateColumns: `repeat(${numGatosVisible}, 1fr)`,
-          maxWidth: isMobile ? "280px" : "100%" 
+          // En móvil limitamos al 80% para que las flechas no pisen la carta
+          maxWidth: isMobile ? "80%" : "100%",
+          padding: isMobile ? "10px 0" : "0"
         }}>
           {gatosVisibles.map((gato) => (
             <div 
@@ -105,7 +107,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                         e.stopPropagation();
                         onPay(`Ayuda médica para ${gato.nombre}`, 10);
                       }} 
-                      style={{ ...botonStyle, backgroundColor: "#2ed573" }}
+                      style={{ ...botonStyle, backgroundColor: "#2ed573", borderRadius: "0 0 12px 12px" }}
                     >
                       ❤️ Ayudar
                     </button>
@@ -129,7 +131,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
   );
 }
 
-// --- ESTILOS ---
+// --- ESTILOS OPTIMIZADOS ---
 const tituloSeccion: React.CSSProperties = { fontSize: "1.8rem", color: "#2c3e50", marginBottom: "20px", fontWeight: "800" };
 const carouselWrapper: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", width: "100%" };
 const gridStyle: React.CSSProperties = { display: "grid", gap: "15px", flex: 1, perspective: "1000px", margin: "0 auto" };
@@ -138,7 +140,7 @@ const imgStyle: React.CSSProperties = { width: "100%", height: "180px", objectFi
 const infoWrapperStyle: React.CSSProperties = { flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px" };
 const nombreStyle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: "bold", color: "#333" };
 const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.85rem" };
-const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "12px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto", borderRadius: "0 0 12px 12px" };
+const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "12px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto" };
 const backTitle: React.CSSProperties = { fontSize: "1rem", margin: "0 0 10px 0", borderBottom: "1px solid #eee", paddingBottom: "5px" };
 const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.8rem", padding: "0", listStyle: "none", lineHeight: "1.5", color: "#444", flexGrow: 1 };
 const flechaStyle: React.CSSProperties = { background: "none", border: "none", fontSize: "1.8rem", cursor: "pointer", padding: "5px" };
