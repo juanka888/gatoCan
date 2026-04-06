@@ -31,12 +31,19 @@ export default function Login() {
     const result = loginSchema.safeParse({ email, password });
     
     if (!result.success) {
-      setError(result.error.errors[0].message);
+      // Extraemos los errores de forma segura para TypeScript
+      const formattedErrors = result.error.flatten();
+      const fieldErrors = Object.values(formattedErrors.fieldErrors);
+      // Cogemos el primer mensaje del primer campo que falló
+      const firstError = fieldErrors.length > 0 && fieldErrors[0] ? fieldErrors[0][0] : "Datos inválidos";
+      
+      setError(firstError);
       setLoading(false);
       return;
     }
 
     // 2. Intento de inicio de sesión
+    // Usamos result.data porque ya está limpio y validado por Zod
     const res = await signIn("credentials", {
       email: result.data.email,
       password: result.data.password,
@@ -48,7 +55,8 @@ export default function Login() {
       setError("Email o contraseña incorrectos");
       setLoading(false);
     } else {
-      window.location.href = "/perfil"; // Redirección manual exitosa
+      // Redirección manual para asegurar que la sesión se actualice correctamente
+      window.location.href = "/perfil"; 
     }
   };
 

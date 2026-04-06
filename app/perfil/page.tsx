@@ -13,10 +13,12 @@ const profileSchema = z.object({
     message: "DNI/NIE no es válido",
   }),
   direccion: z.string().max(200).optional().or(z.literal("")),
-  codigoPostal: z.string().regex(/^\d{5}$/, "El C.P. debe tener 5 dígitos").optional().or(z.literal("")),
+  codigoPostal: z.string().refine((v) => v === "" || /^\d{5}$/.test(v), {
+    message: "El C.P. debe tener 5 dígitos",
+  }),
   poblacion: z.string().max(100).optional().or(z.literal("")),
-  aceptaPoliticas: z.literal(true, {
-    errorMap: () => ({ message: "Debes aceptar las políticas para guardar" }),
+  aceptaPoliticas: z.boolean().refine((val) => val === true, {
+    message: "Debes aceptar las políticas para guardar",
   }),
 });
 
@@ -97,17 +99,22 @@ export default function PerfilPage() {
 
   const updateField = (f: keyof ProfileData, v: any) => {
     setProfile(p => ({ ...p, [f]: v }));
-    setErrorMessage(""); // Limpiar errores al escribir
+    setErrorMessage(""); 
   };
 
   const saveProfile = async () => {
     setErrorMessage("");
     setMessage("");
 
-    // Validación Zod
+    // 1. VALIDACIÓN ZOD CORREGIDA PARA TYPESCRIPT
     const validation = profileSchema.safeParse(profile);
+    
     if (!validation.success) {
-      setErrorMessage(validation.error.errors[0].message);
+      const formattedErrors = validation.error.flatten();
+      const fieldErrors = Object.values(formattedErrors.fieldErrors);
+      const firstError = fieldErrors.length > 0 && fieldErrors[0] ? fieldErrors[0][0] : "Datos inválidos";
+      
+      setErrorMessage(firstError);
       return;
     }
 
@@ -291,10 +298,12 @@ const btnPrimary: CSSProperties = {
   fontWeight: 600,
   border: "1px solid rgba(255, 255, 255, 0.3)",
   cursor: "pointer",
+  textDecoration: "none",
+  textAlign: "center"
 };
 
 const sectionTitle: CSSProperties = { marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10, fontSize: "1.2rem" };
 const labelStyle: CSSProperties = { fontWeight: "bold", fontSize: "0.85rem", display: "block", marginBottom: 5, opacity: 0.9 };
 const statBox: CSSProperties = { backgroundColor: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "12px", textAlign: "center" };
-const errorBanner: CSSProperties = { backgroundColor: 'rgba(220, 38, 38, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem' };
-const successBanner: CSSProperties = { backgroundColor: 'rgba(22, 101, 52, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem' };
+const errorBanner: CSSProperties = { backgroundColor: 'rgba(220, 38, 38, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' };
+const successBanner: CSSProperties = { backgroundColor: 'rgba(22, 101, 52, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' };
