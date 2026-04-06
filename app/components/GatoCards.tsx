@@ -9,10 +9,10 @@ interface GatoCardsProps {
 
 export default function GatoCards({ onPay }: GatoCardsProps) {
   const [indiceInicio, setIndiceInicio] = useState(0);
-  const [bloqueadas, setBloqueadas] = useState<{ [key: number]: boolean }>({});
+  // Estado para saber qué tarjeta está girada
+  const [flippedId, setFlippedId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detectar si es móvil para mostrar 1 o 3 gatos
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -24,15 +24,22 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
   const gatosVisibles = gatosColonia.slice(indiceInicio, indiceInicio + numGatosVisible);
 
   const siguienteGato = () => {
-    if (indiceInicio + numGatosVisible < gatosColonia.length) setIndiceInicio(indiceInicio + 1);
+    if (indiceInicio + numGatosVisible < gatosColonia.length) {
+      setIndiceInicio(indiceInicio + 1);
+      setFlippedId(null); // Resetear giro al cambiar de gato
+    }
   };
 
   const anteriorGato = () => {
-    if (indiceInicio > 0) setIndiceInicio(indiceInicio - 1);
+    if (indiceInicio > 0) {
+      setIndiceInicio(indiceInicio - 1);
+      setFlippedId(null); // Resetear giro al cambiar de gato
+    }
   };
 
-  const toggleBloqueo = (id: number) => {
-    setBloqueadas((prev) => ({ ...prev, [id]: !prev[id] }));
+  // NUEVA LÓGICA DE GIRO: Si ya está girada, vuelve al frente. Si no, gira.
+  const handleCardClick = (id: number) => {
+    setFlippedId(flippedId === id ? null : id);
   };
 
   return (
@@ -56,13 +63,13 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
           {gatosVisibles.map((gato) => (
             <div 
               key={gato.id} 
-              className={`flip-card ${bloqueadas[gato.id] ? "is-flipped" : ""}`} 
-              onClick={() => toggleBloqueo(gato.id)}
-              style={{ height: "380px" }} // Altura fija para que no salte el layout
+              className={`flip-card ${flippedId === gato.id ? "is-flipped" : ""}`} 
+              onClick={() => handleCardClick(gato.id)}
+              style={{ height: "400px", cursor: "pointer" }}
             >
               <div className="flip-card-inner">
                 
-                {/* CARA FRONTAL */}
+                {/* CARA FRONTAL (FOTO) */}
                 <div className="flip-face flip-front" style={faceContentStyle}>
                   <img src={gato.imagen} alt={gato.nombre} style={imgStyle} />
                   <div style={infoWrapperStyle}>
@@ -71,7 +78,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                   </div>
                   <button 
                     onClick={(e) => {
-                      e.stopPropagation(); 
+                      e.stopPropagation(); // IMPORTANTE: Evita que la carta gire al pagar
                       onPay(`Apadrinar a ${gato.nombre}`, 10);
                     }} 
                     style={botonStyle}
@@ -80,7 +87,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                   </button>
                 </div>
 
-                {/* CARA TRASERA */}
+                {/* CARA TRASERA (DETALLES) */}
                 <div className="flip-face flip-back" style={faceContentStyle}>
                   <div style={{ padding: "15px", height: "100%", display: "flex", flexDirection: "column" }}>
                     <h4 style={backTitle}>Estado de {gato.nombre}</h4>
@@ -92,10 +99,10 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                     </ul>
                     <button 
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // Evita que la carta gire al pagar
                         onPay(`Ayuda médica para ${gato.nombre}`, 10);
                       }} 
-                      style={{ ...botonStyle, backgroundColor: "#2ed573", borderRadius: "0 0 12px 12px" }}
+                      style={{ ...botonStyle, backgroundColor: "#2ed573" }}
                     >
                       ❤️ Ayudar
                     </button>
@@ -104,6 +111,34 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
 
               </div>
             </div>
+          ))}
+        </div>
+
+        <button 
+          onClick={siguienteGato} 
+          disabled={indiceInicio + numGatosVisible >= gatosColonia.length} 
+          style={{...flechaStyle, opacity: (indiceInicio + numGatosVisible >= gatosColonia.length) ? 0.3 : 1}}
+        >
+          ➡️
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// --- ESTILOS MANTENIDOS ---
+const tituloSeccion: React.CSSProperties = { fontSize: "1.8rem", color: "#2c3e50", marginBottom: "20px", fontWeight: "800" };
+const carouselWrapper: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", width: "100%" };
+const gridStyle: React.CSSProperties = { display: "grid", gap: "15px", flex: 1, perspective: "1000px", margin: "0 auto" };
+const faceContentStyle: React.CSSProperties = { display: "flex", flexDirection: "column", height: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid #eee", overflow: "hidden" };
+const imgStyle: React.CSSProperties = { width: "100%", height: "180px", objectFit: "cover", flexShrink: 0 };
+const infoWrapperStyle: React.CSSProperties = { flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px" };
+const nombreStyle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: "bold", color: "#333" };
+const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.85rem" };
+const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "12px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto" };
+const backTitle: React.CSSProperties = { fontSize: "1rem", margin: "0 0 10px 0", borderBottom: "1px solid #eee", paddingBottom: "5px" };
+const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.8rem", padding: "0", listStyle: "none", lineHeight: "1.5", color: "#444", flexGrow: 1 };
+const flechaStyle: React.CSSProperties = { background: "none", border: "none", fontSize: "1.8rem", cursor: "pointer", padding: "5px" };
           ))}
         </div>
 
