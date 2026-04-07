@@ -300,11 +300,9 @@ export default function HomePage() {
       <section id="noticias" style={card}>
         <NoticiasGatocan />
       </section>
-<main className="min-h-screen bg-white">
       {/* Tu Hero/Banner aquí */}
       <StatsSection />
       {/* Tu sección de animalitos aquí */}
-    </main>
       <DonationSection 
         gatosColonia={gatosColonia} 
         handlePayment={handlePayment} 
