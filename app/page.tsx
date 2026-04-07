@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link"; // Añade esto
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
-import { signIn, signOut, useSession } from "next-auth/react"; // Añade signOut aquí
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import GatoCards from "./components/GatoCards";
-import { gatosColonia } from "@/lib/gatos"; 
+import { gatosColonia } from "@/lib/gatos";
 import ContactoForm from "./components/ContactoForm";
-import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
 import DonationSection from "./components/DonationSection";
 import NoticiasGatocan from "./components/NoticiasGatocan";
@@ -14,59 +13,6 @@ import GaleriaActuaciones from "./components/GaleriaActuaciones";
 import TeamingWidget from "./components/TeamingWidget";
 import StatsSection from "./components/StatsSection";
 
-type DonationOption = {
-  id: string;
-  label: string;
-  price: number;
-  karma: number;
-  icon: string;
-  iconClassName: string;
-};
-
-const donationOptions: DonationOption[] = [
-  { id: "male", label: "Esterilización macho — 60 €", price: 60, karma: 30, icon: "✚", iconClassName: "icon-med" },
-  { id: "female", label: "Esterilización femenina — 100 €", price: 100, karma: 50, icon: "♀", iconClassName: "icon-female" },
-  { id: "food", label: "Comida mensual — 10 €", price: 10, karma: 10, icon: "🍴", iconClassName: "icon-food" },
-  { id: "pipette", label: "Pipeta antiparasitaria — 12 €", price: 12, karma: 8, icon: "PP", iconClassName: "icon-pipette" },
-  { id: "sponsor", label: "Apadrina este gato — 15 €/mes", price: 15, karma: 18, icon: "♥", iconClassName: "icon-love" },
-];
-
-const flechaProStyle = {
-  background: 'rgba(255, 71, 87, 0.1)', // Fondo rosado muy suave y elegante
-  border: 'none',
-  fontSize: '2rem',
-  cursor: 'pointer',
-  padding: '10px 15px',
-  borderRadius: '50%', // Lo hace circular
-  color: '#ff4757',
-  transition: 'all 0.3s ease', // Animación suave
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  userSelect: 'none' as const, // Evita que se seleccione el emoji como texto
-  width: '50px', // Tamaño fijo para que sea un círculo perfecto
-  height: '50px',
-  boxShadow: '0 2px 5px rgba(0,0,0,0.05)' // Una sombra casi invisible para dar relieve
-};
-const botonCaraFrontal = {
-    backgroundColor: '#ff4757',
-    color: 'white',
-    padding: '8px 12px',
-    borderRadius: '20px',
-    border: 'none',
-    fontWeight: 'bold' as const,
-    cursor: 'pointer',
-    fontSize: '0.8rem',
-    marginTop: '10px'
-  };
-
-  const flechaStyle = {
-    background: 'none',
-    border: 'none',
-    fontSize: '2rem',
-    cursor: 'pointer',
-    color: '#ff4757'
-  };
 const card: React.CSSProperties = {
   background: "#fff",
   border: "1px solid #e5e7eb",
@@ -74,26 +20,19 @@ const card: React.CSSProperties = {
   padding: "1rem",
   width: "100%",
   maxWidth: "1200px",
-  margin: "0 auto 2rem auto"
+  margin: "0 auto 2rem auto",
 };
 
-const mainLayout: React.CSSProperties = {
-  backgroundColor: "#f4f7f6",
-  minHeight: "100vh",
-  padding: "40px 10px"
-};
 const handlePayment = async (name: string, amount: number) => {
   try {
-    // 1. Llamamos a tu API
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, amount }), // Enviamos nombre y cantidad (en euros)
+      body: JSON.stringify({ name, amount }),
     });
 
     const data = await res.json();
 
-    // 2. Si la API nos devuelve la URL de Stripe, redirigimos
     if (data.url) {
       window.location.href = data.url;
     } else {
@@ -108,46 +47,18 @@ const handlePayment = async (name: string, amount: number) => {
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [colabClicks, setColabClicks] = useState<Record<string, number>>({});
-  const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
-  const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
   const { data: session, status } = useSession();
 
-  // Avatar dinámico
-  const avatar = useMemo(() => 
-    session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
-    [session]
+  const avatar = useMemo(
+    () =>
+      session?.user?.image ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
+    [session],
   );
 
-  // Cerrar menú al cambiar login
   useEffect(() => {
     setMenuOpen(false);
   }, [status]);
-
-  // Cargar clicks de colaboradores
-  useEffect(() => {
-    const stored = localStorage.getItem("gatocanColaboradoresClicks");
-    if (stored) setColabClicks(JSON.parse(stored));
-  }, []);
-
-  // Cálculos de donaciones
-  const donationTotal = Object.keys(donationSelections).reduce((acc, key) => {
-    if (donationSelections[key]) {
-      const optionId = key.split("-")[1];
-      const option = donationOptions.find((o) => o.id === optionId);
-      return acc + (option ? option.price : 0);
-    }
-    return acc;
-  }, 0);
-
-  const karmaTotal = Object.keys(donationSelections).reduce((acc, key) => {
-    if (donationSelections[key]) {
-      const optionId = key.split("-")[1];
-      const option = donationOptions.find((o) => o.id === optionId);
-      return acc + (option ? option.karma : 0);
-    }
-    return acc;
-  }, 0);
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
@@ -161,50 +72,36 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-        {status === "loading" ? (
-          <button className="btn btn-secondary" disabled>Cargando...</button>
-        ) : session ? (
-          /* SI ESTÁ LOGUEADO */
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <img 
-                src={avatar} 
-                alt="Avatar" 
-                style={{ width: "24px", height: "24px", borderRadius: "50%" }} 
-              />
-              Ir a mi perfil
-            </Link>
-            
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              style={{ opacity: 0.8 }}
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              Salir
-            </button>
-          </div>
-        ) : (
-          /* SI NO ESTÁ LOGUEADO */
-          <>
-            <Link href="/login" className="btn btn-secondary">
-              Acceder
-            </Link>
-            <Link href="/register" className="btn btn-secondary">
-              Crear cuenta
-            </Link>
-          </>
-        )}
+            {status === "loading" ? (
+              <button className="btn btn-secondary" disabled>
+                Cargando...
+              </button>
+            ) : session ? (
+              <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <img src={avatar} alt="Avatar" style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
+                  Ir a mi perfil
+                </Link>
 
-        <a
-          href="https://www.teaming.net/proyectogatonaturanrural"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-primary"
-        >
-          Teaming 1€
-        </a>
-      </div>
+                <button type="button" className="btn btn-secondary" style={{ opacity: 0.8 }} onClick={() => signOut({ callbackUrl: "/" })}>
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="btn btn-secondary">
+                  Acceder
+                </Link>
+                <Link href="/register" className="btn btn-secondary">
+                  Crear cuenta
+                </Link>
+              </>
+            )}
+
+            <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+              Teaming 1€
+            </a>
+          </div>
         </div>
 
         <button
@@ -238,10 +135,7 @@ export default function HomePage() {
 
         <section className="hero">
           <h2>Cuidamos colonias felinas con responsabilidad y compromiso</h2>
-          <p>
-            Aplicamos el método CER para mejorar la vida de los gatos comunitarios y fomentar una convivencia
-            respetuosa en el entorno rural.
-          </p>
+          <p>Aplicamos el método CER para mejorar la vida de los gatos comunitarios y fomentar una convivencia respetuosa en el entorno rural.</p>
           <div className="hero-actions">
             {status === "authenticated" ? (
               <a href="/perfil" className="btn btn-secondary">Mi perfil</a>
@@ -259,20 +153,16 @@ export default function HomePage() {
       <section id="mision" style={card}><h3>Misión y valores</h3><p>Trabajamos para proteger, esterilizar y cuidar a los gatos de colonias felinas mediante acciones coordinadas con personas voluntarias, clínicas veterinarias y administraciones locales.</p></section>
       <section id="colonias" style={card}><h3>Colonias felinas</h3><p>Realizamos seguimiento sanitario, alimentación controlada y campañas de sensibilización para garantizar colonias estables, saludables y bien gestionadas.</p></section>
 
-      {/* SECCIÓN GALERÍA (La parte que hemos extraído) */}
       <section id="galeria" style={card}>
         <h3>Galería de actuaciones</h3>
         <p>Recorrido visual de nuestro trabajo en las colonias.</p>
         <GaleriaActuaciones />
       </section>
 
-
-    {/* Contenedor de las 3 tarjetas */}
-   {/* GatoCards (le pasamos el estilo "card" directamente) */}
-      <section id="colonias" style={card}>
+      <section id="fichas" style={card}>
         <GatoCards onPay={handlePayment} />
       </section>
-      
+
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
@@ -293,7 +183,7 @@ export default function HomePage() {
           Firmar campaña en Change.org
         </a>
       </section>
-      
+
       <section id="ayuda" style={card}><h3>Cómo ayudar</h3><ul><li>Únete al equipo de voluntariado.</li><li>Colabora con material o alimento.</li><li>Difunde nuestras campañas en tu entorno.</li></ul></section>
       <section id="ranking" style={card}><h3>Rankings solidarios 🏆</h3><p>Consulta los dos rankings completos (donaciones y minijuego).</p><a href="/rankings">Ver página completa de rankings</a></section>
 
@@ -303,16 +193,10 @@ export default function HomePage() {
       <section id="stats" style={card}>
         <StatsSection />
       </section>
-      <DonationSection 
-        gatosColonia={gatosColonia} 
-        handlePayment={handlePayment} 
-        cardStyle={card} 
-      />
+      <DonationSection gatosColonia={gatosColonia} handlePayment={handlePayment} cardStyle={card} />
 
-{/* Antes había 30 líneas de código aquí, ahora solo una */}
-<TeamingWidget />
+      <TeamingWidget />
 
-{/* CONTACTO */}
       <section id="contacto" style={card}>
         <ContactoForm />
       </section>

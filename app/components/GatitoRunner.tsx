@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
 
 type GatitoRunnerProps = {
   embedded?: boolean;
@@ -30,7 +29,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [statusText, setStatusText] = useState("");
-  const { data: session } = useSession();
 
   const scoreRef = useRef(0);
   const distanceRef = useRef(0);
@@ -271,13 +269,15 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
     window.addEventListener("resize", resizeGameCanvas);
     const handleKey = (e: KeyboardEvent) => { if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); } };
     window.addEventListener("keydown", handleKey);
-    canvas.addEventListener("pointerdown", (e) => { e.preventDefault(); jump(); });
+    const handlePointer = (e: PointerEvent) => { e.preventDefault(); jump(); };
+    canvas.addEventListener("pointerdown", handlePointer);
     rafRef.current = requestAnimationFrame(tick);
-    
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resizeGameCanvas);
       window.removeEventListener("keydown", handleKey);
+      canvas.removeEventListener("pointerdown", handlePointer);
     };
   }, []);
 
