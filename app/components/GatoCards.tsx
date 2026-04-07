@@ -10,7 +10,6 @@ interface GatoCardsProps {
 export default function GatoCards({ onPay }: GatoCardsProps) {
   const [indiceInicio, setIndiceInicio] = useState(0);
   const [flippedId, setFlippedId] = useState<number | null>(null);
-  const [lockedFrontId, setLockedFrontId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -31,7 +30,6 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     if (indiceInicio + numGatosVisible < gatosColonia.length) {
       setIndiceInicio(indiceInicio + 1);
       setFlippedId(null);
-      setLockedFrontId(null);
     }
   };
 
@@ -39,19 +37,11 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     if (indiceInicio > 0) {
       setIndiceInicio(indiceInicio - 1);
       setFlippedId(null);
-      setLockedFrontId(null);
     }
   };
 
   const handleCardClick = (id: number) => {
-    if (isMobile) {
-      setFlippedId((prevId) => (prevId === id ? null : id));
-      return;
-    }
-
-    // En escritorio: el hover sigue mostrando reverso, pero el click puede forzar volver al frente.
-    setLockedFrontId((prevId) => (prevId === id ? null : id));
-    setFlippedId(null);
+    setFlippedId((prevId) => (prevId === id ? null : id));
   };
 
   return (
@@ -77,7 +67,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
           {gatosVisibles.map((gato) => (
             <div 
               key={gato.id} 
-              className={`flip-card ${flippedId === gato.id ? "is-flipped" : ""} ${lockedFrontId === gato.id ? "is-front-locked" : ""}`} 
+              className={`flip-card ${flippedId === gato.id ? "is-flipped" : ""}`}
               onClick={() => handleCardClick(gato.id)}
               style={{ height: "400px", cursor: "pointer" }}
             >
