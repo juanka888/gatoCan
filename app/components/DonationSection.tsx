@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 
+// --- TIPOS ---
 interface Gato {
   id: any;
   nombre: string;
@@ -23,21 +24,30 @@ interface DonationSectionProps {
   cardStyle: React.CSSProperties;
 }
 
+// --- OPCIONES DE DONACIÓN (REUTILIZANDO TUS DATOS) ---
 const donationOptions: DonationOption[] = [
   { id: "comida", label: "Comida (semana)", icon: "🥣", iconClassName: "food", price: 10, karma: 10 },
   { id: "vet", label: "Revisión Veterinaria", icon: "🏥", iconClassName: "vet", price: 30, karma: 35 },
   { id: "desparasitar", label: "Desparasitación", icon: "🪱", iconClassName: "bug", price: 15, karma: 15 },
+  // Añadimos la opción de unificar apadrinamiento si quieres:
+  // { id: "apadrinar", label: "Apadrita este gato", icon: "💖", iconClassName: "heart", price: 15, karma: 20 },
 ];
 
 export default function DonationSection({ gatosColonia, handlePayment, cardStyle }: DonationSectionProps) {
-  // 1. Estado para saber qué gatos se muestran (empezamos con los 3 primeros)
+  // --- ESTADOS ---
+  // Gatos visibles (empezamos con los 3 primeros)
   const [visibleCatIds, setVisibleCatIds] = useState<any[]>(gatosColonia.slice(0, 3).map(g => g.id));
+  
+  // Gato abierto (para el accordion)
   const [openDonationCatId, setOpenDonationCatId] = useState<any | null>(null);
+  
+  // Selecciones de checkboxes
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   
-  // Estado para mostrar/ocultar el selector de gatos
+  // Mostrar/Ocultar el buscador con scroll
   const [showPicker, setShowPicker] = useState(false);
 
+  // --- CÁLCULO DE TOTALES (useMemo para eficiencia) ---
   const { donationTotal, karmaTotal } = useMemo(() => {
     let total = 0;
     let karma = 0;
@@ -54,7 +64,7 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
     return { donationTotal: total, karmaTotal: karma };
   }, [donationSelections]);
 
-  // Función para añadir un gato a la lista visual
+  // --- FUNCIONES DE LÓGICA ---
   const addCatToView = (id: any) => {
     if (!visibleCatIds.includes(id)) {
       setVisibleCatIds([...visibleCatIds, id]);
@@ -65,20 +75,25 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
 
   return (
     <section id="donar" style={cardStyle} className="donation-card">
-      <h3>Haz tu aporte gatuno 🐾</h3>
+      <h3 style={{ color: '#FFFFFF' }}>Haz tu aporte gatuno 🐾</h3>
       <p>Abre cada gatete y marca el apoyo que quieras cubrir.</p>
 
-      {/* LISTADO DE GATOS VISIBLES */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* 1. LISTADO DE GATOS VISIBLES (REUTILIZANDO TU CLASE donation-panel) */}
+      <div className="cats-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {gatosColonia
           .filter(cat => visibleCatIds.includes(cat.id))
           .map((cat) => (
-            <details key={cat.id} className="donation-panel" open={openDonationCatId === cat.id}>
+            <details 
+              key={cat.id} 
+              className="donation-panel" 
+              open={openDonationCatId === cat.id}
+            >
               <summary
                 onClick={(event) => {
-                  event.preventDefault();
-                  // Lógica de minimizar: si pincho el que ya está abierto, se cierra (null)
-                  setOpenDonationCatId(openDonationCatId === cat.id ? null : cat.id);
+                  // LÓGICA DE MINIMIZAR: Quitamos event.preventDefault() para no romper el accordion
+                  // y simplemente gestionamos qué gato está abierto en el estado.
+                  const isCurrentlyOpen = openDonationCatId === cat.id;
+                  setOpenDonationCatId(isCurrentlyOpen ? null : cat.id);
                 }}
               >
                 <span className="cat-summary">
@@ -86,6 +101,8 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
                   <span>{cat.nombre}</span>
                 </span>
               </summary>
+              
+              {/* USAMOS TU CLASE cat-options PARA RECUPERAR EL DISEÑO */}
               <div className="cat-options">
                 {donationOptions.map((option) => {
                   const key = `${cat.id}-${option.id}`;
@@ -93,9 +110,15 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
                     <label key={key}>
                       <input
                         type="checkbox"
+                        // USAMOS TU CLASE donation-item
+                        className="donation-item"
                         checked={Boolean(donationSelections[key])}
-                        onChange={(e) => setDonationSelections(prev => ({ ...prev, [key]: e.target.checked }))}
+                        onChange={(event) => {
+                          const checked = event.target.checked;
+                          setDonationSelections((prev) => ({ ...prev, [key]: checked }));
+                        }}
                       />{" "}
+                      {/* USAMOS TU CLASE option-icon */}
                       <span className={`option-icon ${option.iconClassName}`}>{option.icon}</span> {option.label}
                     </label>
                   );
@@ -105,38 +128,64 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
           ))}
       </div>
 
-      {/* SELECTOR DE GATOS (EL MINI SCROLL) */}
-      <div style={{ marginTop: '15px' }}>
+      {/* 2. SELECTOR DE GATOS (EL MINI SCROLL) - Aseguramos visibilidad */}
+      <div className="add-cat-selector" style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
         {!showPicker ? (
           <button 
+            type="button" // Evita que envíe el formulario si lo hay
             onClick={() => setShowPicker(true)} 
-            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '2px dashed rgba(255,255,255,0.3)', background: 'transparent', color: 'white', cursor: 'pointer' }}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              borderRadius: '12px', 
+              border: '2px dashed rgba(255,255,255,0.4)', // Más visible
+              background: 'rgba(255,255,255,0.05)', // Pequeño fondo para visibilidad
+              color: 'white', 
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
           >
-            + Ayudar a otro gato de la colonia
+            + Ayudar a otro gato (Ver colonia completa)
           </button>
         ) : (
-          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '15px', padding: '10px', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <p style={{ fontSize: '0.8rem', marginBottom: '8px', opacity: 0.8 }}>Selecciona un gato para añadirlo:</p>
-            <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '15px', padding: '15px', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}>
+            <p style={{ fontSize: '0.9rem', marginBottom: '10px', fontWeight: 'bold' }}>Selecciona un gato de la colonia:</p>
+            
+            {/* MINI SCROLL: maxHeight y overflowY */}
+            <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '5px' }}>
               {gatosColonia.map(g => (
                 <div 
                   key={g.id} 
                   onClick={() => addCatToView(g.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '8px', cursor: 'pointer', background: 'rgba(255,255,255,0.05)' }}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '10px', 
+                    padding: '10px', 
+                    borderRadius: '8px', 
+                    cursor: 'pointer', 
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
                 >
-                  <img src={g.imagen} alt={g.nombre} style={{ width: '30px', height: '30px', borderRadius: '50%' }} />
-                  <span style={{ fontSize: '0.9rem' }}>{g.nombre}</span>
+                  <img src={g.imagen} alt={g.nombre} style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <span style={{ fontSize: '0.95rem' }}>{g.nombre}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => setShowPicker(false)} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: '#ff7675', cursor: 'pointer', fontSize: '0.8rem' }}>
+            
+            <button 
+              type="button"
+              onClick={() => setShowPicker(false)} 
+              style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: '#ff7675', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}
+            >
               Cancelar
             </button>
           </div>
         )}
       </div>
 
-      {/* RESUMEN FINAL */}
+      {/* 3. RESUMEN FINAL (REUTILIZANDO TU CLASE donation-summary) */}
       <div className="donation-summary" style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
         <p><strong>Total estimado:</strong> {donationTotal} €</p>
         <p><strong>Puntos Karma:</strong> {karmaTotal}</p>
@@ -146,13 +195,18 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
           style={{ 
             marginTop: '15px', 
             width: '100%',
+            // Estilos de opacidad para el botón principal
             opacity: donationTotal > 0 ? 1 : 0.6,
             cursor: donationTotal > 0 ? 'pointer' : 'not-allowed'
           }}
           disabled={donationTotal === 0}
-          onClick={() => handlePayment("Donación conjunta Colonias", donationTotal)}
+          onClick={() => {
+            handlePayment("Donación conjunta Colonias", donationTotal);
+          }}
         >
-          {donationTotal > 0 ? `Confirmar aportación de ${donationTotal} €` : "Selecciona una ayuda"}
+          {donationTotal > 0 
+            ? `Quiero confirmar mi aportación de ${donationTotal} €` 
+            : "Selecciona una ayuda para continuar"}
         </button>
       </div>
     </section>
