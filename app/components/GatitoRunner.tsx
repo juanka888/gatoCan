@@ -32,7 +32,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
   const [statusText, setStatusText] = useState("");
   const { data: session } = useSession();
 
-  // Refs para que el bucle de dibujo acceda a valores actualizados sin re-renderizar
   const scoreRef = useRef(0);
   const distanceRef = useRef(0);
 
@@ -95,6 +94,11 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       obstacleSpawn: 0,
       mouseSpawn: 0,
       animation: { current: "run" as "run" | "jump" | "fall", frame: 0, lastFrameAt: 0 },
+      // Capas para el fondo con movimiento
+      bgLayers: {
+        cloudsX: 0,
+        cityX: 0
+      }
     };
 
     const resizeGameCanvas = () => {
@@ -115,10 +119,7 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
     const jump = () => {
-      if (!game.started) {
-        resetGame();
-        return;
-      }
+      if (!game.started) { resetGame(); return; }
       if (game.cat.onGround && game.running) {
         game.cat.vy = -10;
         game.cat.onGround = false;
@@ -130,17 +131,10 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       setRunning(false);
       setGameOver(true);
       const finalDist = Math.floor(game.distance);
-      
       const oldBestS = Number(localStorage.getItem(BEST_SCORE_KEY) || 0);
       const oldBestD = Number(localStorage.getItem(BEST_DISTANCE_KEY) || 0);
-      if (game.score > oldBestS) {
-        localStorage.setItem(BEST_SCORE_KEY, String(game.score));
-        setBestScore(game.score);
-      }
-      if (finalDist > oldBestD) {
-        localStorage.setItem(BEST_DISTANCE_KEY, String(finalDist));
-        setBestDistance(finalDist);
-      }
+      if (game.score > oldBestS) { localStorage.setItem(BEST_SCORE_KEY, String(game.score)); setBestScore(game.score); }
+      if (finalDist > oldBestD) { localStorage.setItem(BEST_DISTANCE_KEY, String(finalDist)); setBestDistance(finalDist); }
       persistRemoteRecord(game.score, finalDist);
     };
 
@@ -169,7 +163,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       const sprite = catSprites[name];
       const meta = spriteMeta[name];
       if (!spriteReady[name]) return false;
-      
       if (game.animation.current !== name) {
         game.animation.current = name;
         game.animation.frame = 0;
@@ -178,7 +171,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
         game.animation.lastFrameAt = now;
         game.animation.frame = meta.loop ? (game.animation.frame + 1) % meta.frames : Math.min(game.animation.frame + 1, meta.frames - 1);
       }
-
       const frameWidth = sprite.width / meta.frames;
       ctx.drawImage(sprite, game.animation.frame * frameWidth, 0, frameWidth, sprite.height, game.cat.x - 10, game.cat.y - 15, 50, 50);
       return true;
@@ -192,6 +184,10 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
         game.cat.y += game.cat.vy;
         if (game.cat.y >= game.groundY) { game.cat.y = game.groundY; game.cat.vy = 0; game.cat.onGround = true; }
 
+        // Movimiento de las capas del fondo
+        game.bgLayers.cloudsX = (game.bgLayers.cloudsX - (game.speed * 0.15)) % game.width;
+        game.bgLayers.cityX = (game.bgLayers.cityX - (game.speed * 0.4)) % game.width;
+
         game.obstacleSpawn--;
         if (game.obstacleSpawn <= 0) {
           game.obstacles.push({ x: game.width, y: game.groundY + 10, w: 25, h: 25, type: "yarn" });
@@ -202,7 +198,6 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
           game.mice.push({ x: game.width, y: game.groundY - 40 - Math.random() * 40, w: 20, h: 20, caught: false });
           game.mouseSpawn = 150 + Math.random() * 100;
         }
-
         game.obstacles.forEach(o => o.x -= game.speed);
         game.mice.forEach(m => m.x -= game.speed + 1);
         game.obstacles = game.obstacles.filter(o => o.x > -50);
@@ -211,34 +206,55 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
         const catBox = { x: game.cat.x + 5, y: game.cat.y + 5, w: game.cat.w - 10, h: game.cat.h - 5 };
         game.obstacles.forEach(o => { if (overlap(catBox, o)) doGameOver(); });
         game.mice.forEach(m => { if (!m.caught && overlap(catBox, m)) { m.caught = true; game.score += 10; setScore(game.score); scoreRef.current = game.score; } });
-        
         distanceRef.current = Math.floor(game.distance);
         if (distanceRef.current % 10 === 0) setDistance(distanceRef.current);
       }
 
-      // DIBUJO
+      // --- DIBUJO ---
       ctx.clearRect(0, 0, game.width, game.height);
+      
+      // 1. Cielo Degradado
       const bg = ctx.createLinearGradient(0, 0, 0, game.height);
-      bg.addColorStop(0, "#f0f9ff"); bg.addColorStop(1, "#dbeffd");
+      bg.addColorStop(0, "#a5d8ff"); bg.addColorStop(1, "#ffffff");
       ctx.fillStyle = bg; ctx.fillRect(0, 0, game.width, game.height);
 
+      // 2. Nubes (Capa lenta)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      for (let i = 0; i < 2; i++) {
+        const xOffset = game.bgLayers.cloudsX + (i * game.width);
+        ctx.beginPath();
+        ctx.arc(xOffset + 100, 40, 20, 0, Math.PI * 2);
+        ctx.arc(xOffset + 125, 40, 25, 0, Math.PI * 2);
+        ctx.arc(xOffset + 150, 40, 20, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. Ciudad/Silueta (Capa media)
+      ctx.fillStyle = "#d3e1e8";
+      for (let i = 0; i < 2; i++) {
+        const xOffset = game.bgLayers.cityX + (i * game.width);
+        ctx.fillRect(xOffset + 50, game.groundY - 30, 40, 50);
+        ctx.fillRect(xOffset + 120, game.groundY - 50, 30, 70);
+        ctx.fillRect(xOffset + 250, game.groundY - 40, 50, 60);
+        ctx.fillRect(xOffset + 400, game.groundY - 25, 40, 45);
+      }
+
+      // 4. Suelo
       ctx.strokeStyle = "#7cb4d5"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, game.groundY + game.cat.h + 1); ctx.lineTo(game.width, game.groundY + game.cat.h + 1); ctx.stroke();
 
+      // Elementos del juego
       game.obstacles.forEach(o => { ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(o.x + 12, o.y + 12, 12, 0, Math.PI * 2); ctx.fill(); });
       game.mice.forEach(m => { ctx.font = "18px serif"; ctx.fillText("🐭", m.x, m.y + 15); });
 
       const catDrawn = drawCat(game.running ? (game.cat.onGround ? "run" : "jump") : "fall", now);
       if (!catDrawn) { ctx.font = "20px serif"; ctx.fillText("🐱", game.cat.x, game.cat.y + 20); }
 
-      // --- MARCADORES INCRUSTADOS ---
+      // Marcadores
       if (game.started) {
         ctx.fillStyle = "rgba(0,0,0,0.7)";
-        ctx.font = "bold 14px Arial";
-        ctx.textAlign = "left";
-        ctx.fillText(`✨ ${scoreRef.current}`, 15, 25); // Puntos arriba izq
-        ctx.textAlign = "right";
-        ctx.fillText(`${distanceRef.current} m`, game.width - 15, 25); // Metros arriba der
+        ctx.font = "bold 14px Arial"; ctx.textAlign = "left"; ctx.fillText(`✨ ${scoreRef.current}`, 15, 25);
+        ctx.textAlign = "right"; ctx.fillText(`${distanceRef.current} m`, game.width - 15, 25);
       }
 
       if (!game.started) {
@@ -256,8 +272,8 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
     const handleKey = (e: KeyboardEvent) => { if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); jump(); } };
     window.addEventListener("keydown", handleKey);
     canvas.addEventListener("pointerdown", (e) => { e.preventDefault(); jump(); });
-
     rafRef.current = requestAnimationFrame(tick);
+    
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resizeGameCanvas);
@@ -272,40 +288,22 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
           ref={canvasRef}
           style={{ width: "100%", height: "180px", display: "block", background: "#fff", cursor: "pointer", touchAction: "none" }}
         />
-        
-        {/* Pantalla de Game Over superpuesta */}
         {gameOver && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#fff", zIndex: 10 }}>
             <p style={{ fontSize: "1.2rem", fontWeight: "bold", margin: "0 0 10px 0" }}>¡Vaya golpe! 🙀</p>
-            <button 
-              onClick={() => controlsRef.current.restart()}
-              style={{ padding: "8px 20px", borderRadius: "20px", border: "none", background: "#ff4757", color: "#fff", fontWeight: "bold", cursor: "pointer" }}
-            >
-              Reintentar ↻
-            </button>
+            <button onClick={() => controlsRef.current.restart()} style={{ padding: "8px 20px", borderRadius: "20px", border: "none", background: "#ff4757", color: "#fff", fontWeight: "bold", cursor: "pointer" }}>Reintentar ↻</button>
           </div>
         )}
-
-        {/* Botón inicial si no ha empezado */}
         {!started && (
-          <div 
-            onClick={() => controlsRef.current.start()}
-            style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}
-          >
-            <button style={{ padding: "10px 25px", borderRadius: "25px", border: "none", background: "#2ed573", color: "#fff", fontWeight: "bold", fontSize: "1.1rem", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>
-              ¡INICIAR JUEGO! 🐾
-            </button>
+          <div onClick={() => controlsRef.current.start()} style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5 }}>
+            <button style={{ padding: "10px 25px", borderRadius: "25px", border: "none", background: "#2ed573", color: "#fff", fontWeight: "bold", fontSize: "1.1rem", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>¡INICIAR JUEGO! 🐾</button>
           </div>
         )}
       </div>
-
-      {/* Récords en formato compacto para móvil */}
       <div style={{ display: "flex", justifyContent: "space-around", padding: "5px", background: "#f8fafd", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "bold", color: "#444" }}>
         <span>🏆 Mejor: {bestScore} pts</span>
         <span>🏁 Récord: {bestDistance} m</span>
       </div>
-      
-      {statusText && <p style={{ textAlign: "center", margin: 0, fontSize: "0.8rem", color: "#ff4757" }}>{statusText}</p>}
     </div>
   );
 }
