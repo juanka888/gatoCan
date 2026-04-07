@@ -9,40 +9,41 @@ datasource db {
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
+  id                 String      @id @default(cuid())
+  email              String      @unique
   password           String?
-  googleId           String?   @unique
+  googleId           String?     @unique
   name               String?
   image              String?
-  runnerBestScore    Int       @default(0)
-  runnerBestDistance Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  runnerBestScore    Int         @default(0)
+  runnerBestDistance Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
   profile            Profile?
   forumPosts         ForumPost[]
+  donations          Donation[]  // Relación con sus donaciones
 }
 
 model Profile {
   id                  String   @id @default(cuid())
-  userId               String   @unique
-  email                String
-  nombreCompleto       String?
-  telefono             String?
-  dniNie               String?
-  direccion            String?
-  codigoPostal         String?
-  poblacion            String?
-  karmaPoints          Int      @default(0)
-  karmaRank            Int?
-  totalDonaciones      Decimal  @default(0)
-  runnerBestScore      Int      @default(0)
-  runnerBestDistanceM  Int      @default(0)
-  aceptaPoliticas      Boolean  @default(false)
-  runnerGlobalRank     Int?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String   @unique
+  email               String
+  nombreCompleto      String?
+  telefono            String?
+  dniNie              String?
+  direccion           String?
+  codigoPostal        String?
+  poblacion           String?
+  karmaPoints         Int      @default(0)
+  karmaRank           Int?
+  totalDonaciones     Decimal  @default(0)
+  runnerBestScore     Int      @default(0)
+  runnerBestDistanceM Int      @default(0)
+  aceptaPoliticas     Boolean  @default(false)
+  runnerGlobalRank    Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([karmaPoints])
   @@index([runnerBestScore])
@@ -56,5 +57,22 @@ model ForumPost {
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  @@index([createdAt])
+}
+
+// NUEVO MODELO PARA DONACIONES
+model Donation {
+  id          String   @id @default(cuid())
+  amount      Decimal  // Cantidad donada
+  animalName  String   // El gato al que ayudó (Zeus, Nube, etc.)
+  status      String   @default("succeeded") // Por si quieres trackear fallos
+  
+  // Relación Opcional: Si userId existe, es de usuario. Si no, es ANÓNIMA.
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
   @@index([createdAt])
 }

@@ -10,7 +10,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   const body = await req.text();
   
-  // ARREGLO AQUÍ: Añadimos el await para que headersList deje de ser una Promesa
+  // SOLUCIÓN AL ERROR ROJO (image_5ff299.png): 
+  // En Next.js 15 headers() es asíncrono. Añadimos await.
   const headersList = await headers(); 
   const signature = headersList.get("stripe-signature");
 
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body, 
       signature, 
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET! 
     );
   } catch (err: any) {
     console.error(`❌ Error de firma: ${err.message}`);
@@ -36,15 +37,20 @@ export async function POST(req: Request) {
 
     const userEmail = session.metadata?.userEmail;
     const pointsToAdd = Number(session.metadata?.karmaPoints || 0);
+    const animalName = session.metadata?.animalName || "Gatito";
     const amountInEuros = session.amount_total ? session.amount_total / 100 : 0;
 
-    if (userEmail && pointsToAdd > 0) {
-      try {
+    try {
+      let userId: string | null = null;
+
+      // 1. Buscamos usuario para asignar Karma (si no es anónimo)
+      if (userEmail && userEmail !== "anonymous") {
         const user = await prisma.user.findUnique({
           where: { email: userEmail },
         });
 
         if (user) {
+          userId = user.id;
           await prisma.profile.update({
             where: { userId: user.id },
             data: {
@@ -52,11 +58,23 @@ export async function POST(req: Request) {
               totalDonaciones: { increment: amountInEuros },
             },
           });
-          console.log(`✅ ${pointsToAdd} puntos añadidos a ${userEmail}`);
         }
-      } catch (error) {
-        console.error("❌ Error al actualizar DB:", error);
       }
+
+      // 2. REGISTRO DE DONACIÓN (Anónima o Registrada)
+      // Nota: El error rojo en 'donation' desaparecerá al ejecutar el comando de abajo
+      await (prisma as any).donation.create({
+        data: {
+          amount: amountInEuros,
+          animalName: animalName,
+          userId: userId, 
+        },
+      });
+
+      console.log(`✅ Registro completado: ${amountInEuros}€ para ${animalName}`);
+
+    } catch (error) {
+      console.error("❌ Error en DB:", error);
     }
   }
 
