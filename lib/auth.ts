@@ -1,48 +1,45 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import type { Provider } from "next-auth/providers/index";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
-const providers = [
+// Definimos el array con el tipo Provider[] para permitir múltiples tipos de login
+const providers: Provider[] = [
   CredentialsProvider({
-  name: "Credentials",
-  credentials: {
-    email: { label: "Email", type: "text" },
-    password: { label: "Password", type: "password" },
-  },
-  async authorize(credentials) {
-    // 1. Verificación básica
-    if (!credentials?.email || !credentials?.password) {
-      throw new Error("Por favor, introduce tus datos");
-    }
+    name: "Credentials",
+    credentials: {
+      email: { label: "Email", type: "text" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        throw new Error("Por favor, introduce tus datos");
+      }
 
-    // 2. Buscar usuario (con minúsculas para evitar fallos de escritura)
-    const user = await prisma.user.findUnique({
-      where: { email: credentials.email.toLowerCase() },
-    });
+      const user = await prisma.user.findUnique({
+        where: { email: credentials.email.toLowerCase() },
+      });
 
-    // 3. Si no existe o se registró con Google (y no tiene password)
-    if (!user || !user.password) {
-      throw new Error("No existe una cuenta con este email o debe entrar con Google");
-    }
+      if (!user || !user.password) {
+        throw new Error("No existe una cuenta con este email o debe entrar con Google");
+      }
 
-    // 4. Comparar contraseñas
-    const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
-    
-    if (!isPasswordCorrect) {
-      throw new Error("Contraseña incorrecta");
-    }
+      const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
+      
+      if (!isPasswordCorrect) {
+        throw new Error("Contraseña incorrecta");
+      }
 
-    // 5. Devolver el objeto de usuario (NextAuth lo guardará en el Token)
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      image: user.image,
-    };
-  },
-}),
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      };
+    },
+  }),
 ];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -77,15 +74,9 @@ export const authOptions: NextAuthOptions = {
 
         if (!existing) {
           const created = await prisma.user.create({
-            data: {
-              email,
-              name,
-              image,
-              googleId,
-            },
+            data: { email, name, image, googleId },
           });
           token.uid = created.id;
-          token.sub = created.id;
         } else {
           const shouldUpdate =
             (name && name !== existing.name) ||
@@ -102,37 +93,23 @@ export const authOptions: NextAuthOptions = {
               },
             });
           }
-
           token.uid = existing.id;
-          token.sub = existing.id;
         }
       }
 
-      if (!token.uid && token.sub) {
-        token.uid = token.sub;
-      }
-
-      if (!token.uid && token.email) {
-        const userByEmail = await prisma.user.findUnique({
-          where: { email: token.email.toLowerCase() },
-        });
-        if (userByEmail) {
-          token.uid = userByEmail.id;
-          token.sub = userByEmail.id;
-        }
-      }
+      if (!token.uid && token.sub) token.uid = token.sub;
 
       if (profile && typeof profile === "object" && "picture" in profile && !token.picture) {
-        token.picture = profile.picture as string;
+        token.picture = (profile as any).picture;
       }
 
       return token;
     },
-    async session({ session, token, user }) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.uid || token.sub || user?.id) as string;
-        session.user.name = (session.user.name || token.name) as string | null | undefined;
-        session.user.image = (session.user.image || token.picture) as string | null | undefined;
+        (session.user as any).id = token.uid || token.sub;
+        session.user.name = token.name;
+        session.user.image = token.picture;
       }
       return session;
     },

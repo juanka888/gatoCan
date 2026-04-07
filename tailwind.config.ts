@@ -1,5 +1,8 @@
-import type { Config } from "tailwindcss";
-const config: Config = {
+// Borra la línea del import type { Config }...
+// Y cambia la definición de la constante a esto:
+
+/** @type {import('tailwindcss').Config} */
+const config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -13,4 +16,5 @@ const config: Config = {
   },
   plugins: [],
 };
+
 export default config;

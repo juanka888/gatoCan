@@ -2,22 +2,45 @@
 
 import { useSWRLite } from "@/lib/useSWRLite";
 import Link from "next/link";
+import React from "react";
 
-type DonationRow = { userId: string; nombreCompleto: string | null; email: string; karmaPoints: number; totalDonaciones: number; };
-type RunnerRow = { userId: string; nombreCompleto: string | null; email: string; runnerBestScore: number; runnerBestDistanceM: number; };
+// Tipos bien definidos para que no haya errores de "any"
+type DonationRow = { 
+  userId: string; 
+  nombreCompleto: string | null; 
+  email: string; 
+  karmaPoints: number; 
+  totalDonaciones: number; 
+};
+
+type RunnerRow = { 
+  userId: string; 
+  nombreCompleto: string | null; 
+  email: string; 
+  runnerBestScore: number; 
+  runnerBestDistanceM: number; 
+};
 
 export default function RankingsPage() {
-  const { data: dData } = useSWRLite<{ rows: DonationRow[] }>("/api/rankings/donations", async (u) => (await fetch(u)).json());
-  const { data: rData } = useSWRLite<{ rows: RunnerRow[] }>("/api/rankings/runner", async (u) => (await fetch(u)).json());
+  // 1. Tipamos correctamente la respuesta del fetch
+  const { data: dData } = useSWRLite<{ rows: DonationRow[] }>("/api/rankings/donations", async (u) => {
+    const res = await fetch(u);
+    return res.json();
+  });
+
+  const { data: rData } = useSWRLite<{ rows: RunnerRow[] }>("/api/rankings/runner", async (u) => {
+    const res = await fetch(u);
+    return res.json();
+  });
   
-  // Cargamos el mismo endpoint de runner pero lo ordenaremos por distancia en el cliente o puedes crear /api/rankings/distance
   const donations = dData?.rows || [];
   const runnerScore = rData?.rows || [];
   
-  // Ordenamos por distancia para el nuevo ranking
+  // 2. Ordenamos por distancia (creando una copia para no mutar el original)
   const runnerDistance = [...runnerScore].sort((a, b) => b.runnerBestDistanceM - a.runnerBestDistanceM);
 
-  const glassCard = {
+  // --- ESTILOS CON TIPADO ---
+  const glassCard: React.CSSProperties = {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
@@ -29,7 +52,7 @@ export default function RankingsPage() {
     color: '#FFFFFF'
   };
 
-  const rowStyle = {
+  const rowStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -62,7 +85,10 @@ export default function RankingsPage() {
         <div>
           {donations.length === 0 ? <p>Cargando podio...</p> : donations.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#FFD700', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}>
+                <strong style={{ color: '#FFD700', marginRight: '10px' }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email || "Usuario"}
+              </span>
               <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.karmaPoints} pts</span>
             </div>
           ))}
@@ -77,14 +103,17 @@ export default function RankingsPage() {
         <div>
           {runnerScore.length === 0 ? <p>Cargando datos...</p> : runnerScore.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#70d6ff', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}>
+                <strong style={{ color: '#70d6ff', marginRight: '10px' }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email || "Usuario"}
+              </span>
               <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.runnerBestScore} pts</span>
             </div>
           ))}
         </div>
       </section>
 
-      {/* RANKING 3: NUEVO - DISTANCIA RECORRIDA */}
+      {/* RANKING 3: DISTANCIA RECORRIDA */}
       <section style={glassCard}>
         <h2 style={{ fontSize: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '15px', marginBottom: '20px', fontWeight: 'bold' }}>
           🏃‍♂️ Top Maratonianos (Distancia)
@@ -92,7 +121,10 @@ export default function RankingsPage() {
         <div>
           {runnerDistance.length === 0 ? <p>Esperando corredores...</p> : runnerDistance.map((row, i) => (
             <div key={row.userId} style={rowStyle}>
-              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}><strong style={{ color: '#a29bfe', marginRight: '10px' }}>#{i + 1}</strong>{row.nombreCompleto || row.email || "Usuario"}</span>
+              <span style={{ flex: '1 1 220px', minWidth: 0, overflowWrap: 'anywhere' }}>
+                <strong style={{ color: '#a29bfe', marginRight: '10px' }}>#{i + 1}</strong>
+                {row.nombreCompleto || row.email || "Usuario"}
+              </span>
               <span style={{ fontWeight: '800', whiteSpace: 'nowrap' }}>{row.runnerBestDistanceM} metros</span>
             </div>
           ))}
