@@ -15,8 +15,7 @@ interface DonationOption {
   icon: string;
   iconClassName: string;
   price: number;
-  karma: number;
-  color: string; // Color de fondo para el círculo del emoji
+  color: string; 
 }
 
 interface DonationSectionProps {
@@ -25,86 +24,93 @@ interface DonationSectionProps {
   cardStyle: React.CSSProperties;
 }
 
-// --- CONFIGURACIÓN DE OPCIONES CON TUS COLORES ---
+// --- CONFIGURACIÓN DE OPCIONES (Karma es 1:1 con el precio) ---
 const donationOptions: DonationOption[] = [
-  { id: "macho", label: "Esterilización macho", icon: "➕", iconClassName: "macho", price: 60, karma: 50, color: "#e3f2fd" },
-  { id: "hembra", label: "Esterilización femenina", icon: "♀️", iconClassName: "hembra", price: 100, karma: 80, color: "#f3e5f5" },
-  { id: "comida", label: "Comida mensual", icon: "🍴", iconClassName: "food", price: 10, karma: 10, color: "#e8f5e9" },
-  { id: "pipeta", label: "Pipeta antiparasitaria", icon: "💊", iconClassName: "bug", price: 12, karma: 10, color: "#fff3e0" },
-  { id: "apadrinar", label: "Apadrina este gato", icon: "💗", iconClassName: "heart", price: 15, karma: 20, color: "#fce4ec" },
+  { id: "macho", label: "Esterilización macho", icon: "➕", iconClassName: "macho", price: 60, color: "#e3f2fd" },
+  { id: "hembra", label: "Esterilización femenina", icon: "♀️", iconClassName: "hembra", price: 100, color: "#f3e5f5" },
+  { id: "comida", label: "Comida mensual", icon: "🍴", iconClassName: "food", price: 10, color: "#e8f5e9" },
+  { id: "pipeta", label: "Pipeta antiparasitaria", icon: "💊", iconClassName: "bug", price: 12, color: "#fff3e0" },
+  { id: "apadrinar", label: "Apadrina este gato", icon: "💗", iconClassName: "heart", price: 15, color: "#fce4ec" },
 ];
 
 export default function DonationSection({ gatosColonia, handlePayment, cardStyle }: DonationSectionProps) {
-  // --- ESTADOS ---
   const [visibleCatIds, setVisibleCatIds] = useState<(string | number)[]>(gatosColonia.slice(0, 3).map(g => g.id));
   const [openDonationCatId, setOpenDonationCatId] = useState<string | number | null>(null);
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [showPicker, setShowPicker] = useState(false);
 
-  // --- LÓGICA DE TOTALES ---
-  const { donationTotal, karmaTotal } = useMemo(() => {
-    let total = 0, karma = 0;
+  // --- LÓGICA DE TOTALES (Karma 1:1) ---
+  const { donationTotal } = useMemo(() => {
+    let total = 0;
     Object.entries(donationSelections).forEach(([key, checked]) => {
       if (checked) {
         const optionId = key.split("-")[1];
         const option = donationOptions.find((o) => o.id === optionId);
-        if (option) { total += option.price; karma += option.karma; }
+        if (option) { total += option.price; }
       }
     });
-    return { donationTotal: total, karmaTotal: karma };
+    return { donationTotal: total };
   }, [donationSelections]);
 
   const addCatToView = (id: string | number) => {
-    if (!visibleCatIds.includes(id)) {
-      setVisibleCatIds([...visibleCatIds, id]);
-    }
+    if (!visibleCatIds.includes(id)) { setVisibleCatIds([...visibleCatIds, id]); }
     setOpenDonationCatId(id); 
     setShowPicker(false);
   };
 
   return (
     <section id="donar" style={cardStyle} className="donation-card">
-      <h3 className="text-xl font-bold mb-2" style={{ color: '#333' }}>Haz tu aporte gatuno 🐾</h3>
-      <p className="mb-6 opacity-80" style={{ color: '#666' }}>Abre cada gatete y marca el apoyo que quieras cubrir.</p>
+      <h3 className="text-xl font-bold mb-1" style={{ color: '#333' }}>Haz tu aporte gatuno 🐾</h3>
+      <p className="mb-6 text-sm opacity-70" style={{ color: '#666' }}>Abre cada gatete y marca el apoyo que quieras cubrir.</p>
 
-      {/* 1. LISTADO DE GATOS VISIBLES */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {gatosColonia
           .filter(cat => visibleCatIds.includes(cat.id))
           .map((cat) => (
-            <details key={cat.id} className="donation-panel" open={openDonationCatId === cat.id} style={{ border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <details key={cat.id} className="group" open={openDonationCatId === cat.id} style={{ border: '1px solid #eee', borderRadius: '14px', overflow: 'hidden', background: '#fff' }}>
               <summary 
                 onClick={(e) => {
                   e.preventDefault();
                   setOpenDonationCatId(openDonationCatId === cat.id ? null : cat.id);
                 }}
-                style={{ padding: '15px 20px', cursor: 'pointer', background: '#fcfcfc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                className="list-none"
+                style={{ padding: '12px 18px', cursor: 'pointer', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               >
-                <span className="cat-summary flex items-center gap-4">
-                  <img src={cat.imagen} alt={cat.nombre} style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-                  <span className="font-semibold" style={{ color: '#333', fontSize: '1.05rem' }}>{cat.nombre}</span>
-                </span>
-                <span style={{ fontSize: '0.8rem', color: '#999' }}>
-                  {openDonationCatId === cat.id ? '▲' : '▼'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <img src={cat.imagen} alt={cat.nombre} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff' }} />
+                  <span className="font-bold text-gray-800" style={{ fontSize: '1.05rem' }}>{cat.nombre}</span>
+                </div>
+                <span className="text-gray-400 group-open:rotate-180 transition-transform" style={{ fontSize: '0.7rem' }}>▼</span>
               </summary>
               
-              <div className="cat-options p-5 flex flex-col gap-3" style={{ borderTop: '1px solid #f0f0f0', background: 'rgba(240, 240, 240, 0.2)' }}>
+              <div className="p-4 flex flex-col gap-2" style={{ background: 'rgba(248, 250, 252, 0.5)' }}>
                 {donationOptions.map((option) => {
                   const key = `${cat.id}-${option.id}`;
                   return (
-                    <label key={key} className="flex items-center gap-4 cursor-pointer hover:bg-white p-2.5 rounded-xl transition-colors" style={{ color: '#555' }}>
+                    <label key={key} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-lg transition-colors border border-transparent hover:border-gray-100">
                       <input
                         type="checkbox"
-                        className="donation-item w-5 h-5"
-                        style={{ cursor: 'pointer', accentColor: '#34d399' }}
+                        className="w-4 h-4 rounded"
+                        style={{ cursor: 'pointer', accentColor: '#10b981' }}
                         checked={Boolean(donationSelections[key])}
                         onChange={(e) => setDonationSelections(prev => ({ ...prev, [key]: e.target.checked }))}
                       />
-                      <span style={{ fontSize: '1.2rem', padding: '10px', borderRadius: '50%', background: option.color, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '42px', minHeight: '42px' }}>
+                      <span style={{ 
+                        fontSize: '0.9rem', 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '50%', 
+                        background: option.color, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
                         {option.icon}
                       </span>
-                      <span className="text-sm font-medium">{option.label} — <strong>{option.price} €</strong></span>
+                      <span className="text-gray-600 font-medium" style={{ fontSize: '0.85rem', lineHeight: '1' }}>
+                        {option.label} — <span className="font-bold text-gray-900">{option.price} €</span>
+                      </span>
                     </label>
                   );
                 })}
@@ -113,65 +119,60 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
           ))}
       </div>
 
-      {/* 2. BOTÓN AÑADIR GATOS (VERDE) */}
-      <div className="mt-8 mb-6">
+      {/* BOTÓN AÑADIR GATOS (AHORA VERDE) */}
+      <div className="mt-6 mb-6">
         {!showPicker ? (
           <button 
             onClick={() => setShowPicker(true)} 
-            className="w-full py-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-semibold hover:border-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/30 transition-all flex items-center justify-center gap-2.5"
+            className="w-full py-3.5 border-2 border-dashed border-emerald-200 rounded-2xl text-emerald-600 font-bold hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
             style={{ background: '#fff', cursor: 'pointer' }}
           >
-            <span className="text-3xl text-emerald-600">+</span> Ver más gatos para ayudar
+            <span className="text-2xl">+</span> Ver más gatos para ayudar
           </button>
         ) : (
-          <div className="bg-white border border-gray-100 shadow-2xl rounded-2xl p-5">
-            <p className="text-sm font-bold text-gray-500 mb-4 px-2">Selecciona un gato de la colonia:</p>
-            <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="bg-white border border-gray-100 shadow-xl rounded-2xl p-4">
+            <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Selecciona un gato:</p>
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="flex flex-col gap-2">
                 {gatosColonia
                   .filter(g => !visibleCatIds.includes(g.id))
                   .map(g => (
                     <button 
                       key={g.id} 
                       onClick={() => addCatToView(g.id)}
-                      className="flex items-center gap-4 p-3 hover:bg-emerald-50 rounded-xl transition-colors w-full text-left"
-                      style={{ border: '1px solid #f0f0f0', background: '#fff', cursor: 'pointer' }}
+                      className="flex items-center gap-3 p-2 hover:bg-emerald-50 rounded-xl transition-colors w-full text-left border border-gray-50"
                     >
-                      <img src={g.imagen} alt={g.nombre} style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                      <span className="font-medium" style={{ color: '#333' }}>{g.nombre}</span>
+                      <img src={g.imagen} alt={g.nombre} style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span className="font-medium text-sm text-gray-700">{g.nombre}</span>
                     </button>
                   ))}
-              </div>
             </div>
-            <button onClick={() => setShowPicker(false)} className="w-full mt-4 py-2 text-red-500 text-sm font-semibold hover:underline" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-              Cancelar
-            </button>
+            <button onClick={() => setShowPicker(false)} className="w-full mt-3 py-1 text-gray-400 text-xs font-semibold hover:text-red-400">Cancelar</button>
           </div>
         )}
       </div>
 
-      {/* 3. RESUMEN Y BOTÓN DORADO */}
-      <div className="donation-summary bg-white p-7 rounded-2xl border border-gray-100 shadow-xl">
-        <div className="flex justify-between items-center mb-2.5">
-          <span className="text-gray-600 font-medium">Total estimado:</span>
-          <span className="text-3xl font-extrabold" style={{ color: '#222' }}>{donationTotal} €</span>
+      {/* RESUMEN FINAL */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-lg">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-gray-500 text-sm font-medium">Total estimado:</span>
+          <span className="text-2xl font-black text-gray-900">{donationTotal} €</span>
         </div>
         <div className="flex justify-between items-center mb-5">
-          <span className="text-gray-600 font-medium">Puntos Karma:</span>
-          <span className="font-bold text-lg" style={{ color: '#f5a623' }}>{karmaTotal} ✨</span>
+          <span className="text-gray-500 text-sm font-medium">Puntos Karma:</span>
+          <span className="font-bold text-emerald-600">{donationTotal} ✨</span>
         </div>
         
         <button 
-          className="w-full py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+          className="w-full py-4 rounded-xl font-bold shadow-md transition-all active:scale-[0.97] disabled:opacity-40 disabled:grayscale"
           style={{ 
             border: 'none', 
             color: 'white',
             cursor: donationTotal > 0 ? 'pointer' : 'not-allowed', 
-            fontSize: '1.1rem', 
+            fontSize: '1rem', 
             background: donationTotal > 0 
-              ? 'linear-gradient(45deg, #FFC107 0%, #FFB300 100%)' 
-              : 'linear-gradient(45deg, #FFECB3 0%, #FFD54F 100%)',
-            boxShadow: donationTotal > 0 ? '0 6px 20px rgba(255, 193, 7, 0.3)' : 'none'
+              ? 'linear-gradient(135deg, #FFB300 0%, #FFA000 100%)' 
+              : 'linear-gradient(135deg, #FFECB3 0%, #FFD54F 100%)',
+            boxShadow: donationTotal > 0 ? '0 4px 15px rgba(255, 160, 0, 0.3)' : 'none'
           }}
           disabled={donationTotal === 0}
           onClick={() => handlePayment("Donación conjunta Colonias", donationTotal)}

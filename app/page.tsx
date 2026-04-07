@@ -271,6 +271,7 @@ export default function HomePage() {
       <section id="colonias" style={card}>
         <GatoCards onPay={handlePayment} />
       </section>
+      
       <section id="minijuego" style={card}>
         <h3>Minijuego: Gatito Runner 🐱</h3>
         <p>Salta con espacio o flecha arriba para sumar puntos y esquivar obstáculos.</p>
@@ -278,6 +279,7 @@ export default function HomePage() {
           <GatitoRunner embedded showLeaderboard={false} />
         </div>
       </section>
+
       <section id="campana" style={{ ...card, borderColor: "#0f766e" }}>
         <h3>Campaña de firmas (Change.org)</h3>
         <p>Apoya la petición para una gestión ética de colonias felinas en San Xoán de Río (Ourense).</p>
@@ -290,6 +292,7 @@ export default function HomePage() {
           Firmar campaña en Change.org
         </a>
       </section>
+      
       <section id="ayuda" style={card}><h3>Cómo ayudar</h3><ul><li>Únete al equipo de voluntariado.</li><li>Colabora con material o alimento.</li><li>Difunde nuestras campañas en tu entorno.</li></ul></section>
       <section id="ranking" style={card}><h3>Rankings solidarios 🏆</h3><p>Consulta los dos rankings completos (donaciones y minijuego).</p><a href="/rankings">Ver página completa de rankings</a></section>
 
