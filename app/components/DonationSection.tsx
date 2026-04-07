@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 
 interface Gato {
-  id: any;
+  id: string | number;
   nombre: string;
   imagen: string;
 }
@@ -32,8 +32,8 @@ const donationOptions: DonationOption[] = [
 ];
 
 export default function DonationSection({ gatosColonia, handlePayment, cardStyle }: DonationSectionProps) {
-  const [visibleCatIds, setVisibleCatIds] = useState<any[]>(gatosColonia.slice(0, 3).map(g => g.id));
-  const [openDonationCatId, setOpenDonationCatId] = useState<any | null>(null);
+  const [visibleCatIds, setVisibleCatIds] = useState<(string | number)[]>(gatosColonia.slice(0, 3).map(g => g.id));
+  const [openDonationCatId, setOpenDonationCatId] = useState<string | number | null>(null);
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [showPicker, setShowPicker] = useState(false);
 
@@ -49,7 +49,7 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
     return { donationTotal: total, karmaTotal: karma };
   }, [donationSelections]);
 
-  const addCatToView = (id: any) => {
+  const addCatToView = (id: string | number) => {
     if (!visibleCatIds.includes(id)) {
       setVisibleCatIds([...visibleCatIds, id]);
     }
@@ -62,7 +62,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
       <h3 className="text-xl font-bold mb-2" style={{ color: '#333' }}>Haz tu aporte gatuno 🐾</h3>
       <p className="mb-6 opacity-80" style={{ color: '#666' }}>Abre cada gatete y marca el apoyo que quieras cubrir.</p>
 
-      {/* LISTADO DE GATOS VISIBLES */}
       <div className="flex flex-col gap-4">
         {gatosColonia
           .filter(cat => visibleCatIds.includes(cat.id))
@@ -75,7 +74,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
                 style={{ padding: '15px', cursor: 'pointer', background: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               >
                 <span className="cat-summary flex items-center gap-3">
-                  {/* Imagen en el listado principal */}
                   <img src={cat.imagen} alt={cat.nombre} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
                   <span className="font-semibold" style={{ color: '#333' }}>{cat.nombre}</span>
                 </span>
@@ -105,7 +103,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
           ))}
       </div>
 
-      {/* BOTÓN AÑADIR GATOS */}
       <div className="mt-8 mb-4">
         {!showPicker ? (
           <button 
@@ -116,12 +113,10 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
             <span className="text-xl">+</span> Ver más gatos para ayudar
           </button>
         ) : (
-          {/* --- AQUÍ ESTÁ EL ARREGLO DEL SELECTOR --- */}
-          <div className="bg-white border shadow-xl rounded-2xl p-4 animate-in fade-in slide-in-from-bottom-4" style={{ borderColor: '#eee' }}>
+          <div className="bg-white border shadow-xl rounded-2xl p-4" style={{ borderColor: '#eee' }}>
             <p className="text-sm font-bold text-gray-500 mb-4 px-2">Selecciona un gato de la colonia:</p>
             
-            {/* Contenedor del scroll con altura limitada */}
-            <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' }} className="custom-scrollbar">
+            <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {gatosColonia
                   .filter(g => !visibleCatIds.includes(g.id))
@@ -132,25 +127,23 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
                       className="flex items-center gap-4 p-3 hover:bg-blue-50 rounded-xl transition-colors w-full text-left"
                       style={{ border: '1px solid #f0f0f0', background: '#fff', cursor: 'pointer' }}
                     >
-                      {/* --- ARREGLO DE LA IMAGEN EN EL SELECTOR --- */}
                       <img 
                         src={g.imagen} 
                         alt={g.nombre} 
                         style={{ 
-                          width: '45px',      // Ancho fijo pequeño
-                          height: '45px',     // Alto fijo pequeño
-                          borderRadius: '50%', // Redonda
-                          objectFit: 'cover', // Asegura que no se deforme
+                          width: '45px',
+                          height: '45px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
                           border: '2px solid #fff',
                           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          flexShrink: 0       // Evita que se aplaste si el nombre es largo
+                          flexShrink: 0
                         }} 
                       />
                       <span className="font-medium" style={{ color: '#333', fontSize: '1rem' }}>{g.nombre}</span>
                     </button>
                   ))}
                 
-                {/* Mensaje si no quedan gatos por añadir */}
                 {gatosColonia.filter(g => !visibleCatIds.includes(g.id)).length === 0 && (
                   <p className="text-center py-6 text-gray-400 text-sm italic bg-gray-50 rounded-xl">
                     Ya estás ayudando a todos los gatos de la colonia ❤️
@@ -170,7 +163,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
         )}
       </div>
 
-      {/* RESUMEN FINAL */}
       <div className="donation-summary bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner" style={{ background: '#f9f9f9' }}>
         <div className="flex justify-between items-center mb-2">
           <span style={{ color: '#666' }}>Total estimado:</span>
@@ -180,7 +172,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
           <span style={{ color: '#666' }}>Puntos Karma:</span>
           <span className="font-bold text-lg" style={{ color: '#f5a623' }}>{karmaTotal} ✨</span>
         </div>
-        <p className="text-sm mb-6" style={{ color: '#888', fontStyle: 'italic' }}>Cada punto ayuda a cambiar vidas felinas 💛</p>
         
         <button 
           className="w-full py-4 bg-[#f5a623] text-white rounded-xl font-bold shadow-lg hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
