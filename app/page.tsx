@@ -12,6 +12,7 @@ import DonationSection from "./components/DonationSection";
 import NoticiasGatocan from "./components/NoticiasGatocan";
 import GaleriaActuaciones from "./components/GaleriaActuaciones";
 import TeamingWidget from "./components/TeamingWidget";
+import StatsSection from "./components/StatsSection";
 
 type DonationOption = {
   id: string;
@@ -299,7 +300,11 @@ export default function HomePage() {
       <section id="noticias" style={card}>
         <NoticiasGatocan />
       </section>
-
+<main className="min-h-screen bg-white">
+      {/* Tu Hero/Banner aquí */}
+      <StatsSection />
+      {/* Tu sección de animalitos aquí */}
+    </main>
       <DonationSection 
         gatosColonia={gatosColonia} 
         handlePayment={handlePayment} 

@@ -35,8 +35,9 @@ export async function POST(req: Request) {
         userEmail: sessionAuth.user.email,
         karmaPoints: amount.toString(), // Lógica 1€ = 1 Punto
       },
+      // ... dentro de stripe.checkout.sessions.create
       success_url: `${process.env.NEXT_PUBLIC_URL}/perfil?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL}/`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL}/donar`,
     });
 
     return NextResponse.json({ url: session.url });
