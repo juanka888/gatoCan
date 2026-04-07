@@ -1,15 +1,10 @@
+// checkout/route.ts (Actualizado)
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
-}
-
-const stripe = new Stripe(stripeSecretKey, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2023-10-16" as any,
 });
 
@@ -22,32 +17,26 @@ export async function POST(req: Request) {
 
     const { name, amount } = await req.json();
 
-    if (!name || typeof amount !== "number" || amount <= 0) {
-      return NextResponse.json({ error: "Parámetros inválidos" }, { status: 400 });
-    }
-
-    const baseUrl = process.env.NEXT_PUBLIC_URL || new URL(req.url).origin;
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: "eur",
-            product_data: { name },
-            unit_amount: Math.round(amount * 100),
+            product_data: { name: name },
+            unit_amount: amount * 100, 
           },
           quantity: 1,
         },
       ],
       mode: "payment",
+      // METADATOS: Aquí guardamos la info para el Webhook
       metadata: {
         userEmail: sessionAuth.user.email,
-        karmaPoints: amount.toString(),
-        animalName: name,
+        karmaPoints: amount.toString(), // Lógica 1€ = 1 Punto
       },
-      success_url: `${baseUrl}/perfil?success=true`,
-      cancel_url: `${baseUrl}/?cancel=true`,
+      success_url: `${process.env.NEXT_PUBLIC_URL}/perfil?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL}/`,
     });
 
     return NextResponse.json({ url: session.url });
