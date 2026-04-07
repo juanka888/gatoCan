@@ -20,7 +20,6 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <Providers>
-          {/* Hemos quitado el Confetti de aquí para evitar el bucle infinito */}
           <SessionHeader />
           {children}
         </Providers>
