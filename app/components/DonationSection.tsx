@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 
 // Definimos los tipos para que TypeScript esté contento
 interface Gato {
-  id: string;
+  id: any;
   nombre: string;
   imagen: string;
 }

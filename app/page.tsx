@@ -8,7 +8,7 @@ import { gatosColonia } from "@/lib/gatos";
 import ContactoForm from "./components/ContactoForm";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
-import DonationSection from "@/components/DonationSection";
+import DonationSection from "./components/DonationSection";
 import NoticiasGatocan from "./components/NoticiasGatocan";
 import GaleriaActuaciones from "./components/GaleriaActuaciones";
 import TeamingWidget from "./components/TeamingWidget";
