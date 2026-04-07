@@ -3,16 +3,24 @@ import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!stripeSecretKey) {
+  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+}
+
+if (!stripeWebhookSecret) {
+  throw new Error("Missing STRIPE_WEBHOOK_SECRET environment variable");
+}
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2023-10-16" as any,
 });
 
 export async function POST(req: Request) {
   const body = await req.text();
-  
-  // SOLUCIÓN AL ERROR ROJO (image_5ff299.png): 
-  // En Next.js 15 headers() es asíncrono. Añadimos await.
-  const headersList = await headers(); 
+  const headersList = await headers();
   const signature = headersList.get("stripe-signature");
 
   if (!signature) {
@@ -22,11 +30,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body, 
-      signature, 
-      process.env.STRIPE_WEBHOOK_SECRET! 
-    );
+    event = stripe.webhooks.constructEvent(body, signature, stripeWebhookSecret);
   } catch (err: any) {
     console.error(`❌ Error de firma: ${err.message}`);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
@@ -37,42 +41,43 @@ export async function POST(req: Request) {
 
     const userEmail = session.metadata?.userEmail;
     const pointsToAdd = Number(session.metadata?.karmaPoints || 0);
-    const animalName = session.metadata?.animalName || "Gatito";
+    const animalName = session.metadata?.animalName || "Donación GatoCan";
     const amountInEuros = session.amount_total ? session.amount_total / 100 : 0;
 
     try {
       let userId: string | null = null;
 
-      // 1. Buscamos usuario para asignar Karma (si no es anónimo)
       if (userEmail && userEmail !== "anonymous") {
-        const user = await prisma.user.findUnique({
-          where: { email: userEmail },
-        });
+        const user = await prisma.user.findUnique({ where: { email: userEmail } });
 
         if (user) {
           userId = user.id;
-          await prisma.profile.update({
+          await prisma.profile.upsert({
             where: { userId: user.id },
-            data: {
+            update: {
               karmaPoints: { increment: pointsToAdd },
               totalDonaciones: { increment: amountInEuros },
+            },
+            create: {
+              userId: user.id,
+              email: user.email,
+              karmaPoints: pointsToAdd,
+              totalDonaciones: amountInEuros,
+              aceptaPoliticas: true,
             },
           });
         }
       }
 
-      // 2. REGISTRO DE DONACIÓN (Anónima o Registrada)
-      // Nota: El error rojo en 'donation' desaparecerá al ejecutar el comando de abajo
-      await (prisma as any).donation.create({
+      await prisma.donation.create({
         data: {
           amount: amountInEuros,
-          animalName: animalName,
-          userId: userId, 
+          animalName,
+          userId,
         },
       });
 
       console.log(`✅ Registro completado: ${amountInEuros}€ para ${animalName}`);
-
     } catch (error) {
       console.error("❌ Error en DB:", error);
     }
