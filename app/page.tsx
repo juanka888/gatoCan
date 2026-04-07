@@ -8,6 +8,7 @@ import { gatosColonia } from "@/lib/gatos";
 import ContactoForm from "./components/ContactoForm";
 import EuropaPressNews from "./components/EuropaPressNews";
 import GatitoRunner from "./components/GatitoRunner";
+import DonationSection from "@/components/DonationSection";
 import NoticiasGatocan from "./components/NoticiasGatocan";
 import GaleriaActuaciones from "./components/GaleriaActuaciones";
 import TeamingWidget from "./components/TeamingWidget";
@@ -296,74 +297,11 @@ export default function HomePage() {
         <NoticiasGatocan />
       </section>
 
-      <section id="donar" style={card} className="donation-card">
-        <h3>Apoya nuestro trabajo con una donación</h3>
-        <p>Cada aportación nos ayuda a cubrir gastos veterinarios, alimentación y tratamientos de urgencia.</p>
-        <h3>Haz tu aporte gatuno 🐾</h3>
-        <p>Abre cada gatete y marca el apoyo que quieras cubrir. Verás el total y tus <strong>Puntos Karma</strong> al momento.</p>
-
-        {gatosColonia.map((cat) => (
-          <details key={cat.id} className="donation-panel" open={openDonationCatId === cat.id}>
-            <summary
-              onClick={(event) => {
-                event.preventDefault();
-                setOpenDonationCatId(cat.id);
-              }}
-            >
-              <span className="cat-summary">
-                <img src={cat.imagen} alt={cat.nombre} />
-                <span>{cat.nombre}</span>
-              </span>
-            </summary>
-            <div className="cat-options">
-              {donationOptions.map((option) => {
-                const key = `${cat.id}-${option.id}`;
-                return (
-                  <label key={key}>
-                    <input
-                      type="checkbox"
-                      className="donation-item"
-                      checked={Boolean(donationSelections[key])}
-                      onChange={(event) => {
-                        const checked = event.target.checked;
-                        setDonationSelections((prev) => ({ ...prev, [key]: checked }));
-                      }}
-                    />{" "}
-                    <span className={`option-icon ${option.iconClassName}`}>{option.icon}</span> {option.label}
-                  </label>
-                );
-              })}
-            </div>
-          </details>
-        ))}
-
-        <div className="donation-summary" aria-live="polite">
-          <p><strong>Total estimado:</strong> <span id="donation-total">{donationTotal} €</span></p>
-          <p><strong>Puntos Karma:</strong> <span id="karma-total">{karmaTotal}</span></p>
-          <p id="karma-message" className="karma-message">Cada punto ayuda a cambiar vidas felinas 💛</p>
-          <button id="saveDonationScoreBtn" type="button" className="btn btn-secondary">Guardar puntos en mi perfil</button>
-          <p id="saveDonationScoreMsg" className="auth-message" aria-live="polite"></p>
-        </div>
-
-      <button 
-        className="btn btn-primary" 
-        style={{ 
-          marginTop: '20px', 
-          width: '100%',
-          opacity: donationTotal > 0 ? 1 : 0.6, // Se ve un poco más transparente si es 0
-          cursor: donationTotal > 0 ? 'pointer' : 'not-allowed'
-        }}
-        disabled={donationTotal === 0} // Desactiva el clic si no hay nada seleccionado
-        onClick={() => {
-          handlePayment("Donación conjunta Colonias", donationTotal);
-        }}
-      >
-        {donationTotal > 0 
-          ? `Quiero confirmar mi aportación de ${donationTotal} €` 
-          : "Selecciona una ayuda para continuar"}
-      </button>
-
-    </section>
+      <DonationSection 
+        gatosColonia={gatosColonia} 
+        handlePayment={handlePayment} 
+        cardStyle={card} 
+      />
 
 {/* Antes había 30 líneas de código aquí, ahora solo una */}
 <TeamingWidget />
