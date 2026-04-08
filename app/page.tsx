@@ -35,6 +35,17 @@ export default function HomePage() {
   const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
   const { data: session, status } = useSession();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [stats, setStats] = useState({ total: 0, usuarios: 0, anonimo: 0 });
+
+  // Cargar estadísticas al montar el componente
+  useEffect(() => {
+    fetch("/api/stats")
+      .then(res => res.json())
+      .then(data => {
+        setStats(data);
+      })
+      .catch(err => console.error("Error cargando estadísticas:", err));
+  }, []);
 
   // Avatar dinámico
   const avatar = useMemo(() => 
@@ -100,7 +111,21 @@ export default function HomePage() {
     const stored = localStorage.getItem("gatocanColaboradoresClicks");
     if (stored) setColabClicks(JSON.parse(stored));
   }, []);
-
+const StatsDonaciones = ({ stats }: { stats: any }) => (
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", margin: "1rem 0" }}>
+    {[
+      { label: "Total", val: stats.total, col: "#0f4c5c" },
+      { label: "Socios", val: stats.usuarios, col: "#0f766e" },
+      { label: "Anónimos", val: stats.anonimo, col: "#64748b" }
+    ].map((s, i) => (
+      <div key={i} style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "1px solid #eee", textAlign: "center" }}>
+        <span style={{ fontSize: "0.75rem", color: "#666", textTransform: "uppercase" }}>{s.label}</span>
+        <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: s.col }}>{s.val}€</div>
+      </div>
+    ))}
+  </div>
+);
+  
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
       <header id="inicio" className="site-header">
@@ -282,6 +307,30 @@ export default function HomePage() {
 
       <section id="noticias" style={card}>
         <NoticiasGatocan />
+      </section>
+
+{/* SECCIÓN DE ESTADÍSTICAS */}
+      <section id="estadisticas" style={card}>
+        <h3 style={{ color: "#0f4c5c", marginBottom: "0.5rem" }}>Progreso Solidario</h3>
+        <p style={{ fontSize: "0.9rem", color: "#666" }}>Visualiza el impacto de vuestra ayuda en tiempo real.</p>
+        
+        <StatsDonaciones stats={stats} />
+
+        {/* Barra de Progreso */}
+        <div style={{ marginTop: "1rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "13px", fontWeight: "bold" }}>
+            <span>Objetivo: {stats.total}€ / 1000€</span>
+            <span>{Math.min(Math.round((stats.total / 1000) * 100), 100)}%</span>
+          </div>
+          <div style={{ width: "100%", backgroundColor: "#e5e7eb", borderRadius: "20px", height: "12px", overflow: "hidden" }}>
+            <div style={{ 
+              width: `${Math.min((stats.total / 1000) * 100, 100)}%`, 
+              backgroundColor: "#0f766e", 
+              height: "100%", 
+              transition: "width 1.5s ease-in-out" 
+            }}></div>
+          </div>
+        </div>
       </section>
 
       <DonationSection 
