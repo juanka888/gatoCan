@@ -27,29 +27,6 @@ const mainLayout: React.CSSProperties = {
   minHeight: "100vh",
   padding: "40px 10px"
 };
-const handlePayment = async (name: string, amount: number) => {
-  try {
-    // 1. Llamamos a tu API
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, amount }), // Enviamos nombre y cantidad (en euros)
-    });
-
-    const data = await res.json();
-
-    // 2. Si la API nos devuelve la URL de Stripe, redirigimos
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      console.error("Error en la respuesta de Stripe:", data.error);
-      alert("No se pudo generar la sesión de pago: " + data.error);
-    }
-  } catch (error) {
-    console.error("Error de conexión:", error);
-    alert("Hubo un fallo en la conexión con el servidor de pagos.");
-  }
-};
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,12 +34,46 @@ export default function HomePage() {
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [openDonationCatId, setOpenDonationCatId] = useState<string | number>(gatosColonia[0]?.id ?? "");
   const { data: session, status } = useSession();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Avatar dinámico
   const avatar = useMemo(() => 
     session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
     [session]
   );
+
+  const handlePayment = async (name: string, amount: number) => {
+    try {
+      // Verificamos si hay sesión para avisar sobre el Karma
+      if (!session) {
+        const confirmar = confirm("Estás donando sin sesión. No acumularás puntos de Karma. ¿Deseas continuar de forma anónima?");
+        if (!confirmar) {
+          signIn(); 
+          return;
+        }
+      }
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name, 
+          amount,
+          userId: session?.user?.email || "anonymous" 
+        }),
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Error en Stripe: " + data.error);
+      }
+    } catch (error) {
+      alert("Fallo en la conexión de pagos.");
+    }
+  };
+  
 
   // Cerrar menú al cambiar login
   useEffect(() => {
