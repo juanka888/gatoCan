@@ -631,7 +631,7 @@ footer {
 }
 
 .donation-panel {
-    margin: 0.9rem 0;
+    margin: 0;
     border: 1px solid #dbe8eb;
     border-radius: 10px;
     background: #f8fcfd;
@@ -723,7 +723,7 @@ footer {
     border-radius: 10px;
     border: 1px solid #e0edf0;
     background: #fff;
-    margin: 1rem 0;
+    margin: 0;
 }
 
 .donation-summary p {
