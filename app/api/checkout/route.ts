@@ -1,4 +1,3 @@
-// checkout/route.ts (Corregido para permitir anónimos)
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth";
@@ -10,16 +9,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    // Intentamos obtener la sesión, pero NO bloqueamos si no existe
+    // 1. Intentamos obtener la sesión del servidor
     const sessionAuth = await getServerSession(authOptions);
     const { name, amount, userId } = await req.json();
 
-    // Lógica de identidad: 
-    // Prioridad 1: Sesión del servidor
-    // Prioridad 2: userId enviado desde el cliente (si es "anonymous" o email)
-    // Prioridad 3: "anonymous" por defecto
+    // 2. Lógica de identidad para el Webhook (Karma)
     const finalUserEmail = sessionAuth?.user?.email || (userId !== "anonymous" ? userId : "anonymous");
 
+    // 3. Definimos la URL base y la redirección inteligente
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL;
+    
+    // Si hay sesión real, va al perfil; si no, vuelve a la home con el parámetro "thanks"
+    const successRedirect = sessionAuth 
+      ? `${baseUrl}/perfil?success=true` 
+      : `${baseUrl}/?thanks=true`;
+
+    // 4. Creación de la sesión de Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -36,16 +41,13 @@ export async function POST(req: Request) {
         },
       ],
       mode: "payment",
-      // METADATOS: Aquí guardamos la info para el Webhook
       metadata: {
-        userEmail: finalUserEmail, // Aquí irá el email real o "anonymous"
+        userEmail: finalUserEmail,
         karmaPoints: amount.toString(),
         catName: name
       },
-      // Cambiamos NEXT_PUBLIC_URL por NEXTAUTH_URL si es necesario, 
-      // pero asegúrate de que tus variables de entorno coincidan
-      success_url: `${process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL}/perfil?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL}/`,
+      success_url: successRedirect,
+      cancel_url: `${baseUrl}/`,
     });
 
     return NextResponse.json({ url: session.url });
