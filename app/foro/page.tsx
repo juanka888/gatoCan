@@ -1,121 +1,157 @@
-"use client";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { FORUM_CATEGORIES, isForumCategory } from "@/lib/forum";
+import CreateThreadForm from "./_components/CreateThreadForm";
+import type { CSSProperties } from "react";
 
-import { FormEvent, useEffect, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
-
-type Post = {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-  author: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
+type ForoPageProps = {
+  searchParams?: {
+    category?: string;
+    view?: "feed" | "table";
   };
 };
 
-export default function ForoPage() {
-  const { status, data: session } = useSession();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+export default async function ForoPage({ searchParams }: ForoPageProps) {
+  const categoryFilter = searchParams?.category;
+  const view = searchParams?.view === "table" ? "table" : "feed";
 
-  const loadPosts = async () => {
-    setLoadingPosts(true);
-    const response = await fetch("/api/forum/posts", { cache: "no-store" });
-    if (!response.ok) {
-      setErrorMessage("No se pudieron cargar las publicaciones del foro.");
-      setLoadingPosts(false);
-      return;
-    }
-
-    const data = await response.json();
-    setPosts(data.posts || []);
-    setLoadingPosts(false);
-  };
-
-  useEffect(() => {
-    loadPosts();
-  }, []);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (status !== "authenticated") {
-      setErrorMessage("Debes iniciar sesión para publicar.");
-      return;
-    }
-
-    setLoading(true);
-    setErrorMessage("");
-
-    const response = await fetch("/api/forum/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content }),
-    });
-
-    setLoading(false);
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setErrorMessage(data.error || "Error al crear post");
-      return;
-    }
-
-    setTitle("");
-    setContent("");
-    loadPosts();
-  };
+  const posts = await prisma.forumPost.findMany({
+    where: categoryFilter && isForumCategory(categoryFilter) ? { category: categoryFilter } : undefined,
+    include: {
+      author: { select: { name: true, email: true, image: true } },
+      _count: { select: { comments: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
 
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>Foro GatoCan</h1>
-      <p>
-        Todos pueden leer. Solo usuarios autenticados pueden publicar.
-        {session?.user?.email ? ` Sesión activa: ${session.user.email}.` : ""}
-      </p>
+    <main style={layoutStyle}>
+      <section style={heroCard}>
+        <h1 style={{ marginTop: 0 }}>Foro GatoCan</h1>
+        <p style={{ marginBottom: 0 }}>Espacio para consultas, coordinación y apoyo entre socios.</p>
+      </section>
 
-      {status !== "authenticated" && (
-        <button type="button" onClick={() => signIn("google", { callbackUrl: "/foro" })} style={{ marginBottom: 16 }}>
-          Acceder con Google para publicar
-        </button>
-      )}
+      <CreateThreadForm />
 
-      {errorMessage && (
-        <p role="alert" style={{ color: "#9d1c1c", background: "#ffe6e6", border: "1px solid #f2b8b8", borderRadius: 8, padding: 10, marginBottom: 16 }}>
-          {errorMessage}
-        </p>
-      )}
+      <section style={cardStyle}>
+        <h2 style={{ marginTop: 0 }}>Categorías</h2>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <Link className="btn btn-secondary" href={`/foro?view=${view}`}>
+            Todas
+          </Link>
+          {FORUM_CATEGORIES.map((category) => (
+            <Link key={category} className="btn btn-secondary" href={`/foro?category=${encodeURIComponent(category)}&view=${view}`}>
+              {category}
+            </Link>
+          ))}
+        </div>
+      </section>
 
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, marginBottom: 24 }}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" required />
-        <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Contenido" rows={4} required />
-        <button disabled={loading}>{loading ? "Publicando..." : "Publicar"}</button>
-      </form>
+      <section style={cardStyle}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <h2 style={{ margin: 0 }}>Hilos</h2>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link className="btn btn-secondary" href={`/foro?${categoryFilter ? `category=${encodeURIComponent(categoryFilter)}&` : ""}view=feed`}>
+              Vista Feed
+            </Link>
+            <Link className="btn btn-secondary" href={`/foro?${categoryFilter ? `category=${encodeURIComponent(categoryFilter)}&` : ""}view=table`}>
+              Vista Tabla
+            </Link>
+          </div>
+        </div>
 
-      <section style={{ display: "grid", gap: 12 }}>
-        {loadingPosts ? (
-          <p>Cargando publicaciones...</p>
-        ) : posts.length === 0 ? (
-          <p>No hay publicaciones aún.</p>
+        {posts.length === 0 ? (
+          <p>No hay hilos para esta categoría todavía.</p>
+        ) : view === "table" ? (
+          <div style={{ overflowX: "auto", marginTop: 12 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={thtd}>Título</th>
+                  <th style={thtd}>Categoría</th>
+                  <th style={thtd}>Autor</th>
+                  <th style={thtd}>Comentarios</th>
+                  <th style={thtd}>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post.id}>
+                    <td style={thtd}>
+                      <Link href={`/foro/${post.id}`}>{post.title}</Link>
+                    </td>
+                    <td style={thtd}>{post.category}</td>
+                    <td style={thtd}>{post.author.name || post.author.email || "Usuario"}</td>
+                    <td style={thtd}>{post._count.comments}</td>
+                    <td style={thtd}>{new Date(post.createdAt).toLocaleString("es-ES")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          posts.map((post) => (
-            <article key={post.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}>
-              <h3 style={{ margin: "0 0 6px" }}>{post.title}</h3>
-              <p style={{ margin: "0 0 10px" }}>{post.content}</p>
-              <small>
-                Por {post.author.name || post.author.email || "Usuario"} · {new Date(post.createdAt).toLocaleString()}
-              </small>
-            </article>
-          ))
+          <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+            {posts.map((post) => (
+              <article key={post.id} style={feedCardStyle}>
+                <p style={badgeStyle}>{post.category}</p>
+                <h3 style={{ margin: "0 0 8px" }}>
+                  <Link href={`/foro/${post.id}`}>{post.title}</Link>
+                </h3>
+                <p style={{ margin: "0 0 10px" }}>{post.content.slice(0, 180)}{post.content.length > 180 ? "..." : ""}</p>
+                <small>
+                  {post.author.name || post.author.email || "Usuario"} · {post._count.comments} comentarios · {new Date(post.createdAt).toLocaleString("es-ES")}
+                </small>
+              </article>
+            ))}
+          </div>
         )}
       </section>
     </main>
   );
 }
+
+const layoutStyle: CSSProperties = {
+  maxWidth: 980,
+  margin: "1.5rem auto",
+  padding: "0 1rem",
+  display: "grid",
+  gap: 16,
+};
+
+const heroCard: CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 12,
+  padding: "1rem",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#fff",
+  border: "1px solid #e2e8f0",
+  borderRadius: 12,
+  padding: "1rem",
+};
+
+const feedCardStyle: CSSProperties = {
+  border: "1px solid #e2e8f0",
+  borderRadius: 10,
+  padding: "0.9rem",
+};
+
+const badgeStyle: CSSProperties = {
+  display: "inline-block",
+  margin: "0 0 8px",
+  background: "#e6f2f5",
+  color: "#0f4c5c",
+  borderRadius: 999,
+  padding: "0.2rem 0.6rem",
+  fontSize: 12,
+  fontWeight: 700,
+};
+
+const thtd: CSSProperties = {
+  border: "1px solid #e2e8f0",
+  padding: "0.55rem",
+  textAlign: "left",
+};

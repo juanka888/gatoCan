@@ -21,6 +21,7 @@ model User {
   updatedAt          DateTime    @updatedAt
   profile            Profile?
   forumPosts         ForumPost[]
+  forumComments      Comment[]
   donations          Donation[]  // Relación con sus donaciones
 }
 
@@ -50,14 +51,30 @@ model Profile {
 }
 
 model ForumPost {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
   content   String
+  category  String    @default("General")
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  createdAt DateTime  @default(now())
 
   @@index([createdAt])
+  @@index([category])
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  postId    Int
+  authorId  String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([postId, createdAt])
+  @@index([authorId])
 }
 
 // NUEVO MODELO PARA DONACIONES
