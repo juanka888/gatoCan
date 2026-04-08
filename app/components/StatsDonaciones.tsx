@@ -17,7 +17,7 @@ const StatsDonaciones = ({ total, usuarios, anonimo }: StatsProps) => {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", margin: "1rem 0" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
       <div style={cardStyle}>
         <h4 style={{ color: "#0f4c5c", margin: 0 }}>Total Recaudado</h4>
         <p style={{ fontSize: "1.8rem", fontWeight: "bold", margin: "0.5rem 0" }}>{total}€</p>

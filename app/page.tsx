@@ -19,7 +19,7 @@ const card: React.CSSProperties = {
   padding: "1rem",
   width: "100%",
   maxWidth: "1200px",
-  margin: "0 auto 2rem auto"
+  justifySelf: "center"
 };
 
 const mainLayout: React.CSSProperties = {
@@ -112,7 +112,7 @@ export default function HomePage() {
     if (stored) setColabClicks(JSON.parse(stored));
   }, []);
 const StatsDonaciones = ({ stats }: { stats: any }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", margin: "1rem 0" }}>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
     {[
       { label: "Total", val: stats.total, col: "#0f4c5c" },
       { label: "Socios", val: stats.usuarios, col: "#0f766e" },
@@ -127,7 +127,7 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
 );
   
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "0.75rem" }}>
+    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem" }}>
       <header id="inicio" className="site-header">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -332,7 +332,7 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
           </div>
           {/* Texto del Sorteo */}
           <p style={{ 
-            marginTop: "1.2rem", 
+            margin: "1.2rem 0 0",
             fontSize: "0.9rem", 
             color: "#0f766e", 
             backgroundColor: "#f0fdfa", 
