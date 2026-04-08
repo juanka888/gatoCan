@@ -13,14 +13,19 @@ import GaleriaActuaciones from "./components/GaleriaActuaciones";
 import TeamingWidget from "./components/TeamingWidget";
 
 const card: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #e5e7eb",
-  borderRadius: "12px",
-  padding: "1rem",
+  background: "rgba(255, 255, 255, 0.85)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+  border: "1px solid rgba(229, 231, 235, 0.5)",
+  borderRadius: "16px",
+  padding: "1.5rem",
   width: "100%",
   maxWidth: "1200px",
-  justifySelf: "center"
+  justifySelf: "center",
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+  margin: "0" 
 };
+
 
 const mainLayout: React.CSSProperties = {
   backgroundColor: "#f4f7f6",
