@@ -44,43 +44,38 @@ export default function HomePage() {
 
   const handlePayment = async (name: string, amount: number) => {
     try {
-      // 1. Definimos la identidad por defecto
-      let identity = "anonymous";
+      // Usamos un correo genérico para anónimos
+      let identity = "anonymous@gatocan.com"; 
       
-      // 2. Si no hay sesión, preguntamos
       if (!session) {
-        const confirmar = confirm("Estás donando sin sesión. No acumularás puntos de Karma. ¿Deseas continuar?");
+        const confirmar = confirm("Estás donando sin sesión. Los puntos irán a la cuenta global de anónimos. ¿Continuar?");
         if (!confirmar) {
-          signIn(); // Si cancela, lo mandamos a loguearse
+          signIn(); 
           return;
         }
-        // Si acepta continuar, identity se queda como "anonymous"
       } else {
-        // 3. Si hay sesión, usamos su email
-        identity = session.user?.email || "anonymous";
+        identity = session.user?.email || "anonymous@gatocan.com";
       }
 
-      // 4. Llamada a la API
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name, 
           amount,
-          userId: identity // Aquí ahora siempre va un texto, nunca un undefined
+          userId: identity 
         }),
       });
 
       const data = await res.json();
-
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        alert("Error en la pasarela: " + (data.error || "Datos de pago inválidos"));
+        // ESTO ES CLAVE: Si falla, el alert nos dirá por qué
+        alert("Stripe dice: " + (data.error || "Error desconocido"));
       }
     } catch (error) {
-      console.error("Error en handlePayment:", error);
-      alert("Hubo un fallo en la conexión con el servidor de pagos.");
+      alert("Error de red al intentar pagar");
     }
   };
 
