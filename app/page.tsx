@@ -84,6 +84,17 @@ export default function HomePage() {
     setMenuOpen(false);
   }, [status]);
 
+  useEffect(() => {
+  // Detecta si volvemos de una donación anónima exitosa
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("thanks") === "true") {
+    alert("¡Muchas gracias por tu donación! Tu ayuda llegará directamente a las colonias felinas. 🐱");
+    
+    // Limpia la URL para que el mensaje no salga cada vez que recarguen
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}, []);
+
   // Cargar clicks de colaboradores
   useEffect(() => {
     const stored = localStorage.getItem("gatocanColaboradoresClicks");
