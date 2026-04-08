@@ -44,36 +44,45 @@ export default function HomePage() {
 
   const handlePayment = async (name: string, amount: number) => {
     try {
-      // Verificamos si hay sesión para avisar sobre el Karma
+      // 1. Definimos la identidad por defecto
+      let identity = "anonymous";
+      
+      // 2. Si no hay sesión, preguntamos
       if (!session) {
-        const confirmar = confirm("Estás donando sin sesión. No acumularás puntos de Karma. ¿Deseas continuar de forma anónima?");
+        const confirmar = confirm("Estás donando sin sesión. No acumularás puntos de Karma. ¿Deseas continuar?");
         if (!confirmar) {
-          signIn(); 
+          signIn(); // Si cancela, lo mandamos a loguearse
           return;
         }
+        // Si acepta continuar, identity se queda como "anonymous"
+      } else {
+        // 3. Si hay sesión, usamos su email
+        identity = session.user?.email || "anonymous";
       }
 
+      // 4. Llamada a la API
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name, 
           amount,
-          userId: session?.user?.email || "anonymous" 
+          userId: identity // Aquí ahora siempre va un texto, nunca un undefined
         }),
       });
 
       const data = await res.json();
-      if (data.url) {
+
+      if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        alert("Error en Stripe: " + data.error);
+        alert("Error en la pasarela: " + (data.error || "Datos de pago inválidos"));
       }
     } catch (error) {
-      alert("Fallo en la conexión de pagos.");
+      console.error("Error en handlePayment:", error);
+      alert("Hubo un fallo en la conexión con el servidor de pagos.");
     }
   };
-  
 
   // Cerrar menú al cambiar login
   useEffect(() => {
@@ -98,50 +107,81 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-actions">
-        {status === "loading" ? (
-          <button className="btn btn-secondary" disabled>Cargando...</button>
-        ) : session ? (
-          /* SI ESTÁ LOGUEADO */
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <Link href="/perfil" className="btn btn-secondary" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <img 
-                src={avatar} 
-                alt="Avatar" 
-                style={{ width: "24px", height: "24px", borderRadius: "50%" }} 
-              />
-              Ir a mi perfil
-            </Link>
-            
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              style={{ opacity: 0.8 }}
-              onClick={() => signOut({ callbackUrl: "/" })}
-            >
-              Salir
-            </button>
-          </div>
-        ) : (
-          /* SI NO ESTÁ LOGUEADO */
-          <>
-            <Link href="/login" className="btn btn-secondary">
-              Acceder
-            </Link>
-            <Link href="/register" className="btn btn-secondary">
-              Crear cuenta
-            </Link>
-          </>
-        )}
+            {status === "loading" ? (
+              <button className="btn btn-secondary" disabled>Cargando...</button>
+            ) : session ? (
+              /* ESTADO LOGUEADO: Solo el avatar con su menú */
+              <div style={{ position: 'relative', zIndex: 1000 }}>
+                <img 
+                  src={avatar} 
+                  alt="Avatar" 
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  style={{ 
+                    width: "45px", 
+                    height: "45px", 
+                    borderRadius: "50%", 
+                    cursor: 'pointer', 
+                    border: '2px solid #0f4c5c',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)' 
+                  }} 
+                />
+                {userMenuOpen && (
+                  <div style={{ 
+                    position: 'absolute', 
+                    right: 0, 
+                    top: '55px', 
+                    background: '#fff', 
+                    borderRadius: '8px', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)', 
+                    minWidth: '160px', 
+                    padding: '5px', 
+                    border: '1px solid #eee' 
+                  }}>
+                    <Link href="/perfil" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: '#333', fontSize: '14px' }}>
+                      Mi Perfil
+                    </Link>
+                    <button 
+                      onClick={() => signOut({ callbackUrl: "/" })} 
+                      style={{ 
+                        display: 'block', 
+                        width: '100%', 
+                        textAlign: 'left', 
+                        padding: '10px', 
+                        background: 'none', 
+                        border: 'none', 
+                        color: '#ff4757', 
+                        cursor: 'pointer', 
+                        fontSize: '14px', 
+                        borderTop: '1px solid #f5f5f5' 
+                      }}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ESTADO NO LOGUEADO: Los dos botones clásicos */
+              <>
+                <Link href="/login" className="btn btn-secondary">
+                  Acceder
+                </Link>
+                <Link href="/register" className="btn btn-secondary">
+                  Crear cuenta
+                </Link>
+              </>
+            )}
 
-        <a
-          href="https://www.teaming.net/proyectogatonaturanrural"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-primary"
-        >
-          Teaming 1€
-        </a>
-      </div>
+            {/* El botón de Teaming siempre visible */}
+            <a 
+              href="https://www.teaming.net/proyectogatonaturanrural" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-primary"
+            >
+              Teaming 1€
+            </a>
+          </div>
         </div>
 
         <button
