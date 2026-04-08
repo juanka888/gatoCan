@@ -127,7 +127,7 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
 );
   
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
+    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gap: "0.75rem" }}>
       <header id="inicio" className="site-header">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -330,6 +330,19 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
               transition: "width 1.5s ease-in-out" 
             }}></div>
           </div>
+          {/* Texto del Sorteo */}
+          <p style={{ 
+            marginTop: "1.2rem", 
+            fontSize: "0.9rem", 
+            color: "#0f766e", 
+            backgroundColor: "#f0fdfa", 
+            padding: "10px", 
+            borderRadius: "8px",
+            border: "1px dashed #0f766e",
+            textAlign: "center"
+          }}>
+            🎁 <strong>¡Sorteo Especial!</strong> Al alcanzar el objetivo de 1000€, sortearemos una camiseta exclusiva de GatoCan entre los usuarios registrados que hayan aportado 100€ o más.
+          </p>
         </div>
       </section>
 
