@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { FormEvent, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Send } from "lucide-react";
 import { FORUM_CATEGORIES, type ForumCategory } from "@/lib/forum";
 
 export default function CreateThreadForm() {
@@ -41,6 +42,7 @@ export default function CreateThreadForm() {
 
     setTitle("");
     setContent("");
+    setCategory("General");
     router.refresh();
   };
 
@@ -57,13 +59,15 @@ export default function CreateThreadForm() {
 
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10, marginTop: 12 }}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título del hilo" required />
-        <select value={category} onChange={(e) => setCategory(e.target.value as ForumCategory)} required>
+
+        <select style={selectStyle} value={category} onChange={(e) => setCategory(e.target.value as ForumCategory)} required>
           {FORUM_CATEGORIES.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
           ))}
         </select>
+
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -71,7 +75,9 @@ export default function CreateThreadForm() {
           rows={4}
           required
         />
-        <button className="btn btn-primary" disabled={loading}>
+
+        <button style={publishButtonStyle} disabled={loading}>
+          <Send size={16} />
           {loading ? "Publicando..." : "Publicar hilo"}
         </button>
       </form>
@@ -84,6 +90,27 @@ const cardStyle: CSSProperties = {
   border: "1px solid #e2e8f0",
   borderRadius: 12,
   padding: "1rem",
+};
+
+const selectStyle: CSSProperties = {
+  borderRadius: 12,
+  border: "1px solid #cbd5e1",
+  padding: "0.65rem 0.8rem",
+  background: "#fff",
+};
+
+const publishButtonStyle: CSSProperties = {
+  background: "#f97316",
+  color: "#fff",
+  border: "none",
+  borderRadius: 10,
+  padding: "0.65rem 0.9rem",
+  display: "inline-flex",
+  gap: 8,
+  alignItems: "center",
+  justifyContent: "center",
+  fontWeight: 700,
+  cursor: "pointer",
 };
 
 const errorStyle: CSSProperties = {
