@@ -138,15 +138,35 @@ export default function PerfilPage() {
     }
   };
 
-  const submitManualDonationValidation = (e: React.FormEvent) => {
+  const submitManualDonationValidation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualConcepto.trim() || !manualCantidad) {
       setManualMessage("Completa el concepto y el importe para enviar la validación.");
       return;
     }
-    setManualMessage("Solicitud enviada. Revisaremos el ingreso y actualizaremos tus puntos Karma.");
-    setManualConcepto("");
-    setManualCantidad("");
+
+    try {
+      const response = await fetch("/api/manual-donations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          concepto: manualConcepto,
+          cantidad: Number(manualCantidad),
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        setManualMessage(body.error || "No se pudo enviar la validación manual.");
+        return;
+      }
+
+      setManualMessage("Solicitud enviada. Revisaremos el ingreso y actualizaremos tus puntos Karma.");
+      setManualConcepto("");
+      setManualCantidad("");
+    } catch (error) {
+      setManualMessage("No se pudo enviar la validación manual.");
+    }
   };
 
   if (loading) return <main style={{ padding: "2rem", color: "white", textAlign: "center" }}>Cargando perfil...</main>;

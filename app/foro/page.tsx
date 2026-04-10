@@ -1,9 +1,15 @@
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { isAdmin } from "@/lib/admin";
 import CreateThreadForm from "./_components/CreateThreadForm";
 import ForumThreadList from "./_components/ForumThreadList";
 import type { CSSProperties } from "react";
 
 export default async function ForoPage() {
+  const session = await getServerSession(authOptions);
+  const admin = isAdmin(session?.user?.email);
+
   const posts = await prisma.forumPost.findMany({
     include: {
       author: { select: { name: true, email: true } },
@@ -22,7 +28,7 @@ export default async function ForoPage() {
 
       <CreateThreadForm />
 
-      <ForumThreadList posts={posts} />
+      <ForumThreadList posts={posts} isAdmin={admin} />
     </main>
   );
 }
