@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
+import { isAdmin } from "@/lib/admin";
 
 const fallbackAvatar = "/img/default-avatar.svg";
 
@@ -12,6 +13,7 @@ export default function SessionHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const showHomeButton = pathname !== "/";
+  const admin = isAdmin(session?.user?.email);
 
   const avatar = useMemo(() => {
     if (session?.user?.image) return session.user.image;
@@ -69,9 +71,10 @@ export default function SessionHeader() {
                 right: 0,
                 top: "calc(100% + .4rem)",
                 minWidth: 190,
-                background: "#fff",
-                borderRadius: 10,
-                border: "1px solid #d1d5db",
+                background: "rgba(255,255,255,0.78)",
+                backdropFilter: "blur(16px)",
+                borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.5)",
                 boxShadow: "0 10px 20px rgba(0,0,0,.14)",
                 padding: ".35rem",
                 display: "grid",
@@ -81,6 +84,15 @@ export default function SessionHeader() {
               <Link href="/perfil" onClick={() => setOpen(false)}>
                 Ir a mi perfil
               </Link>
+              {admin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  style={{ color: "#facc15", fontWeight: 800 }}
+                >
+                  🛠️ Panel Admin
+                </Link>
+              )}
               <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>
                 Cerrar sesión
               </button>

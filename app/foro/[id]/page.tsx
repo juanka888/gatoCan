@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { isAdmin } from "@/lib/admin";
 import CommentForm from "../_components/CommentForm";
+import AdminDeleteButton from "../_components/AdminDeleteButton";
 import type { CSSProperties } from "react";
 
 type ThreadPageProps = {
@@ -9,6 +13,9 @@ type ThreadPageProps = {
 };
 
 export default async function ThreadPage({ params }: ThreadPageProps) {
+  const session = await getServerSession(authOptions);
+  const admin = isAdmin(session?.user?.email);
+
   const postId = Number(params.id);
   if (!Number.isInteger(postId)) {
     notFound();
@@ -35,7 +42,10 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
 
       <article style={cardStyle}>
         <p style={badgeStyle}>{post.category}</p>
-        <h1 style={{ margin: "0 0 10px" }}>{post.title}</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+          <h1 style={{ margin: "0 0 10px" }}>{post.title}</h1>
+          {admin && <AdminDeleteButton endpoint={`/api/forum/${post.id}`} label="el hilo" />}
+        </div>
         <p style={{ whiteSpace: "pre-wrap" }}>{post.content}</p>
         <small>
           Publicado por {post.author.name || post.author.email || "Usuario"} · {new Date(post.createdAt).toLocaleString("es-ES")}
@@ -52,7 +62,10 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           <div style={{ display: "grid", gap: 10 }}>
             {post.comments.map((comment) => (
               <article key={comment.id} style={commentCardStyle}>
-                <p style={{ margin: "0 0 8px", whiteSpace: "pre-wrap" }}>{comment.content}</p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                  <p style={{ margin: "0 0 8px", whiteSpace: "pre-wrap", flex: 1 }}>{comment.content}</p>
+                  {admin && <AdminDeleteButton endpoint={`/api/forum/comments/${comment.id}`} label="el comentario" />}
+                </div>
                 <small>
                   {comment.author.name || comment.author.email || "Usuario"} · {new Date(comment.createdAt).toLocaleString("es-ES")}
                 </small>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
 import { Clock, Heart, MessageCircle, MessageSquare, ShieldAlert, Stethoscope } from "lucide-react";
+import AdminDeleteButton from "./AdminDeleteButton";
 import { FORUM_CATEGORIES, type ForumCategory } from "@/lib/forum";
 
 type ThreadItem = {
@@ -22,6 +23,7 @@ type ThreadItem = {
 
 type ForumThreadListProps = {
   posts: ThreadItem[];
+  isAdmin: boolean;
 };
 
 const categoryIcons: Record<ForumCategory, typeof MessageSquare> = {
@@ -31,7 +33,7 @@ const categoryIcons: Record<ForumCategory, typeof MessageSquare> = {
   Rescate: ShieldAlert,
 };
 
-export default function ForumThreadList({ posts }: ForumThreadListProps) {
+export default function ForumThreadList({ posts, isAdmin }: ForumThreadListProps) {
   const [selectedCategory, setSelectedCategory] = useState<ForumCategory | "Todas">("Todas");
 
   const filteredPosts = useMemo(() => {
@@ -75,9 +77,12 @@ export default function ForumThreadList({ posts }: ForumThreadListProps) {
             const CategoryIcon = categoryIcons[post.category as ForumCategory] || MessageSquare;
             return (
               <article key={post.id} style={feedCardStyle}>
-                <h3 style={titleStyle}>
-                  <Link href={`/foro/${post.id}`}>{post.title}</Link>
-                </h3>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
+                  <h3 style={titleStyle}>
+                    <Link href={`/foro/${post.id}`}>{post.title}</Link>
+                  </h3>
+                  {isAdmin && <AdminDeleteButton endpoint={`/api/forum/${post.id}`} label="el hilo" />}
+                </div>
 
                 <div style={metaRowStyle}>
                   <span style={badgeStyle}>
