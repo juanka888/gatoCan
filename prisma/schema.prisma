@@ -9,20 +9,21 @@ datasource db {
 }
 
 model User {
-  id                 String      @id @default(cuid())
-  email              String      @unique
+  id                 String           @id @default(cuid())
+  email              String           @unique
   password           String?
-  googleId           String?     @unique
+  googleId           String?          @unique
   name               String?
   image              String?
-  runnerBestScore    Int         @default(0)
-  runnerBestDistance Int         @default(0)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  runnerBestScore    Int              @default(0)
+  runnerBestDistance Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   profile            Profile?
   forumPosts         ForumPost[]
   forumComments      Comment[]
-  donations          Donation[]  // Relación con sus donaciones
+  donations          Donation[] // Relación con sus donaciones
+  manualDonations    ManualDonation[]
 }
 
 model Profile {
@@ -79,17 +80,35 @@ model Comment {
 
 // NUEVO MODELO PARA DONACIONES
 model Donation {
-  id          String   @id @default(cuid())
-  amount      Decimal  // Cantidad donada
-  animalName  String   // El gato al que ayudó (Zeus, Nube, etc.)
-  status      String   @default("succeeded") // Por si quieres trackear fallos
-  
+  id         String  @id @default(cuid())
+  amount     Decimal // Cantidad donada
+  animalName String // El gato al que ayudó (Zeus, Nube, etc.)
+  status     String  @default("succeeded") // Por si quieres trackear fallos
+
   // Relación Opcional: Si userId existe, es de usuario. Si no, es ANÓNIMA.
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  
-  createdAt   DateTime @default(now())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
+}
+
+enum ManualDonationStatus {
+  PENDING
+  APPROVED
+}
+
+model ManualDonation {
+  id       String               @id @default(cuid())
+  userId   String
+  concepto String
+  cantidad Decimal
+  status   ManualDonationStatus @default(PENDING)
+  fecha    DateTime             @default(now())
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([fecha])
 }
