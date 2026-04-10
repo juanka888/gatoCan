@@ -68,7 +68,7 @@ export default function NoticiasGatocan() {
   }, [news.length, loading, nextSlide]);
 
   if (loading) return (
-    <div style={{padding: '40px', textAlign: 'center', background: 'white', borderRadius: '24px', border: '1px solid #eee'}}>
+    <div style={{padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.65)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'}}>
       <p style={{color: '#666', fontSize: '14px', fontWeight: '500', animation: 'pulse 1.5s infinite'}}>
         🐾 Rastreando últimas noticias animales...
       </p>
@@ -80,9 +80,11 @@ export default function NoticiasGatocan() {
 
   return (
     <div style={{
-      background: 'white', 
-      border: '1px solid #e2e8f0', 
-      borderRadius: '24px',
+      background: 'rgba(255,255,255,0.65)', 
+      border: '1px solid rgba(255,255,255,0.4)', 
+      borderRadius: '16px',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       padding: '20px 24px', 
       boxShadow: '0 10px 25px rgba(0,0,0,0.05)', 
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -112,7 +114,7 @@ export default function NoticiasGatocan() {
       </div>
 
       {/* Contenido Principal */}
-      <div style={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', gap: '15px', flexDirection: 'column', minHeight: '400px', maxHeight: '400px' }}>
         <h3 style={{
           fontSize: '18px', 
           color: '#0f172a', 
@@ -135,7 +137,7 @@ export default function NoticiasGatocan() {
           </div>
         )}
 
-        <p style={{fontSize: '14px', color: '#475569', lineHeight: '1.5', margin: '0'}}>
+        <p style={{fontSize: '14px', color: '#475569', lineHeight: '1.5', margin: '0', overflowY: 'auto', flexGrow: 1, paddingRight: '4px'}}>
           {current.desc}
         </p>
       </div>

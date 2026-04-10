@@ -1,22 +1,68 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { galleryImages, type GalleryCategory } from "@/lib/gatos";
+
+type GalleryCategory = "all" | "colonias" | "capturas" | "esterilizaciones" | "actuaciones" | "rescates";
+
+interface GalleryImage {
+  id: string;
+  src: string;
+  alt: string;
+  category: Exclude<GalleryCategory, "all">;
+  tag: string;
+  caption: string;
+}
+
+const CATEGORIES: GalleryCategory[] = ["all", "colonias", "capturas", "esterilizaciones", "actuaciones", "rescates"];
 
 export default function GaleriaActuaciones() {
   const [filter, setFilter] = useState<GalleryCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    const checkViewport = () => setIsDesktop(window.innerWidth >= 1024);
+    checkViewport();
+    window.addEventListener("resize", checkViewport);
+    return () => window.removeEventListener("resize", checkViewport);
+  }, []);
+
+  useEffect(() => {
+    async function loadImages() {
+      const response = await fetch("/api/gallery", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      setImages(data.images ?? []);
+    }
+
+    loadImages();
+  }, []);
 
   const visibleImages = useMemo(
-    () => galleryImages.filter((img) => filter === "all" || img.category === filter),
-    [filter]
+    () => images.filter((img) => filter === "all" || img.category === filter),
+    [images, filter]
   );
 
-  // Resetear índice al cambiar filtro
-  useEffect(() => { setCurrentIndex(0); }, [filter]);
+  const pageSize = isDesktop ? 8 : 4;
+  const maxPage = Math.max(0, Math.ceil(visibleImages.length / pageSize) - 1);
 
-  // Funciones de navegación
+  useEffect(() => {
+    setCurrentIndex(0);
+    setPage(0);
+  }, [filter]);
+
+  useEffect(() => {
+    if (page > maxPage) setPage(maxPage);
+  }, [maxPage, page]);
+
+  const pageImages = useMemo(() => {
+    const start = page * pageSize;
+    return visibleImages.slice(start, start + pageSize);
+  }, [visibleImages, page, pageSize]);
+
   const nextImage = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % visibleImages.length);
   }, [visibleImages.length]);
@@ -25,7 +71,6 @@ export default function GaleriaActuaciones() {
     setCurrentIndex((prev) => (prev - 1 + visibleImages.length) % visibleImages.length);
   }, [visibleImages.length]);
 
-  // Manejo de teclado (Flechas y Escape)
   useEffect(() => {
     if (!isLightboxOpen) return;
 
@@ -39,87 +84,102 @@ export default function GaleriaActuaciones() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLightboxOpen, nextImage, prevImage]);
 
-  const activeImage = visibleImages[currentIndex] || galleryImages[0];
+  const activeImage = visibleImages[currentIndex] ?? visibleImages[0];
 
   return (
-    <div>
-      {/* Botones de Filtro */}
-      <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", marginBottom: "1rem" }}>
-        {["all", "colonias", "capturas", "esterilizaciones", "actuaciones"].map((cat) => (
+    <div className="rounded-2xl border border-white/40 bg-white/65 p-4 backdrop-blur-md">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {CATEGORIES.map((cat) => (
           <button
             key={cat}
-            onClick={() => setFilter(cat as GalleryCategory)}
-            style={{
-              padding: "0.4rem 1rem",
-              borderRadius: "20px",
-              border: "1px solid #ddd",
-              background: filter === cat ? "#111" : "#fff",
-              color: filter === cat ? "#fff" : "#111",
-              cursor: "pointer",
-              fontSize: "0.9rem"
-            }}
+            onClick={() => setFilter(cat)}
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+              filter === cat ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-900"
+            }`}
           >
             {cat === "all" ? "Todas" : cat.charAt(0).toUpperCase() + cat.slice(1)}
           </button>
         ))}
       </div>
 
-      {/* Rejilla de Fotos */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
-        {visibleImages.map((img, index) => (
-          <div 
-            key={index} 
-            onClick={() => { setCurrentIndex(index); setIsLightboxOpen(true); }} 
-            style={{ cursor: "pointer", textAlign: "center" }}
-          >
-            <img 
-              src={img.src} 
-              alt={img.alt} 
-              style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px", transition: "transform 0.2s" }} 
-              onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.03)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
-            />
-            <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "4px" }}>{img.tag}</div>
-          </div>
-        ))}
+      <div className="relative rounded-2xl border border-white/40 bg-white/60 p-3 backdrop-blur-md">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+          disabled={page === 0}
+          className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/60 bg-slate-900/80 px-3 py-2 text-white disabled:opacity-30"
+          aria-label="Miniaturas anteriores"
+        >
+          ‹
+        </button>
+
+        <div className={`grid gap-3 px-10 ${isDesktop ? "grid-cols-4" : "grid-cols-2"}`}>
+          {pageImages.map((img, index) => {
+            const sourceIndex = page * pageSize + index;
+            return (
+              <button
+                key={img.id}
+                onClick={() => {
+                  setCurrentIndex(sourceIndex);
+                  setIsLightboxOpen(true);
+                }}
+                className="text-center"
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="h-32 w-full rounded-2xl object-cover transition hover:scale-[1.02]"
+                />
+                <span className="mt-1 block text-xs text-slate-500">{img.tag}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => setPage((prev) => Math.min(prev + 1, maxPage))}
+          disabled={page >= maxPage}
+          className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/60 bg-slate-900/80 px-3 py-2 text-white disabled:opacity-30"
+          aria-label="Miniaturas siguientes"
+        >
+          ›
+        </button>
       </div>
 
-      {/* Visor / Lightbox mejorado con FLECHAS */}
-      {isLightboxOpen && (
-        <div 
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}
+      {isLightboxOpen && activeImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90"
           onClick={() => setIsLightboxOpen(false)}
         >
-          {/* Botón Cerrar (Esquina superior derecha) */}
-          <button 
+          <button
             onClick={() => setIsLightboxOpen(false)}
-            style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", color: "white", fontSize: "2.5rem", cursor: "pointer" }}
+            className="absolute right-4 top-4 text-5xl text-white"
+            aria-label="Cerrar"
           >
             ×
           </button>
-
-          {/* Flecha Izquierda */}
-          <button 
-            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-            style={{ position: "absolute", left: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              prevImage();
+            }}
+            className="absolute left-4 rounded-full bg-white/20 px-4 py-2 text-4xl text-white"
+            aria-label="Anterior"
           >
             ‹
           </button>
 
-          {/* Contenedor Imagen */}
-          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: "80%", textAlign: "center" }}>
-            <img 
-              src={activeImage.src} 
-              alt={activeImage.alt} 
-              style={{ maxHeight: "80vh", maxWidth: "100%", borderRadius: "8px", boxShadow: "0 0 20px rgba(0,0,0,0.5)" }} 
-            />
-            <p style={{ marginTop: "1rem", color: "white", fontSize: "1.1rem" }}>{activeImage.caption}</p>
+          <div onClick={(e) => e.stopPropagation()} className="max-w-[85%] text-center">
+            <img src={activeImage.src} alt={activeImage.alt} className="max-h-[80vh] max-w-full rounded-2xl" />
+            <p className="mt-4 text-lg text-white">{activeImage.caption}</p>
           </div>
 
-          {/* Flecha Derecha */}
-          <button 
-            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-            style={{ position: "absolute", right: "20px", background: "rgba(255,255,255,0.1)", border: "none", color: "white", fontSize: "3rem", cursor: "pointer", borderRadius: "50%", width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              nextImage();
+            }}
+            className="absolute right-4 rounded-full bg-white/20 px-4 py-2 text-4xl text-white"
+            aria-label="Siguiente"
           >
             ›
           </button>
