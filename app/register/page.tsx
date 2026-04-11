@@ -22,7 +22,13 @@ const registerSchema = z.object({
 });
 
 export default function Register() {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", confirmPassword: "", aceptaPoliticas: false });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    confirmPassword: "", 
+    aceptaPoliticas: false 
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,18 +44,29 @@ export default function Register() {
     e.preventDefault();
     setError("");
     const result = registerSchema.safeParse(formData);
-    if (!result.success) { setError(result.error.errors[0].message); return; }
+    if (!result.success) { 
+      setError(result.error.errors[0].message); 
+      return; 
+    }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      // CORRECCIÓN DE RUTA: Ahora llama a /api/register directamente
+      const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      
       const data = await res.json();
+
       if (res.ok) {
-        await signIn("credentials", { email: formData.email, password: formData.password, callbackUrl: "/perfil" });
+        // Si el registro es ok, hacemos login automático
+        await signIn("credentials", { 
+          email: formData.email, 
+          password: formData.password, 
+          callbackUrl: "/perfil" 
+        });
       } else {
         setError(data.message || "Error al crear la cuenta");
       }
@@ -137,3 +154,4 @@ const styles = {
   btnGoogle: { padding: "0.75rem", background: "white", border: "1px solid #ddd", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", cursor: "pointer", color: "#555" },
   errorBox: { background: "#ff4757", color: "white", padding: "0.8rem", borderRadius: "10px", textAlign: "center" as const, marginBottom: "1rem", fontSize: "0.8rem" }
 };
+    
