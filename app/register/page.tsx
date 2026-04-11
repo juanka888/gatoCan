@@ -15,8 +15,11 @@ const registerSchema = z.object({
     .min(8, "Mínimo 8 caracteres")
     .regex(/[A-Z]/, "Falta una mayúscula")
     .regex(/[0-9]/, "Falta un número")
-    .regex(/[.,+*\-]/, "Falta un símbolo (.,+*-)"),
+    .regex(/[^A-Za-z0-9]/, "Falta un símbolo (ej: @, ., #, !, etc.)"),
   confirmPassword: z.string(),
+  aceptaPoliticas: z.literal(true, {
+    errorMap: () => ({ message: "Debes aceptar los términos y condiciones" }),
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
@@ -27,22 +30,21 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [aceptaPoliticas, setAceptaPoliticas] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Bloqueo de espacios para evitar conflictos visuales
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === " ") e.stopPropagation();
   };
 
-  // Lógica visual para los "checkmarks" (Sigue funcionando igual)
   const passwordValidation = useMemo(() => {
     return {
       hasMinLength: password.length >= 8,
       hasUpperCase: /[A-Z]/.test(password),
       hasNumber: /[0-9]/.test(password),
-      hasSpecial: /[.,+*\-]/.test(password),
+      hasSpecial: /[^A-Za-z0-9]/.test(password),
       match: password === confirmPassword && password !== ""
     };
   }, [password, confirmPassword]);
@@ -53,8 +55,7 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    // 1. Validación Zod (Segunda capa de seguridad)
-    const result = registerSchema.safeParse({ name, email, password, confirmPassword });
+    const result = registerSchema.safeParse({ name, email, password, confirmPassword, aceptaPoliticas });
     
     if (!result.success) {
       const fieldErrors = Object.values(result.error.flatten().fieldErrors);
@@ -69,11 +70,10 @@ export default function Register() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, aceptaPoliticas }),
       });
 
       if (res.ok) {
-        // Auto-login tras registro exitoso
         await signIn("credentials", { email, password, callbackUrl: "/perfil" });
       } else {
         const data = await res.json();
@@ -143,7 +143,7 @@ export default function Register() {
               <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasMinLength ? "#27ae60" : "#999" }}>● Mín. 8 carac.</p>
               <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasUpperCase ? "#27ae60" : "#999" }}>● Mayúscula</p>
               <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasNumber ? "#27ae60" : "#999" }}>● Un número</p>
-              <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasSpecial ? "#27ae60" : "#999" }}>● Símbolo (.,+*-)</p>
+              <p style={{ fontSize: "0.7rem", margin: 0, color: passwordValidation.hasSpecial ? "#27ae60" : "#999" }}>● Símbolo (@, ., #...)</p>
             </div>
           </div>
 
@@ -157,15 +157,26 @@ export default function Register() {
               placeholder="Repite la contraseña" 
               required 
             />
-            {confirmPassword && !passwordValidation.match && (
-              <span style={{fontSize: "0.75rem", color: "#ff4757"}}>No coinciden</span>
-            )}
+          </div>
+
+          {/* CHECKBOX DE POLÍTICAS */}
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginTop: "0.5rem" }}>
+            <input 
+              type="checkbox" 
+              id="politicas" 
+              checked={aceptaPoliticas}
+              onChange={(e) => setAceptaPoliticas(e.target.checked)}
+              style={{ marginTop: "4px", cursor: "pointer" }}
+            />
+            <label htmlFor="politicas" style={{ fontSize: "0.8rem", color: "#555", cursor: "pointer", lineHeight: "1.2" }}>
+              Acepto los <Link href="/terminos" style={{ color: "#ff4757", fontWeight: "bold" }}>Términos de Uso</Link> y la <Link href="/privacidad" style={{ color: "#ff4757", fontWeight: "bold" }}>Política de Privacidad</Link>.
+            </label>
           </div>
 
           <button 
             type="submit" 
-            disabled={loading || !isPasswordSecure}
-            style={{...btnPrimary, opacity: (loading || !isPasswordSecure) ? 0.6 : 1}}
+            disabled={loading || !isPasswordSecure || !aceptaPoliticas}
+            style={{...btnPrimary, opacity: (loading || !isPasswordSecure || !aceptaPoliticas) ? 0.6 : 1, marginTop: "0.5rem"}}
           >
             {loading ? "Procesando..." : "Finalizar Registro"}
           </button>
@@ -188,7 +199,6 @@ export default function Register() {
   );
 }
 
-// --- ESTILOS ---
 const containerStyle: React.CSSProperties = { minHeight: "100vh", display: "grid", placeItems: "center", padding: "1rem", backgroundImage: "url('/img/foto-05.jpg')", backgroundSize: "cover", backgroundPosition: "center", fontFamily: "sans-serif" };
 const cardStyle: React.CSSProperties = { background: "rgba(255, 255, 255, 0.98)", padding: "2rem 2.5rem", borderRadius: "16px", width: "100%", maxWidth: "420px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", backdropFilter: "blur(5px)" };
 const inputGroup: React.CSSProperties = { display: "grid", gap: "0.3rem" };
