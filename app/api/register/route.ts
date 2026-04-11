@@ -4,42 +4,56 @@ import bcrypt from "bcrypt";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, aceptaPoliticas } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ message: "Faltan datos" }, { status: 400 });
+    // 1. Validaciones básicas de servidor
+    if (!email || !password || !name) {
+      return NextResponse.json({ message: "Faltan datos obligatorios" }, { status: 400 });
     }
 
+    if (!aceptaPoliticas) {
+      return NextResponse.json({ message: "Debes aceptar los términos y condiciones" }, { status: 400 });
+    }
+
+    const emailNormalizado = email.toLowerCase().trim();
+
+    // 2. Verificar si ya existe el usuario
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: emailNormalizado },
     });
 
     if (existingUser) {
-      return NextResponse.json({ message: "El email ya existe" }, { status: 400 });
+      return NextResponse.json({ message: "Este email ya está registrado" }, { status: 400 });
     }
 
-    // Ciframos la contraseña
+    // 3. Cifrar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Creamos el usuario usando tu campo 'password'
+    // 4. Crear usuario y perfil enlazado
     const user = await prisma.user.create({
       data: {
         name,
-        email: email.toLowerCase(),
-        password: hashedPassword, // <--- Ajustado a tu schema de la imagen ae0524
+        email: emailNormalizado,
+        password: hashedPassword,
         profile: {
           create: {
             nombreCompleto: name,
-            email: email.toLowerCase(),
-            aceptaPoliticas: false,
+            email: emailNormalizado,
+            aceptaPoliticas: true, // Guardamos el consentimiento real
           },
         },
       },
     });
 
-    return NextResponse.json({ message: "Ok" }, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ message: "Error en el servidor" }, { status: 500 });
+    return NextResponse.json({ message: "Registro completado con éxito" }, { status: 201 });
+  } catch (error: any) {
+    console.error("ERROR_EN_REGISTRO:", error);
+    
+    // Error específico de Prisma por duplicados o constraints
+    if (error.code === 'P2002') {
+      return NextResponse.json({ message: "El usuario ya existe" }, { status: 400 });
+    }
+    
+    return NextResponse.json({ message: "Error interno del servidor" }, { status: 500 });
   }
 }
