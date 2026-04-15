@@ -78,6 +78,23 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       image.onload = () => { spriteReady[name as keyof typeof catSprites] = true; };
     });
 
+    const sounds = {
+      jump: new Audio("/sounds/saltar.mp3"),
+      catch: new Audio("/sounds/cazar.mp3"),
+      death: new Audio("/sounds/muerte.mp3"),
+    };
+    Object.values(sounds).forEach((sound) => {
+      sound.volume = 0.4;
+      sound.preload = "auto";
+    });
+
+    const playSound = (sound: HTMLAudioElement) => {
+      sound.currentTime = 0;
+      void sound.play().catch(() => {
+        // Ignoramos bloqueos de autoplay del navegador
+      });
+    };
+
     const game = {
       started: false,
       running: false,
@@ -123,10 +140,13 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
       if (game.cat.onGround && game.running) {
         game.cat.vy = -10;
         game.cat.onGround = false;
+        playSound(sounds.jump);
       }
     };
 
     const doGameOver = () => {
+      if (!game.running) return;
+      playSound(sounds.death);
       game.running = false;
       setRunning(false);
       setGameOver(true);
@@ -205,7 +225,15 @@ export default function GatitoRunner({ embedded = false, showLeaderboard = true 
 
         const catBox = { x: game.cat.x + 5, y: game.cat.y + 5, w: game.cat.w - 10, h: game.cat.h - 5 };
         game.obstacles.forEach(o => { if (overlap(catBox, o)) doGameOver(); });
-        game.mice.forEach(m => { if (!m.caught && overlap(catBox, m)) { m.caught = true; game.score += 10; setScore(game.score); scoreRef.current = game.score; } });
+        game.mice.forEach(m => {
+          if (!m.caught && overlap(catBox, m)) {
+            m.caught = true;
+            playSound(sounds.catch);
+            game.score += 10;
+            setScore(game.score);
+            scoreRef.current = game.score;
+          }
+        });
         distanceRef.current = Math.floor(game.distance);
         if (distanceRef.current % 10 === 0) setDistance(distanceRef.current);
       }
