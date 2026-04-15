@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 import Providers from "./providers";
 import SessionHeader from "./components/SessionHeader";
+import GatoAsistente from "./components/GatoAsistente";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <Providers>
           <SessionHeader />
           {children}
+          <GatoAsistente />
         </Providers>
       </body>
     </html>
