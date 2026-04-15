@@ -74,7 +74,7 @@ export default function GatoAsistente() {
   };
 
   const handleCloseChat = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Evita que se reabra el chat al cerrar
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -91,26 +91,26 @@ export default function GatoAsistente() {
   const content = CHAT_CONTENT[replyKey];
 
   return (
-    <div className="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3">
+    <div className="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3 font-sans antialiased">
       {isOpen && (
-        <div className="w-[min(88vw,320px)] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="w-[min(88vw,320px)] rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/5 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="mb-3 flex items-start justify-between gap-3">
             <p className="text-sm leading-relaxed text-slate-800 font-medium">{content.text}</p>
             <button
               type="button"
               onClick={handleCloseChat}
-              className="rounded-md px-2 py-0.5 text-2xl leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="rounded-full h-7 w-7 flex items-center justify-center text-2xl leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               aria-label="Cerrar asistente"
             >
               ×
             </button>
           </div>
 
-          <div className="flex flex-col gap-2 mb-3">
+          <div className="flex flex-col gap-2 mb-4">
             {content.showDonationLink && (
               <Link
                 href="/donaciones"
-                className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 shadow-sm"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-700 shadow-sm"
               >
                 Ir a donaciones
               </Link>
@@ -119,7 +119,7 @@ export default function GatoAsistente() {
             {content.showGuideButton && (
               <a
                 href="/docs/guia.pdf"
-                className="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-sky-700 shadow-sm"
+                className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-700 shadow-sm"
                 download
               >
                 Descargar guía
@@ -127,39 +127,39 @@ export default function GatoAsistente() {
             )}
           </div>
 
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 pt-3 border-t border-slate-100">
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={() => handleQuickReply("donar")}
-              className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-2 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+              className="rounded-xl bg-slate-50 border border-slate-200 px-2 py-2.5 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
             >
               ¿Donar?
             </button>
             <button
               type="button"
               onClick={() => handleQuickReply("karma")}
-              className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-2 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+              className="rounded-xl bg-slate-50 border border-slate-200 px-2 py-2.5 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
             >
               ¿Karma?
             </button>
             <button
               type="button"
               onClick={() => handleQuickReply("bienestar")}
-              className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-2 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+              className="rounded-xl bg-slate-50 border border-slate-200 px-2 py-2.5 text-[10px] font-bold text-slate-600 uppercase transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
             >
               Guía
             </button>
           </div>
           
           {/* Triangulito del bocadillo */}
-          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white rotate-45 border-r border-b border-black/5 shadow-sm"></div>
+          <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white rotate-45 border-r border-b border-black/5 shadow-sm"></div>
         </div>
       )}
 
       <button
         type="button"
         onClick={handleOpenChat}
-        className="h-16 w-16 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-xl transition hover:scale-110 active:scale-90 focus:outline-none"
+        className="h-16 w-16 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-xl transition hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         aria-label="Abrir asistente de GatoCan"
       >
         <span className={`gato-sprite gato-${catMood}`} />
@@ -172,9 +172,10 @@ export default function GatoAsistente() {
           height: 50px;
           background-image: url('/images/gato_asistente.png');
           background-repeat: no-repeat;
-          /* Imagen de 4 frames x 3 filas */
-          background-size: 200px 150px;
+          background-size: 200px 150px; 
           image-rendering: pixelated;
+          /* ESTA ES LA CLAVE: Hace que el negro de tu imagen sea transparente */
+          mix-blend-mode: screen; 
         }
 
         .gato-reposo {
@@ -182,7 +183,7 @@ export default function GatoAsistente() {
         }
 
         .gato-hablando {
-          animation: hablando 0.4s steps(4) infinite;
+          animation: hablando 0.4s steps(2) infinite;
         }
 
         .gato-feliz {
@@ -196,7 +197,7 @@ export default function GatoAsistente() {
 
         @keyframes hablando {
           from { background-position: 0px -50px; }
-          to { background-position: -200px -50px; }
+          to { background-position: -100px -50px; }
         }
 
         @keyframes feliz {
