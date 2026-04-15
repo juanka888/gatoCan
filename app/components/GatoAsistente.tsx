@@ -92,7 +92,7 @@ export default function GatoAsistente() {
   return (
     <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
       {isOpen && (
-        <div className="w-[min(88vw,320px)] rounded-xl bg-white p-4 shadow-lg ring-1 ring-black/5">
+        <div className="w-[min(88vw,320px)] rounded-xl bg-white p-4 shadow-lg ring-1 ring-black/5 relative">
           <div className="mb-2 flex items-start justify-between gap-2">
             <p className="text-sm leading-relaxed text-slate-800">{content.text}</p>
             <button
@@ -147,13 +147,15 @@ export default function GatoAsistente() {
               Guía de Bienestar
             </button>
           </div>
+          {/* Flechita del bocadillo para que parezca un chat */}
+          <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white rotate-45 border-r border-b border-black/5"></div>
         </div>
       )}
 
       <button
         type="button"
         onClick={handleOpenChat}
-        className="h-10 w-10 rounded-full border border-white/50 shadow-md transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="h-14 w-14 flex items-center justify-center transition hover:scale-110 focus:outline-none"
         aria-label="Abrir asistente de GatoCan"
       >
         <span className={`gato-sprite gato-${catMood}`} />
@@ -162,19 +164,21 @@ export default function GatoAsistente() {
       <style jsx>{`
         .gato-sprite {
           display: block;
-          width: 40px;
-          height: 40px;
+          width: 50px; /* Tamaño del frame */
+          height: 50px;
           background-image: url('/images/gato_asistente.png');
           background-repeat: no-repeat;
-          background-size: 400% 300%;
+          /* La imagen tiene 4 frames horizontalmente y 3 verticalmente */
+          background-size: 200px 150px; 
+          image-rendering: pixelated;
         }
 
         .gato-reposo {
-          animation: reposo 0.9s steps(4) infinite;
+          animation: reposo 0.8s steps(4) infinite;
         }
 
         .gato-hablando {
-          animation: hablando 0.5s steps(4) infinite;
+          animation: hablando 0.4s steps(4) infinite;
         }
 
         .gato-feliz {
@@ -182,32 +186,20 @@ export default function GatoAsistente() {
         }
 
         @keyframes reposo {
-          from {
-            background-position: 0% 0%;
-          }
-          to {
-            background-position: 300% 0%;
-          }
+          from { background-position: 0px 0px; }
+          to { background-position: -200px 0px; }
         }
 
         @keyframes hablando {
-          from {
-            background-position: 0% 50%;
-          }
-          to {
-            background-position: 300% 50%;
-          }
+          from { background-position: 0px -50px; }
+          to { background-position: -200px -50px; }
         }
 
         @keyframes feliz {
-          from {
-            background-position: 0% 100%;
-          }
-          to {
-            background-position: 300% 100%;
-          }
+          from { background-position: 0px -100px; }
+          to { background-position: -200px -100px; }
         }
       `}</style>
     </div>
   );
-}
+              }
