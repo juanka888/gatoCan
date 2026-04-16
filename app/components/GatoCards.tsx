@@ -46,22 +46,20 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
 
   const sectionStyle: React.CSSProperties = {
     textAlign: "center",
-    padding: "20px 0",
+    padding: isMobile ? "20px 16px" : "20px 0",
+    boxSizing: "border-box",
   };
 
   const carouselStyle: React.CSSProperties = {
     ...carouselWrapper,
     flexWrap: isMobile ? "nowrap" : "wrap",
     gap: isMobile ? "8px" : "5px",
-    position: "relative",
-    boxSizing: "border-box",
-    padding: isMobile ? "0 40px" : "0",
   };
 
   const gridMobileSafeStyle: React.CSSProperties = {
     ...gridStyle,
     gridTemplateColumns: `repeat(${numGatosVisible}, 1fr)`,
-    maxWidth: "100%",
+    maxWidth: isMobile ? "100%" : "100%",
     minWidth: 0,
     padding: isMobile ? "10px 0" : "0",
   };
@@ -70,26 +68,12 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     ...flechaStyle,
     opacity: indiceInicio === 0 ? 0.3 : 1,
     flexShrink: 0,
-    ...(isMobile ? {
-      position: "absolute",
-      left: "4px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      zIndex: 2,
-    } : {}),
   };
 
   const flechaMovilDerechaStyle: React.CSSProperties = {
     ...flechaStyle,
     opacity: indiceInicio + numGatosVisible >= gatosColonia.length ? 0.3 : 1,
     flexShrink: 0,
-    ...(isMobile ? {
-      position: "absolute",
-      right: "4px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      zIndex: 2,
-    } : {}),
   };
 
   return (
