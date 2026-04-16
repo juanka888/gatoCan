@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type CatMood = "reposo" | "hablando" | "feliz";
-type ReplyKey = "welcome" | "donar" | "karma" | "bienestar";
+type ReplyKey = "welcome" | "donar" | "karma" | "bienestar" | "no_entiendo";
 
 const CHAT_CONTENT: Record<
   ReplyKey,
@@ -14,178 +14,127 @@ const CHAT_CONTENT: Record<
     showGuideButton?: boolean;
   }
 > = {
-  welcome: {
-    text: "¡Hola! Soy el asistente de Gatocan. ¿En qué puedo ayudarte, miau?",
-  },
-  donar: {
-    text: "Puedes donar por Bizum, PayPal o Tarjeta. Si quieres ver los pasos y opciones disponibles, entra en la página de donaciones.",
-    showDonationLink: true,
-  },
-  karma: {
-    text: "El Karma son puntos que consigues al jugar al Runner y al colaborar con la comunidad. Cuanto más participas, más Karma ganas.",
-  },
-  bienestar: {
-    text: "Aquí tienes la guía de bienestar para descargarla cuando quieras.",
-    showGuideButton: true,
-  },
+  welcome: { text: "¡Hola! Soy el asistente de Gatocan. ¿En qué puedo ayudarte, miau?" },
+  donar: { text: "Puedes donar por Bizum, PayPal o Tarjeta en nuestra web.", showDonationLink: true },
+  karma: { text: "El Karma son puntos que ganas jugando al Runner y ayudando a la comunidad." },
+  bienestar: { text: "Aquí tienes la guía de bienestar animal.", showGuideButton: true },
+  no_entiendo: { text: "No estoy seguro de entenderte, miau. Prueba con 'donar', 'karma' o 'guía'." }
 };
 
 export default function GatoAsistente() {
   const [isOpen, setIsOpen] = useState(false);
   const [catMood, setCatMood] = useState<CatMood>("reposo");
   const [replyKey, setReplyKey] = useState<ReplyKey>("welcome");
+  const [inputValue, setInputValue] = useState("");
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
   }, []);
 
   const animateTalking = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setCatMood("hablando");
-    timeoutRef.current = setTimeout(() => {
-      setCatMood("reposo");
-    }, 2000);
-  };
-
-  const playResponseAudio = () => {
-    const audio = new Audio("/sounds/cazar.mp3");
-    audio.volume = 0.2;
-    void audio.play().catch(() => {});
-  };
-
-  const handleOpenChat = () => {
-    setIsOpen((prev) => {
-      if (!prev) {
-        setReplyKey("welcome");
-        setCatMood("reposo");
-      }
-      return !prev;
-    });
-  };
-
-  const handleCloseChat = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    setCatMood("feliz");
-    setIsOpen(false);
+    timeoutRef.current = setTimeout(() => setCatMood("reposo"), 2500);
   };
 
   const handleQuickReply = (nextReply: ReplyKey) => {
     setReplyKey(nextReply);
-    playResponseAudio();
+    const audio = new Audio("/sounds/cazar.mp3");
+    audio.volume = 0.2;
+    void audio.play().catch(() => {});
     animateTalking();
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = inputValue.toLowerCase();
+    setInputValue("");
+
+    if (text.includes("donar") || text.includes("bizum") || text.includes("dinero")) {
+      handleQuickReply("donar");
+    } else if (text.includes("karma") || text.includes("puntos") || text.includes("runner")) {
+      handleQuickReply("karma");
+    } else if (text.includes("guia") || text.includes("bienestar") || text.includes("ayuda")) {
+      handleQuickReply("bienestar");
+    } else {
+      handleQuickReply("no_entiendo");
+    }
   };
 
   const content = CHAT_CONTENT[replyKey];
 
   return (
-    /* CONTENEDOR PADRE: Fuerza la posición arriba de todo el DOM */
-    <div style={{
-      position: 'fixed',
-      bottom: '20px',
-      right: '20px',
-      zIndex: 999999,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-end',
-      pointerEvents: 'none' /* Para que no bloquee clics fuera del gato */
-    }}>
+    <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 999999, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', pointerEvents: 'none' }}>
       
       {isOpen && (
-        <div style={{
-          pointerEvents: 'auto',
-          width: '300px',
-          backgroundColor: 'white',
-          borderRadius: '20px',
-          padding: '20px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #f1f5f9',
-          marginBottom: '15px',
-          position: 'relative',
-          fontFamily: 'sans-serif'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <p style={{ margin: 0, fontSize: '14px', color: '#1e293b', lineHeight: '1.5', fontWeight: 500 }}>
-              {content.text}
-            </p>
-            <button 
-              onClick={handleCloseChat}
-              style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '24px', cursor: 'pointer', padding: '0 5px', lineHeight: 1 }}
-            >×</button>
+        <div style={{ pointerEvents: 'auto', width: '300px', backgroundColor: 'white', borderRadius: '20px', padding: '15px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', marginBottom: '12px', position: 'relative', fontFamily: 'sans-serif' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <p style={{ margin: 0, fontSize: '13px', color: '#333', fontWeight: 600, paddingRight: '20px' }}>{content.text}</p>
+            <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: '#ccc', fontSize: '20px', cursor: 'pointer', position: 'absolute', top: '10px', right: '10px' }}>×</button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-            {content.showDonationLink && (
-              <Link href="/donaciones" style={{ backgroundColor: '#059669', color: 'white', padding: '10px', borderRadius: '12px', fontSize: '12px', textAlign: 'center', fontWeight: 'bold', textDecoration: 'none' }}>
-                Ir a donaciones
-              </Link>
-            )}
-            {content.showGuideButton && (
-              <a href="/docs/guia.pdf" download style={{ backgroundColor: '#0284c7', color: 'white', padding: '10px', borderRadius: '12px', fontSize: '12px', textAlign: 'center', fontWeight: 'bold', textDecoration: 'none' }}>
-                Descargar guía
-              </a>
-            )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' }}>
+            {content.showDonationLink && <Link href="/donaciones" style={{ backgroundColor: '#10b981', color: 'white', padding: '8px', borderRadius: '10px', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: 'bold' }}>Ir a Donaciones</Link>}
+            {content.showGuideButton && <a href="/docs/guia.pdf" download style={{ backgroundColor: '#0ea5e9', color: 'white', padding: '8px', borderRadius: '10px', fontSize: '11px', textAlign: 'center', textDecoration: 'none', fontWeight: 'bold' }}>Descargar Guía</a>}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-            <button onClick={() => handleQuickReply("donar")} style={{ cursor: 'pointer', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '10px', fontWeight: 'bold', color: '#475569', textTransform: 'uppercase' }}>¿Donar?</button>
-            <button onClick={() => handleQuickReply("karma")} style={{ cursor: 'pointer', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '10px', fontWeight: 'bold', color: '#475569', textTransform: 'uppercase' }}>¿Karma?</button>
-            <button onClick={() => handleQuickReply("bienestar")} style={{ cursor: 'pointer', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '10px', fontWeight: 'bold', color: '#475569', textTransform: 'uppercase', gridColumn: 'span 2' }}>Guía de Bienestar</button>
-          </div>
+          <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '5px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+            <input 
+              type="text" 
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Escribe algo miau..."
+              style={{ flex: 1, border: '1px solid #ddd', borderRadius: '8px', padding: '5px 10px', fontSize: '12px', outline: 'none' }}
+            />
+            <button type="submit" style={{ backgroundColor: '#f3f4f6', border: '1px solid #ddd', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}>→</button>
+          </form>
 
-          {/* Pico del bocadillo */}
-          <div style={{ position: 'absolute', bottom: '-8px', right: '24px', width: '16px', height: '16px', backgroundColor: 'white', transform: 'rotate(45deg)', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}></div>
+          <div style={{ position: 'absolute', bottom: '-8px', right: '25px', width: '16px', height: '16px', backgroundColor: 'white', transform: 'rotate(45deg)', borderRight: '1px solid #eee', borderBottom: '1px solid #eee' }}></div>
         </div>
       )}
 
-      {/* BOTÓN DEL GATO */}
       <button
-        onClick={handleOpenChat}
+        onClick={() => setIsOpen(!isOpen)}
         style={{
           pointerEvents: 'auto',
-          width: '70px',
-          height: '70px',
+          width: '75px',
+          height: '75px',
           borderRadius: '50%',
-          backgroundColor: 'white',
-          border: '4px solid #f8fafc',
+          backgroundColor: '#fff',
+          border: '3px solid #f0f0f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-          overflow: 'hidden',
-          padding: 0
+          boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+          padding: 0,
+          overflow: 'hidden'
         }}
       >
-        <div className={`gato-sprite gato-${catMood}`} />
+        <div 
+          className={`gato-anim gato-${catMood}`} 
+          style={{
+            width: '100px',
+            height: '100px',
+            backgroundImage: "url('/images/gato_asistente.png')",
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '400px 300px', 
+            imageRendering: 'pixelated',
+            transform: 'scale(0.8) translateY(5px)' // Centra el gato en el círculo
+          }} 
+        />
       </button>
 
       <style jsx>{`
-        .gato-sprite {
-          width: 50px;
-          height: 50px;
-          background-image: url('/images/gato_asistente.png');
-          background-repeat: no-repeat;
-          background-size: 200px 150px;
-          image-rendering: pixelated;
-        }
-        .gato-reposo { animation: anim-reposo 0.8s steps(4) infinite; }
-        .gato-hablando { animation: anim-hablando 0.4s steps(2) infinite; }
-        .gato-feliz { animation: anim-feliz 1.2s steps(4) infinite; }
+        .gato-reposo { animation: reposo-anim 1s steps(4) infinite; }
+        .gato-hablando { animation: hablando-anim 0.5s steps(2) infinite; }
+        .gato-feliz { animation: feliz-anim 1s steps(4) infinite; }
 
-        @keyframes anim-reposo { from { background-position: 0px 0px; } to { background-position: -200px 0px; } }
-        @keyframes anim-hablando { from { background-position: 0px -50px; } to { background-position: -100px -50px; } }
-        @keyframes anim-feliz { from { background-position: 0px -100px; } to { background-position: -200px -100px; } }
+        @keyframes reposo-anim { from { background-position: 0px 0px; } to { background-position: -400px 0px; } }
+        @keyframes hablando-anim { from { background-position: 0px -100px; } to { background-position: -200px -100px; } }
+        @keyframes feliz-anim { from { background-position: 0px -200px; } to { background-position: -400px -200px; } }
       `}</style>
     </div>
   );
-}
+                       }
