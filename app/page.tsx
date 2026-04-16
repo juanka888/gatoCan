@@ -18,19 +18,25 @@ const card: React.CSSProperties = {
   WebkitBackdropFilter: "blur(10px)",
   border: "1px solid rgba(229, 231, 235, 0.5)",
   borderRadius: "16px",
-  padding: "1.5rem",
+  padding: "1.25rem",
   width: "100%",
-  maxWidth: "1200px",
+  maxWidth: "100%", 
+  boxSizing: "border-box", 
   justifySelf: "center",
   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
-  margin: "0" 
+  margin: "0 auto",
+  overflow: "hidden"
 };
 
-
-const mainLayout: React.CSSProperties = {
-  backgroundColor: "#f4f7f6",
-  minHeight: "100vh",
-  padding: "40px 10px"
+const mainContainerStyle: React.CSSProperties = {
+  maxWidth: "1100px",
+  margin: "0 auto",
+  padding: "1rem 15px", 
+  display: "grid",
+  gridTemplateColumns: "100%",
+  gap: "1.2rem",
+  boxSizing: "border-box",
+  minHeight: "100vh"
 };
 
 export default function HomePage() {
@@ -132,7 +138,7 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
 );
   
   return (
-    <main style={{ maxWidth: 1100, margin: "0 auto", padding: "1rem", display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem" }}>
+    <main style={mainContainerStyle}>
       <header id="inicio" className="site-header">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
@@ -366,4 +372,4 @@ const StatsDonaciones = ({ stats }: { stats: any }) => (
       </section>
     </main>
   );
-}
+                     }
