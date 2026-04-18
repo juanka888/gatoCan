@@ -44,10 +44,10 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     setFlippedId((prevId) => (prevId === id ? null : id));
   };
 
-  // --- ESTILOS DINÁMICOS ---
+  // --- ESTILOS CORREGIDOS ---
   const sectionStyle: React.CSSProperties = {
     textAlign: "center",
-    padding: isMobile ? "10px 5px" : "20px 0",
+    padding: isMobile ? "20px 10px" : "20px 0",
     boxSizing: "border-box",
     width: "100%",
   };
@@ -56,9 +56,10 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: isMobile ? "2px" : "15px",
+    gap: isMobile ? "10px" : "20px",
     width: "100%",
-    margin: "0 auto"
+    maxWidth: "1000px",
+    margin: "0 auto",
   };
 
   const gridMobileSafeStyle: React.CSSProperties = {
@@ -66,37 +67,24 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     gridTemplateColumns: `repeat(${numGatosVisible}, 1fr)`,
     gap: "15px",
     perspective: "1000px",
-    flex: isMobile ? "0 1 auto" : "1",
-    maxWidth: isMobile ? "260px" : "100%",
+    flex: "1", // Permite que la tarjeta crezca y ocupe el espacio central
     minWidth: 0,
   };
 
-  const flechaMovilStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
+  const flechaStyle: React.CSSProperties = {
+    background: "#f1f5f9",
+    border: "1px solid #e2e8f0",
+    borderRadius: "50%",
+    width: "40px",
+    height: "40px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    opacity: indiceInicio === 0 ? 0.3 : 1,
-    padding: isMobile ? "2px" : "10px",
-    fontSize: isMobile ? "1.5rem" : "2rem",
+    fontSize: "1.2rem",
     flexShrink: 0,
-    zIndex: 10
-  };
-
-  const flechaMovilDerechaStyle: React.CSSProperties = {
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    opacity: indiceInicio + numGatosVisible >= gatosColonia.length ? 0.3 : 1,
-    padding: isMobile ? "2px" : "10px",
-    fontSize: isMobile ? "1.5rem" : "2rem",
-    flexShrink: 0,
-    zIndex: 10
+    transition: "all 0.2s",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
   };
 
   return (
@@ -107,7 +95,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
         <button 
           onClick={anteriorGato} 
           disabled={indiceInicio === 0} 
-          style={flechaMovilStyle}
+          style={{ ...flechaStyle, opacity: indiceInicio === 0 ? 0.3 : 1 }}
         >
           ⬅️
         </button>
@@ -118,7 +106,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
               key={gato.id} 
               className={`flip-card ${flippedId === gato.id ? "is-flipped" : ""}`}
               onClick={() => handleCardClick(gato.id)}
-              style={{ height: "400px", cursor: "pointer", width: "100%" }}
+              style={{ height: "420px", cursor: "pointer", width: "100%" }}
             >
               <div className="flip-card-inner">
                 
@@ -170,7 +158,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
         <button 
           onClick={siguienteGato} 
           disabled={indiceInicio + numGatosVisible >= gatosColonia.length} 
-          style={flechaMovilDerechaStyle}
+          style={{ ...flechaStyle, opacity: indiceInicio + numGatosVisible >= gatosColonia.length ? 0.3 : 1 }}
         >
           ➡️
         </button>
@@ -180,13 +168,13 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
 }
 
 // --- ESTILOS ESTÁTICOS ---
-const tituloSeccion: React.CSSProperties = { fontSize: "1.6rem", color: "#2c3e50", marginBottom: "15px", fontWeight: "800" };
-const faceContentStyle: React.CSSProperties = { display: "flex", flexDirection: "column", height: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid #eee", overflow: "hidden" };
-const imgStyle: React.CSSProperties = { width: "100%", height: "180px", objectFit: "cover", flexShrink: 0 };
-const infoWrapperStyle: React.CSSProperties = { flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px" };
-const nombreStyle: React.CSSProperties = { fontSize: "1.1rem", fontWeight: "bold", color: "#333" };
-const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.85rem" };
-const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "12px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto" };
-const backTitle: React.CSSProperties = { fontSize: "1rem", margin: "0 0 10px 0", borderBottom: "1px solid #eee", paddingBottom: "5px" };
-const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.8rem", padding: "0", listStyle: "none", lineHeight: "1.5", color: "#444", flexGrow: 1 };
+const tituloSeccion: React.CSSProperties = { fontSize: "1.6rem", color: "#2c3e50", marginBottom: "20px", fontWeight: "800" };
+const faceContentStyle: React.CSSProperties = { display: "flex", flexDirection: "column", height: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid #eee", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" };
+const imgStyle: React.CSSProperties = { width: "100%", height: "200px", objectFit: "cover", flexShrink: 0 };
+const infoWrapperStyle: React.CSSProperties = { flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "15px" };
+const nombreStyle: React.CSSProperties = { fontSize: "1.2rem", fontWeight: "bold", color: "#333" };
+const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.9rem" };
+const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "14px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto" };
+const backTitle: React.CSSProperties = { fontSize: "1.1rem", margin: "0 0 12px 0", borderBottom: "1px solid #eee", paddingBottom: "8px", fontWeight: "bold" };
+const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.85rem", padding: "0", listStyle: "none", lineHeight: "1.6", color: "#444", flexGrow: 1 };
               
