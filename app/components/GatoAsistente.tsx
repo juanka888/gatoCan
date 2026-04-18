@@ -63,7 +63,7 @@ export default function GatoAsistente() {
         </div>
       )}
 
-      {/* BOTÓN CIRCULAR CON AJUSTE ANTI-CORTE */}
+      {/* BOTÓN CIRCULAR CON AJUSTE ANTI-CORTE Y CENTRADO CORREGIDO */}
       <button
         onClick={handleToggle}
         style={{
@@ -88,7 +88,8 @@ export default function GatoAsistente() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transform: 'scale(0.8) translateY(8px)', // Ajuste de tamaño y altura
+          // CORRECCIÓN: Ajuste de escala y translateY para centrado perfecto y más aire en la cabeza
+          transform: 'scale(0.85) translateY(5px)', 
         }}>
           <div 
             className={`gato-anim gato-${catMood}`} 
@@ -120,8 +121,8 @@ export default function GatoAsistente() {
         }
 
         .gato-anim {
-          /* Este margen negativo centra al gato que está bailando de lado a lado */
-          margin-left: 10px; 
+          /* CORRECCIÓN: Margen izquierdo ajustado para centrar el frame estático */
+          margin-left: -5px; 
         }
       `}</style>
     </div>
