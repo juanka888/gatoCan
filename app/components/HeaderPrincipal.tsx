@@ -24,184 +24,81 @@ export default function HeaderPrincipal() {
 
   return (
     <header id="inicio" className="site-header">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-          <img src="/img/logo1.png" alt="Logo de GatoCan Natura Rural" className="brand-logo" />
-          <div>
-            <p className="eyebrow">Asociación de protección animal</p>
-            <h1>GatoCan Natura Rural</h1>
+      {/* BARRA SUPERIOR: Logo y Acciones Rápidas */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", paddingBottom: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <img src="/img/logo1.png" alt="Logo" className="brand-logo" style={{ height: "60px" }} />
+          <div className="header-text">
+            <p className="eyebrow" style={{ margin: 0, fontSize: "0.8rem" }}>Asociación de protección animal</p>
+            <h1 style={{ fontSize: "1.4rem", margin: 0 }}>GatoCan Natura Rural</h1>
           </div>
         </div>
-        <div className="hero-actions">
+
+        <div className="top-actions" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {status === "loading" ? (
-            <button className="btn btn-secondary" disabled>
-              Cargando...
-            </button>
+             <span style={{ fontSize: "12px" }}>...</span>
           ) : session ? (
             <div style={{ position: "relative", zIndex: 1000 }}>
               <img
                 src={avatar}
                 alt="Avatar"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                style={{
-                  width: "45px",
-                  height: "45px",
-                  borderRadius: "50%",
-                  cursor: "pointer",
-                  border: "2px solid #0f4c5c",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                }}
+                style={{ width: "40px", height: "40px", borderRadius: "50%", cursor: "pointer", border: "2px solid #0f4c5c" }}
               />
               {userMenuOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    top: "55px",
-                    background: "#fff",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    minWidth: "160px",
-                    padding: "5px",
-                    border: "1px solid #eee",
-                  }}
-                >
-                  <Link
-                    href="/perfil"
-                    style={{ display: "block", padding: "10px", textDecoration: "none", color: "#333", fontSize: "14px" }}
-                  >
-                    Mi Perfil
-                  </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px",
-                      background: "none",
-                      border: "none",
-                      color: "#ff4757",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      borderTop: "1px solid #f5f5f5",
-                    }}
-                  >
-                    Cerrar sesión
-                  </button>
+                <div className="user-dropdown" style={{ position: "absolute", right: 0, top: "50px", background: "#fff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", minWidth: "150px", border: "1px solid #eee", padding: "5px" }}>
+                  <Link href="/perfil" style={{ display: "block", padding: "10px", color: "#333", textDecoration: "none", fontSize: "14px" }}>Mi Perfil</Link>
+                  <button onClick={() => signOut({ callbackUrl: "/" })} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px", background: "none", border: "none", color: "#ff4757", cursor: "pointer", fontSize: "14px", borderTop: "1px solid #eee" }}>Cerrar sesión</button>
                 </div>
               )}
             </div>
           ) : (
-            <>
-              <Link href="/login" className="btn btn-secondary">
-                Acceder
-              </Link>
-              <Link href="/register" className="btn btn-secondary">
-                Crear cuenta
-              </Link>
-            </>
+            <Link href="/login" className="btn btn-secondary" style={{ padding: "8px 15px", fontSize: "14px" }}>
+              Acceder
+            </Link>
           )}
-
-          <a
-            href="https://www.teaming.net/proyectogatonaturanrural"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-primary"
-          >
+          
+          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: "8px 15px", fontSize: "14px", backgroundColor: "#f39c12" }}>
             Teaming 1€
           </a>
         </div>
       </div>
 
+      {/* BOTÓN MENÚ MÓVIL */}
       <button
         type="button"
         className="menu-toggle"
         onClick={() => setMenuOpen((current) => !current)}
-        aria-expanded={menuOpen}
-        aria-controls="main-menu"
+        style={{ width: "100%", padding: "10px", margin: "10px 0" }}
       >
-        ☰ Menú
+        {menuOpen ? "✕ Cerrar Menú" : "☰ Menú Navegación"}
       </button>
 
-      <nav aria-label="Principal" className="main-nav">
-        <ul id="main-menu" className={menuOpen ? "is-open" : ""}>
-          <li>
-            <a href="#inicio">Inicio</a>
-          </li>
-          <li>
-            <a href="#mision">Misión</a>
-          </li>
-          <li>
-            <a href="#colonias">Colonias</a>
-          </li>
-          <li>
-            <a href="#galeria">Galería</a>
-          </li>
-          <li>
-            <a href="#fichas">Fichas</a>
-          </li>
-          <li>
-            <a href="#minijuego">Minijuego</a>
-          </li>
-          <li>
-            <a href="#ayuda">Cómo ayudar</a>
-          </li>
-          <li>
-            <a href="#noticias">Noticias</a>
-          </li>
-          <li>
-            <a href="/foro">Foro</a>
-          </li>
-          <li>
-            <a href="#contacto">Contacto</a>
-          </li>
-          <li>
-            <a href="#donar">Donar</a>
-          </li>
-          <li>
-            <a href="/rankings">Rankings</a>
-          </li>
-          <li>
-            <a href="#campana">Campaña</a>
-          </li>
-          <li>
-            <a href="/perfil">Perfil</a>
-          </li>
+      {/* NAVEGACIÓN */}
+      <nav className={`main-nav ${menuOpen ? "is-open" : ""}`}>
+        <ul id="main-menu" className={menuOpen ? "is-open" : ""} style={{ listStyle: "none", padding: 0 }}>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="#mision">Misión</a></li>
+          <li><a href="#colonias">Colonias</a></li>
+          <li><a href="/foro">Foro</a></li>
+          <li><a href="/donaciones">Donaciones</a></li>
+          <li><a href="/rankings">Rankings</a></li>
+          <li><a href="#contacto">Contacto</a></li>
         </ul>
       </nav>
 
-      <section className="hero">
-        <h2>Cuidamos colonias felinas con responsabilidad y compromiso</h2>
-        <p>
-          Aplicamos el método CER para mejorar la vida de los gatos comunitarios y fomentar una convivencia respetuosa
-          en el entorno rural.
+      {/* HERO: Mensaje directo y llamadas a la acción principales */}
+      <section className="hero" style={{ padding: "40px 20px", textAlign: "center" }}>
+        <h2 style={{ fontSize: "1.8rem", marginBottom: "15px" }}>Responsabilidad y Compromiso Felino</h2>
+        <p style={{ maxWidth: "600px", margin: "0 auto 25px auto", lineHeight: "1.5" }}>
+          Aplicamos el método CER para mejorar la vida de los gatos comunitarios en el entorno rural.
         </p>
-        <div className="hero-actions">
-          {status === "authenticated" ? (
-            <a href="/perfil" className="btn btn-secondary">
-              Mi perfil
-            </a>
-          ) : (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => signIn("google", { callbackUrl: "/perfil" })}
-            >
-              Acceder
-            </button>
-          )}
-          <a href="/register" className="btn btn-secondary">
-            Crear cuenta
+        <div className="hero-actions" style={{ display: "flex", gap: "15px", justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/donaciones" className="btn btn-primary" style={{ padding: "12px 25px" }}>
+            ❤️ Donar ahora
           </a>
-          <a href="#ayuda" className="btn btn-secondary">
-            Hazte voluntario/a
-          </a>
-          <a href="#donar" className="btn btn-primary">
-            Donar ahora
-          </a>
-          <a href="/foro" className="btn btn-secondary">
-            Entrar al foro
+          <a href="#ayuda" className="btn btn-secondary" style={{ padding: "12px 25px" }}>
+            🤝 Voluntariado
           </a>
         </div>
       </section>
