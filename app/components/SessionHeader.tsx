@@ -29,9 +29,9 @@ export default function SessionHeader() {
   }, [session?.user?.image, session?.user?.name]);
 
   return (
-    <div className="session-header" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+    <div className="session-header">
       {showHomeButton && (
-        <Link href="/" className="home-link" style={{ color: "#fff", textDecoration: "none", fontSize: "0.8rem", background: "rgba(0,0,0,0.3)", padding: "5px 10px", borderRadius: "15px" }}>
+        <Link href="/" className="home-link">
           ⌂ Volver al inicio
         </Link>
       )}
@@ -39,7 +39,6 @@ export default function SessionHeader() {
         <button
           type="button"
           className="session-btn"
-          style={{ padding: "8px 18px", fontSize: "0.85rem", borderRadius: "20px", border: "2px solid #fff", color: "#fff", backgroundColor: "rgba(255,255,255,0.1)", cursor: "pointer", fontWeight: "bold" }}
           onClick={() => signIn("google", { callbackUrl: "/perfil" })}
         >
           Acceder
@@ -51,7 +50,6 @@ export default function SessionHeader() {
             onClick={() => setOpen((current) => !current)}
             className="user-menu-toggle"
             aria-label="Abrir menú de usuario"
-            style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
             <img
               src={avatar}
@@ -73,7 +71,7 @@ export default function SessionHeader() {
                 right: 0,
                 top: "calc(100% + .4rem)",
                 minWidth: 190,
-                background: "rgba(255,255,255,0.85)",
+                background: "rgba(255,255,255,0.78)",
                 backdropFilter: "blur(16px)",
                 borderRadius: 16,
                 border: "1px solid rgba(255,255,255,0.5)",
@@ -84,18 +82,14 @@ export default function SessionHeader() {
                 zIndex: 2000
               }}
             >
-              <Link 
-                href="/perfil" 
-                onClick={() => setOpen(false)}
-                style={{ padding: "10px", color: "#333", textDecoration: "none", fontSize: "14px" }}
-              >
+              <Link href="/perfil" onClick={() => setOpen(false)} style={{ padding: "10px", color: "#333", textDecoration: "none" }}>
                 Ir a mi perfil
               </Link>
               {admin && (
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  style={{ color: "#0f4c5c", fontWeight: 800, padding: "10px", textDecoration: "none", fontSize: "14px", borderTop: "1px solid rgba(0,0,0,0.05)" }}
+                  style={{ color: "#0f4c5c", fontWeight: 800, padding: "10px", textDecoration: "none" }}
                 >
                   🛠️ Panel Admin
                 </Link>
@@ -103,7 +97,7 @@ export default function SessionHeader() {
               <button 
                 type="button" 
                 onClick={() => signOut({ callbackUrl: "/" })}
-                style={{ width: "100%", textAlign: "left", padding: "10px", border: "none", background: "none", color: "#e74c3c", cursor: "pointer", fontSize: "14px", borderTop: "1px solid rgba(0,0,0,0.05)" }}
+                style={{ width: "100%", textAlign: "left", padding: "10px", border: "none", background: "none", color: "#e74c3c", cursor: "pointer" }}
               >
                 Cerrar sesión
               </button>
