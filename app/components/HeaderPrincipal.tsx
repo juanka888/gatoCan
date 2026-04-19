@@ -1,104 +1,83 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
-import { useMemo, useState } from "react";
 
-export default function SessionHeader() {
-  const { data: session, status } = useSession();
-  const [open, setOpen] = useState(false);
+export default function HeaderPrincipal() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const avatar = useMemo(() => {
-    if (session?.user?.image) return session.user.image;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      session?.user?.name || "G"
-    )}&background=0f4c5c&color=fff`;
-  }, [session]);
+  // Detectar si es móvil para mostrar el menú horizontal o vertical
+  useEffect(() => {
+    const checkSize = () => setIsMobile(window.innerWidth < 768);
+    checkSize();
+    window.addEventListener("resize", checkSize);
+    return () => window.removeEventListener("resize", checkSize);
+  }, []);
+
+  const navLinks = [
+    { name: "Inicio", href: "/" },
+    { name: "❤️ Donaciones", href: "/donaciones", color: "#f39c12" },
+    { name: "🏆 Rankings", href: "/rankings" },
+    { name: "💬 Foro", href: "/foro" },
+    { name: "🖼️ Galería", href: "#galeria" },
+    { name: "✉️ Contacto", href: "#contacto" },
+  ];
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        right: "15px",
-        top: "25px", // Aire superior añadido
-        zIndex: 1100,
-      }}
-    >
-      {status === "authenticated" ? (
-        <div style={{ position: "relative" }}>
-          <img
-            src={avatar}
-            alt="User"
-            onClick={() => setOpen(!open)}
-            style={{
-              width: "38px",
-              height: "38px",
-              borderRadius: "50%",
-              cursor: "pointer",
-              border: "2px solid #fff",
-              objectFit: "cover",
-            }}
-          />
-          {open && (
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: "45px",
-                background: "#fff",
-                borderRadius: "8px",
-                padding: "8px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                minWidth: "150px",
-              }}
-            >
-              <Link
-                href="/perfil"
-                onClick={() => setOpen(false)}
-                style={{
-                  display: "block",
-                  padding: "8px",
-                  color: "#333",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                }}
-              >
-                Mi Perfil
-              </Link>
-              <button
-                onClick={() => signOut()}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "8px",
-                  border: "none",
-                  background: "none",
-                  color: "red",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  borderTop: "1px solid #eee",
-                }}
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-          )}
+    <header style={{ width: "100%", position: "relative", paddingTop: "5px" }}>
+      {/* LOGO Y TÍTULO */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 15px", marginBottom: "5px" }}>
+        <img src="/img/logo1.png" alt="Logo" style={{ height: "60px", width: "60px", borderRadius: "50%", backgroundColor: "#fff", padding: "2px" }} />
+        <div style={{ textAlign: "left" }}>
+          <h1 style={{ margin: 0, fontSize: "1.35rem", color: "#fff", fontWeight: "800", lineHeight: "1" }}>GatoCan Natura Rural</h1>
+          <p style={{ margin: "3px 0 0 0", fontSize: "0.6rem", color: "#ccc", textTransform: "uppercase", letterSpacing: "1px" }}>Asociación de protección animal</p>
         </div>
-      ) : (
-        <Link
-          href="/login"
-          className="btn btn-secondary"
-          style={{
-            padding: "6px 12px",
-            fontSize: "0.75rem",
-            borderRadius: "20px",
-            border: "1.5px solid #fff",
-            whiteSpace: "nowrap",
-          }}
-        >
-          Acceder / Registro
-        </Link>
-      )}
-    </div>
+      </div>
+
+      {/* NAVEGACIÓN */}
+      <nav style={{ padding: "0 15px" }}>
+        {isMobile && (
+          <button 
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ padding: "8px 15px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", marginBottom: "10px" }}
+          >
+            {menuOpen ? "✕ Cerrar" : "☰ Menú"}
+          </button>
+        )}
+
+        <ul style={{ 
+          display: (isMobile && !menuOpen) ? "none" : "flex", 
+          flexDirection: isMobile ? "column" : "row",
+          listStyle: "none", 
+          padding: isMobile ? "15px" : "0", 
+          margin: isMobile ? "0 0 10px 0" : "10px 0 20px 0",
+          gap: isMobile ? "10px" : "20px",
+          background: isMobile ? "rgba(0,0,0,0.9)" : "transparent",
+          borderRadius: isMobile ? "10px" : "0",
+          flexWrap: "wrap"
+        }}>
+          {navLinks.map((link) => (
+            <li key={link.name}>
+              <Link href={link.href} onClick={() => setMenuOpen(false)} style={{ color: link.color || "#fff", textDecoration: "none", fontSize: "0.9rem", fontWeight: "600", display: "block" }}>
+                {link.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* HERO SECTION */}
+      <section style={{ padding: "15px 15px 25px 15px", textAlign: "left" }}>
+        <h2 style={{ fontSize: "2rem", color: "#fff", fontWeight: "800", marginBottom: "8px", lineHeight: "1.1" }}>Responsabilidad y Compromiso</h2>
+        <p style={{ fontSize: "0.95rem", color: "#eee", maxWidth: "600px", marginBottom: "20px" }}>Mejoramos la vida de los gatos comunitarios mediante el método CER.</p>
+        
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link href="/donaciones" style={{ padding: "12px 20px", fontSize: "0.85rem", background: "#f39c12", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}>❤️ Donar ahora</Link>
+          <a href="#ayuda" style={{ padding: "12px 20px", fontSize: "0.85rem", border: "1.5px solid #fff", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}>🤝 Voluntariado</a>
+          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" style={{ padding: "12px 20px", fontSize: "0.85rem", backgroundColor: "#27ae60", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}>🪙 Teaming 1€</a>
+        </div>
+      </section>
+    </header>
   );
 }
