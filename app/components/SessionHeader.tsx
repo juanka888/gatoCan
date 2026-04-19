@@ -4,18 +4,18 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 
-// Esto evita el error de Vercel al reconocer el rol del usuario
+// Definimos esto para que TS sepa que el usuario tiene ROL
 interface CustomUser {
   name?: string | null;
-  email?: string | null;
+  role?: string; 
   image?: string | null;
-  role?: string;
 }
 
 export default function SessionHeader() {
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
 
+  // Forzamos a TS a entender que el usuario sigue nuestra interfaz
   const user = session?.user as CustomUser;
 
   const avatar = useMemo(() => {
@@ -24,39 +24,39 @@ export default function SessionHeader() {
   }, [user]);
 
   return (
-    <div style={{ position: "absolute", right: "20px", top: "25px", zIndex: 1100 }}>
+    <div style={{ position: "absolute", right: "10px", top: "10px", zIndex: 1100 }}>
       {status === "authenticated" ? (
         <div style={{ position: "relative" }}>
           <img
             src={avatar}
             alt="User"
             onClick={() => setOpen(!open)}
-            style={{ width: "40px", height: "40px", borderRadius: "50%", cursor: "pointer", border: "2px solid #fff", objectFit: "cover" }}
+            style={{ width: "42px", height: "42px", borderRadius: "50%", cursor: "pointer", border: "2px solid #fff", objectFit: "cover" }}
           />
           {open && (
-            <div style={{ position: "absolute", right: 0, top: "50px", background: "#fff", borderRadius: "8px", padding: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.2)", minWidth: "180px" }}>
-              <p style={{ margin: "5px 10px", fontSize: "12px", color: "#666", fontWeight: "bold" }}>Hola, {user.name}</p>
+            <div style={{ position: "absolute", right: 0, top: "50px", background: "#fff", borderRadius: "8px", padding: "10px", boxShadow: "0 4px 15px rgba(0,0,0,0.2)", minWidth: "190px" }}>
+              <p style={{ margin: "0 0 10px 5px", fontSize: "12px", color: "#888" }}>Sesión de {user.name}</p>
               
-              <Link href="/perfil" onClick={() => setOpen(false)} style={{ display: "block", padding: "10px", color: "#333", textDecoration: "none", fontSize: "14px" }}>👤 Mi Perfil</Link>
+              <Link href="/perfil" onClick={() => setOpen(false)} style={{ display: "block", padding: "8px", color: "#333", textDecoration: "none", fontSize: "14px" }}>👤 Mi Perfil</Link>
               
-              {/* RESTAURADO: Acceso al Panel de Control */}
+              {/* RESTAURADO: Si el rol es ADMIN o MODERATOR aparece el panel */}
               {(user.role === "ADMIN" || user.role === "MODERATOR") && (
-                <Link href="/admin" onClick={() => setOpen(false)} style={{ display: "block", padding: "10px", color: "#0f4c5c", textDecoration: "none", fontSize: "14px", fontWeight: "bold", borderTop: "1px solid #eee" }}>
+                <Link href="/admin" onClick={() => setOpen(false)} style={{ display: "block", padding: "8px", color: "#0f4c5c", textDecoration: "none", fontSize: "14px", fontWeight: "bold", borderTop: "1px solid #eee" }}>
                   🛠️ Panel de Control
                 </Link>
               )}
 
-              <button onClick={() => signOut()} style={{ width: "100%", textAlign: "left", padding: "10px", border: "none", background: "none", color: "red", cursor: "pointer", fontSize: "14px", borderTop: "1px solid #eee" }}>
+              <button onClick={() => signOut()} style={{ width: "100%", textAlign: "left", padding: "8px", border: "none", background: "none", color: "red", cursor: "pointer", fontSize: "14px", borderTop: "1px solid #eee", marginTop: "5px" }}>
                 🚪 Cerrar Sesión
               </button>
             </div>
           )}
         </div>
       ) : (
-        <Link href="/login" style={{ padding: "8px 18px", fontSize: "0.8rem", borderRadius: "20px", border: "2px solid #fff", backgroundColor: "rgba(255,255,255,0.1)", color: "#fff", textDecoration: "none", fontWeight: "bold", display: "inline-block" }}>
-          Acceder / Registro
+        <Link href="/login" style={{ padding: "8px 16px", fontSize: "0.85rem", borderRadius: "20px", border: "2px solid #fff", color: "#fff", textDecoration: "none", fontWeight: "bold", backgroundColor: "rgba(255,255,255,0.1)" }}>
+          Acceder
         </Link>
       )}
     </div>
   );
-              }
+}
