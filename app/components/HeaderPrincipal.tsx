@@ -1,96 +1,114 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function HeaderPrincipal() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="site-header" style={{ width: "100%", padding: "20px 0" }}>
-      {/* BLOQUE LOGO */}
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "0 20px", marginBottom: "25px" }}>
-        <img src="/img/logo1.png" alt="Logo" style={{ height: "75px", width: "75px", borderRadius: "50%", backgroundColor: "#fff" }} />
+    <header style={{ width: "100%", position: "relative", paddingTop: "10px" }}>
+      {/* CABECERA: Logo y Título */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "0 20px", marginBottom: "10px" }}>
+        <img 
+          src="/img/logo1.png" 
+          alt="Logo" 
+          style={{ height: "65px", width: "65px", borderRadius: "50%", backgroundColor: "#fff" }} 
+        />
         <div style={{ textAlign: "left" }}>
-          <p style={{ margin: 0, fontSize: "0.8rem", color: "#ddd", letterSpacing: "1px" }}>ASOCIACIÓN PROTECCIÓN ANIMAL</p>
-          <h1 style={{ margin: 0, fontSize: "1.8rem", color: "#fff" }}>GatoCan Natura Rural</h1>
+          <p style={{ margin: 0, fontSize: "0.7rem", color: "#ddd", textTransform: "uppercase", letterSpacing: "1px" }}>Asociación de protección animal</p>
+          <h1 style={{ margin: 0, fontSize: "1.4rem", color: "#fff", fontWeight: "bold" }}>GatoCan Natura Rural</h1>
         </div>
       </div>
 
-      {/* NAVEGACIÓN PRINCIPAL */}
+      {/* BARRA DE NAVEGACIÓN */}
       <nav style={{ padding: "0 20px" }}>
-        {/* Botón solo para móvil */}
+        {/* Botón Menú (Solo visible en móvil por CSS) */}
         <button 
-          className="menu-toggle-btn" 
           onClick={() => setMenuOpen(!menuOpen)}
-          style={{ display: "none", padding: "10px", marginBottom: "10px" }} // Se activa por CSS global
+          style={{ display: "block", padding: "8px 15px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: "8px", cursor: "pointer", marginBottom: "10px" }}
+          className="mobile-only-btn"
         >
-          {menuOpen ? "✕ Cerrar" : "☰ Menú"}
+          {menuOpen ? "✕ Cerrar" : "☰ Menú Navegación"}
         </button>
 
-        <ul className={`nav-menu-list ${menuOpen ? "is-open" : ""}`} style={{ 
-          display: "flex", 
-          flexWrap: "wrap", 
-          gap: "10px", 
+        <ul style={{ 
+          display: menuOpen ? "flex" : "none", 
+          flexDirection: "column",
+          gap: "8px", 
           listStyle: "none", 
-          padding: 0, 
-          margin: 0 
-        }}>
-          <li><a href="/" className="nav-link">Inicio</a></li>
-          <li><a href="#mision" className="nav-link">Misión</a></li>
-          <li><a href="#colonias" className="nav-link">Colonias</a></li>
-          <li><a href="/donaciones" className="nav-link highlight">❤️ Donaciones</a></li>
-          <li><a href="/foro" className="nav-link">Foro</a></li>
-          <li><a href="#galeria" className="nav-link">Galería</a></li>
-          <li><a href="#noticias" className="nav-link">Noticias</a></li>
-          <li><a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" className="nav-link teaming">Teaming 1€</a></li>
+          padding: "10px", 
+          margin: 0,
+          background: "rgba(0,0,0,0.8)",
+          borderRadius: "10px"
+        }} className="nav-list">
+          <li><Link href="/" style={navLinkStyle}>Inicio</Link></li>
+          <li><Link href="#mision" style={navLinkStyle}>Misión</Link></li>
+          <li><Link href="#colonias" style={navLinkStyle}>Colonias</Link></li>
+          <li><Link href="/donaciones" style={{...navLinkStyle, color: "#f39c12"}}>❤️ Donaciones</Link></li>
+          <li><Link href="/rankings" style={navLinkStyle}>🏆 Rankings</Link></li>
+          <li><Link href="/foro" style={navLinkStyle}>Foro</Link></li>
+          <li><Link href="#contacto" style={navLinkStyle}>Contacto</Link></li>
         </ul>
       </nav>
 
-      <style jsx>{`
-        .nav-link {
-          color: #fff;
-          text-decoration: none;
-          padding: 8px 15px;
-          border-radius: 6px;
-          transition: background 0.3s;
-          font-size: 0.95rem;
-          display: block;
-        }
-        .nav-link:hover {
-          background: rgba(255,255,255,0.2);
-        }
-        .highlight {
-          background: #e67e22;
-        }
-        .teaming {
-          background: #27ae60;
-        }
-
-        @media (max-width: 768px) {
-          .menu-toggle-btn { display: block !important; }
-          .nav-menu-list { 
-            display: ${menuOpen ? "flex" : "none"} !important; 
-            flex-direction: column; 
-            background: rgba(0,0,0,0.8);
-            border-radius: 8px;
-            padding: 10px;
-          }
-        }
-      `}</style>
-
-      {/* HERO ALINEADO A LA IZQUIERDA */}
-      <section style={{ padding: "60px 20px", textAlign: "left" }}>
-        <h2 style={{ fontSize: "2.4rem", color: "#fff", fontWeight: "900", marginBottom: "15px" }}>
-          Responsabilidad y <br /> Compromiso Felino
+      {/* HERO SECTION: Ajustada para reducir espacios */}
+      <section style={{ padding: "20px 20px", textAlign: "left" }}>
+        <h2 style={{ 
+          fontSize: "2rem", 
+          color: "#fff", 
+          fontWeight: "800", 
+          marginBottom: "10px", 
+          lineHeight: "1.1",
+          maxWidth: "900px" // Para que quepa en una línea
+        }}>
+          Responsabilidad y Compromiso
         </h2>
-        <p style={{ fontSize: "1.1rem", color: "#eee", maxWidth: "650px", marginBottom: "30px", lineHeight: "1.5" }}>
-          Trabajamos con el método CER para garantizar el bienestar de los gatos comunitarios.
+        <p style={{ 
+          fontSize: "0.95rem", 
+          color: "#eee", 
+          maxWidth: "600px", 
+          marginBottom: "20px", 
+          lineHeight: "1.4" 
+        }}>
+          Aplicamos el método CER para mejorar la vida de los gatos comunitarios en el entorno rural.
         </p>
-        <div style={{ display: "flex", gap: "15px" }}>
-          <a href="/donaciones" className="btn btn-primary" style={{ padding: "14px 28px" }}>❤️ Donar ahora</a>
-          <a href="#ayuda" className="btn btn-secondary" style={{ padding: "14px 28px", border: "2px solid #fff" }}>🤝 Voluntariado</a>
+        
+        {/* ACCIONES DEL HERO */}
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link href="/donaciones" className="btn btn-primary" style={{ padding: "12px 20px" }}>
+            ❤️ Donar ahora
+          </Link>
+          <a href="#ayuda" className="btn btn-secondary" style={{ padding: "12px 20px", border: "1px solid #fff" }}>
+            🤝 Voluntariado
+          </a>
+          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" className="btn btn-primary" style={{ padding: "12px 20px", backgroundColor: "#27ae60" }}>
+            Teaming 1€
+          </a>
         </div>
       </section>
+
+      <style jsx>{`
+        @media (min-width: 769px) {
+          .nav-list { 
+            display: flex !important; 
+            flex-direction: row !important; 
+            background: transparent !important;
+          }
+          .mobile-only-btn { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          h2 { fontSize: 1.8rem !important; }
+        }
+      `}</style>
     </header>
   );
 }
+
+const navLinkStyle = {
+  color: "#fff",
+  textDecoration: "none",
+  fontSize: "0.9rem",
+  padding: "5px 10px",
+  display: "block"
+};
