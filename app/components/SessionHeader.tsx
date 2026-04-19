@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useMemo, useState } from "react";
 import { isAdmin } from "@/lib/admin";
 
@@ -17,85 +17,34 @@ export default function SessionHeader() {
 
   const avatar = useMemo(() => {
     if (session?.user?.image) return session.user.image;
-
     const initial = session?.user?.name?.trim()?.charAt(0)?.toUpperCase();
-    if (initial) {
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        session.user.name || "G",
-      )}&background=0f4c5c&color=fff`;
-    }
-
-    return fallbackAvatar;
+    return initial 
+      ? `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.name || "G")}&background=0f4c5c&color=fff`
+      : fallbackAvatar;
   }, [session?.user?.image, session?.user?.name]);
 
   return (
-    <div className="session-header">
+    <div className="session-header" style={{ position: "absolute", right: "15px", top: "15px", zIndex: 1000, display: "flex", gap: "10px", alignItems: "center" }}>
       {showHomeButton && (
-        <Link href="/" className="home-link">
-          ⌂ Volver al inicio
+        <Link href="/" className="home-link" style={{ fontSize: "0.8rem", color: "#fff", textDecoration: "none", background: "rgba(0,0,0,0.3)", padding: "5px 10px", borderRadius: "20px" }}>
+          ⌂ Inicio
         </Link>
       )}
+
       {status !== "authenticated" ? (
-        <button
-          type="button"
-          className="session-btn"
-          onClick={() => signIn("google", { callbackUrl: "/perfil" })}
-        >
-          Acceder
-        </button>
+        <Link href="/login" className="session-btn" style={{ padding: "8px 15px", borderRadius: "20px", background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: "0.85rem", border: "1px solid rgba(255,255,255,0.4)", textDecoration: "none" }}>
+          Acceder / Registro
+        </Link>
       ) : (
         <div style={{ position: "relative" }}>
-          <button
-            type="button"
-            onClick={() => setOpen((current) => !current)}
-            className="user-menu-toggle"
-            aria-label="Abrir menú de usuario"
-          >
-            <img
-              src={avatar}
-              alt={session.user?.name ? `Avatar de ${session.user.name}` : "Avatar de usuario"}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: "999px",
-                objectFit: "cover",
-                border: "2px solid #fff",
-              }}
-            />
+          <button onClick={() => setOpen(!open)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            <img src={avatar} alt="Avatar" style={{ width: 42, height: 42, borderRadius: "50%", border: "2px solid #fff", objectFit: "cover" }} />
           </button>
-
           {open && (
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: "calc(100% + .4rem)",
-                minWidth: 190,
-                background: "rgba(255,255,255,0.78)",
-                backdropFilter: "blur(16px)",
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.5)",
-                boxShadow: "0 10px 20px rgba(0,0,0,.14)",
-                padding: ".35rem",
-                display: "grid",
-                gap: ".2rem",
-              }}
-            >
-              <Link href="/perfil" onClick={() => setOpen(false)}>
-                Ir a mi perfil
-              </Link>
-              {admin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setOpen(false)}
-                  style={{ color: "#facc15", fontWeight: 800 }}
-                >
-                  🛠️ Panel Admin
-                </Link>
-              )}
-              <button type="button" onClick={() => signOut({ callbackUrl: "/" })}>
-                Cerrar sesión
-              </button>
+            <div style={{ position: "absolute", right: 0, top: "50px", minWidth: 180, background: "white", borderRadius: "12px", padding: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)", display: "grid", gap: "5px" }}>
+              <Link href="/perfil" onClick={() => setOpen(false)} style={{ padding: "10px", color: "#333", textDecoration: "none", fontSize: "14px" }}>Mi perfil</Link>
+              {admin && <Link href="/admin" onClick={() => setOpen(false)} style={{ padding: "10px", color: "#facc15", fontWeight: "bold", textDecoration: "none", fontSize: "14px" }}>🛠️ Admin</Link>}
+              <button onClick={() => signOut({ callbackUrl: "/" })} style={{ padding: "10px", textAlign: "left", background: "none", border: "none", color: "red", cursor: "pointer", fontSize: "14px", borderTop: "1px solid #eee" }}>Cerrar sesión</button>
             </div>
           )}
         </div>
