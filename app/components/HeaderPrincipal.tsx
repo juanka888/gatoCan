@@ -14,51 +14,66 @@ export default function HeaderPrincipal() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const links = [
+    { name: "Inicio", href: "/" },
+    { name: "❤️ Donar", href: "/donaciones", color: "#f39c12" },
+    { name: "🏆 Rankings", href: "/rankings" },
+    { name: "💬 Foro", href: "/foro" },
+    { name: "🖼️ Galería", href: "#galeria" },
+    { name: "📰 Noticias", href: "#noticias" },
+    { name: "✉️ Contacto", href: "#contacto" },
+  ];
+
   return (
-    <header style={{ width: "100%", position: "relative", paddingTop: "20px" }}>
-      {/* Logo y Nombre con el subtítulo que da seriedad */}
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "10px 20px" }}>
+    <header style={{ width: "100%", position: "relative", paddingTop: "10px" }}>
+      {/* Logo con margen superior para no chocar con el botón de login del layout */}
+      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "10px 20px", marginTop: "40px" }}>
         <img src="/img/logo1.png" alt="Logo" style={{ height: "65px", width: "65px", borderRadius: "50%", backgroundColor: "#fff" }} />
         <div style={{ textAlign: "left" }}>
           <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#fff", fontWeight: "900" }}>GatoCan Natura Rural</h1>
-          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#ccc", textTransform: "uppercase", fontWeight: "600" }}>Asociación Protectora Animal</p>
+          <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#ccc", textTransform: "uppercase", fontWeight: "600" }}>Asociación Protectora Animal</p>
         </div>
       </div>
 
-      {/* Menú de navegación */}
-      <nav style={{ padding: "10px 20px" }}>
+      <nav style={{ padding: "5px 20px" }}>
         {isMobile && (
-          <button onClick={() => setOpen(!menuOpen)} style={{ padding: "8px 12px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "6px" }}>
+          <button onClick={() => setOpen(!menuOpen)} style={{ padding: "8px 15px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "8px" }}>
             {menuOpen ? "✕ Cerrar" : "☰ Menú"}
           </button>
         )}
+
         <ul style={{ 
           display: (isMobile && !menuOpen) ? "none" : "flex", 
           flexDirection: isMobile ? "column" : "row",
-          gap: "20px", listStyle: "none", padding: isMobile ? "15px" : "0", margin: "10px 0",
-          background: isMobile ? "rgba(0,0,0,0.8)" : "transparent", borderRadius: "10px"
+          background: "rgba(255,255,255,0.1)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          borderRadius: "12px",
+          padding: "5px",
+          margin: "15px 0",
+          listStyle: "none",
+          justifyContent: "space-around"
         }}>
-          <li><Link href="/" style={{ color: "#fff", textDecoration: "none", fontWeight: "600" }}>Inicio</Link></li>
-          <li><Link href="/donaciones" style={{ color: "#f39c12", textDecoration: "none", fontWeight: "600" }}>❤️ Donar</Link></li>
-          <li><Link href="/rankings" style={{ color: "#fff", textDecoration: "none" }}>🏆 Rankings</Link></li>
-          <li><Link href="/foro" style={{ color: "#fff", textDecoration: "none" }}>💬 Foro</Link></li>
-          <li><Link href="#galeria" style={{ color: "#fff", textDecoration: "none" }}>🖼️ Galería</Link></li>
-          <li><Link href="#noticias" style={{ color: "#fff", textDecoration: "none" }}>📰 Noticias</Link></li>
+          {links.map((l) => (
+            <li key={l.name} style={{ flex: isMobile ? "none" : 1, textAlign: "center" }}>
+              <Link href={l.href} style={{ color: l.color || "#fff", textDecoration: "none", fontSize: "0.9rem", fontWeight: "600", display: "block", padding: "10px", borderRadius: "8px" }}>
+                {l.name}
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
 
-      {/* Hero: Texto más completo y emocional */}
-      <section style={{ padding: "15px 20px 30px 20px" }}>
-        <h2 style={{ fontSize: "2.2rem", color: "#fff", fontWeight: "900", marginBottom: "10px", lineHeight: "1.1" }}>Compromiso y Conciencia Felina</h2>
-        <p style={{ fontSize: "1.05rem", color: "#eee", marginBottom: "20px", maxWidth: "700px", lineHeight: "1.5" }}>
-          Cuidamos, supervisamos y sensibilizamos sobre el bienestar de nuestras colonias. 
-          Un proyecto nacido del respeto animal en el entorno rural mediante el método CER.
+      <section style={{ padding: "5px 20px 20px 20px" }}>
+        <h2 style={{ fontSize: "2.1rem", color: "#fff", fontWeight: "900", marginBottom: "8px" }}>Compromiso y Conciencia Felina</h2>
+        <p style={{ fontSize: "1rem", color: "#eee", marginBottom: "18px", maxWidth: "700px", lineHeight: "1.4" }}>
+          Supervisamos, alimentamos y sensibilizamos sobre el bienestar animal. Unidos por el respeto a nuestras colonias rurales mediante el método CER.
         </p>
         
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Link href="/donaciones" style={{ padding: "12px 20px", background: "#f39c12", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold" }}>❤️ Donar</Link>
-          <a href="#ayuda" style={{ padding: "12px 20px", border: "2px solid #fff", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold" }}>🤝 Voluntariado</a>
-          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" style={{ padding: "12px 20px", background: "#27ae60", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold" }}>🪙 Teaming 1€</a>
+          <Link href="/donaciones" style={{ padding: "10px 22px", background: "#f39c12", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>❤️ Donar</Link>
+          <a href="#ayuda" style={{ padding: "10px 22px", border: "2px solid #fff", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>🤝 Voluntariado</a>
+          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" style={{ padding: "10px 22px", background: "#27ae60", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>🪙 Teaming 1€</a>
         </div>
       </section>
     </header>
