@@ -21,7 +21,17 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <Providers>
-          <SessionHeader />
+          {/* En tu layout.tsx */}
+<div style={{ 
+  position: 'absolute', 
+  top: '20px', 
+  right: '20px', 
+  zIndex: 1500 
+}}>
+  <SessionHeader />
+</div>
+          
+          
           {children}
           <GatoAsistente />
         </Providers>
