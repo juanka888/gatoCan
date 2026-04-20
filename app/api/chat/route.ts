@@ -1,34 +1,19 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// 1. DEFINICIÓN DE TIPOS
 type Role = "user" | "assistant";
+type ChatMessage = { role: Role; content: string; };
+type ChatPayload = { message?: string; messages?: ChatMessage[]; };
 
-type ChatMessage = {
-  role: Role;
-  content: string;
-};
+const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y travieso. Responde corto y usa emojis 🐾.";
 
-type ChatPayload = {
-  message?: string;
-  messages?: ChatMessage[];
-};
-
-// 2. CONFIGURACIÓN DEL SISTEMA
-const SYSTEM_PROMPT =
-  "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y un poco travieso. Tu objetivo es ayudar con dudas sobre la asociación, el método CER y bienestar animal. Responde de forma breve, cariñosa y usa emojis de gatos 🐾.";
-
-// 3. DICCIONARIO DE SUGERENCIAS (Botones de navegación)
 const SECTION_SUGGESTIONS = [
-  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda economica", "tarjeta", "dinero", "contribuir"] },
-  { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad", "tema", "hablar", "discutir", "duda"] },
-  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad", "eventos", "pasa", "nuevo", "blog"] },
-  { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos", "runner", "juego", "top", "clasificacion"] },
-  { section: "Políticas", href: "/politicas", keywords: ["privacidad", "politica", "aviso legal", "cookies", "legal"] },
-  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario", "login", "mis datos", "ajustes"] },
+  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda"] },
+  { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad"] },
+  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad"] },
+  { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos"] },
+  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario"] },
 ];
 
-// 4. FUNCIONES DE UTILIDAD
 function normalize(text: string) {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -40,55 +25,56 @@ function extractSuggestions(text: string) {
   ).map(({ section, href }) => ({ section, href }));
 }
 
-// 5. MANEJADOR DE LA RUTA POST
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ChatPayload;
     const lastUserMessage = body.message?.trim();
-
-    if (!lastUserMessage) return NextResponse.json({ error: "Mensaje vacío" }, { status: 400 });
-
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "Falta la llave API en Vercel" }, { status: 500 });
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // --- EL CAMBIO MAESTRO ---
-    // Usamos 'gemini-1.5-flash' pero forzamos explícitamente la API 'v1'
-    // Si sigue fallando, la librería tiene un bug interno con Next.js
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash", 
-    }, { apiVersion: 'v1' });
+    if (!lastUserMessage || !apiKey) {
+      return NextResponse.json({ error: "Faltan datos o API KEY" }, { status: 400 });
+    }
 
-    let history = (body.messages || [])
-      .filter((msg) => msg?.content?.trim())
-      .map((msg) => ({
+    // Construimos el historial para la API REST de Google
+    const contents = (body.messages || [])
+      .filter(msg => msg.content)
+      .map(msg => ({
         role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content.trim() }],
+        parts: [{ text: msg.content }]
       }));
 
-    if (history.length > 0 && history[0].role === "model") history.shift();
+    // Añadimos el mensaje actual
+    contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
 
-    const chat = model.startChat({
-      history: [
-        { role: "user", parts: [{ text: `Actúa siempre como: ${SYSTEM_PROMPT}` }] },
-        { role: "model", parts: [{ text: "¡Miau! Entendido. 🐾" }] },
-        ...history.slice(-10)
-      ],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 250 },
+    // LLAMADA MANUAL AL ENDPOINT (Esto evita el error 404 de la librería)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: contents.slice(-11), // Últimos 10 + el nuevo
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+      })
     });
 
-    const result = await chat.sendMessage(lastUserMessage);
-    const textReply = result.response.text().trim();
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Error en la respuesta de Google");
+    }
+
+    const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
 
     return NextResponse.json({
-      reply: textReply || "¡Miau! No sé qué decir 🐾",
+      reply: textReply.trim(),
       suggestions: extractSuggestions(lastUserMessage),
     });
 
   } catch (error: any) {
-    console.error("--- 🚨 ERROR EN EL CHAT ---");
-    console.error(error);
-    return NextResponse.json({ error: "Fallo en el servidor", details: error.message }, { status: 500 });
+    console.error("--- 🚨 FALLO EN EL CHAT ---", error);
+    return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
   }
-}
+      }
+        
