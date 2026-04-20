@@ -13,8 +13,7 @@ type ChatPayload = {
   messages?: ChatMessage[];
 };
 
-const SYSTEM_PROMPT =
-  "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y un poco travieso. Tu objetivo es ayudar con dudas sobre la asociación, el método CER y bienestar animal. Responde de forma breve, cariñosa y usa emojis de gatos 🐾.";
+const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y un poco travieso. Tu objetivo es ayudar con dudas sobre la asociación, el método CER y bienestar animal. Responde de forma breve, cariñosa y usa emojis de gatos 🐾.";
 
 const SECTION_SUGGESTIONS = [
   { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda economica", "tarjeta", "dinero"] },
@@ -25,11 +24,7 @@ const SECTION_SUGGESTIONS = [
 ];
 
 function normalize(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function extractSuggestions(text: string) {
@@ -48,28 +43,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El mensaje es obligatorio." }, { status: 400 });
     }
 
-    // Priorizamos GEMINI_API_KEY que es la que configuraste en Vercel
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    // Buscamos la clave en las posibles variables que hayas configurado
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
-      console.error("ERROR: No se encuentra la API KEY en las variables de entorno.");
-      return NextResponse.json(
-        { error: "Falta configurar la API KEY en el servidor." },
-        { status: 500 }
-      );
+      console.error("❌ ERROR: No hay API KEY configurada.");
+      return NextResponse.json({ error: "Falta la API KEY." }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Configuramos el modelo con la instrucción de sistema de forma más explícita
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 250,
-      },
+      systemInstruction: {
+        role: "system",
+        parts: [{ text: SYSTEM_PROMPT }]
+      }
     });
 
-    // Procesamos el historial para que sea compatible con Google Gemini
+    // Mapeamos el historial
     let history = (body.messages || [])
       .filter((msg) => msg?.content?.trim())
       .map((msg) => ({
@@ -77,32 +70,35 @@ export async function POST(request: Request) {
         parts: [{ text: msg.content.trim() }],
       }));
 
-    // REGLA CRÍTICA DE GEMINI: El historial debe empezar siempre por un mensaje de "user"
+    // El historial debe empezar por 'user'
     if (history.length > 0 && history[0].role === "model") {
       history.shift();
     }
 
-    // Limitamos el historial a los últimos 10 mensajes para evitar saturar la API
-    history = history.slice(-10);
+    // Iniciamos chat con historial limpio
+    const chat = model.startChat({
+      history: history.slice(-10),
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 250,
+      },
+    });
 
-    const chat = model.startChat({ history });
     const result = await chat.sendMessage(lastUserMessage);
-    const response = await result.response;
-    const textReply = response.text().trim() || "Miau... me he quedado sin palabras 😿";
+    const textReply = result.response.text().trim();
 
     return NextResponse.json({
-      reply: textReply,
+      reply: textReply || "¡Miau! No supe qué decir 🐾",
       suggestions: extractSuggestions(lastUserMessage),
     });
 
   } catch (error: any) {
-    // Esto aparecerá en tu terminal de VS Code para que sepamos qué falla
-    console.error("--- ERROR DETALLADO DEL GATITO ---");
+    console.error("--- 🚨 FALLO EN EL CHAT ---");
     console.error(error);
     
     return NextResponse.json({ 
-      error: "Error interno del servidor.", 
-      message: error.message || "Error desconocido"
+      error: "Error en el servidor", 
+      details: error.message 
     }, { status: 500 });
   }
 }
