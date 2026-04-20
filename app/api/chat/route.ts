@@ -13,18 +13,23 @@ type ChatPayload = {
   messages?: ChatMessage[];
 };
 
-const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y un poco travieso. Tu objetivo es ayudar con dudas sobre la asociación, el método CER y bienestar animal. Responde de forma breve, cariñosa y usa emojis de gatos 🐾.";
+const SYSTEM_PROMPT =
+  "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y un poco travieso. Tu objetivo es ayudar con dudas sobre la asociación, el método CER y bienestar animal. Responde de forma breve, cariñosa y usa emojis de gatos 🐾.";
 
 const SECTION_SUGGESTIONS = [
   { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda economica", "tarjeta", "dinero"] },
   { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad", "tema", "hablar"] },
   { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad", "eventos", "pasa"] },
   { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos", "runner", "juego", "top"] },
-  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario", "login", "mi datos"] },
+  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario", "login", "mis datos"] },
 ];
 
 function normalize(text: string) {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 }
 
 function extractSuggestions(text: string) {
@@ -43,26 +48,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El mensaje es obligatorio." }, { status: 400 });
     }
 
-    // Buscamos la clave en las posibles variables que hayas configurado
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY;
+    // Buscamos la API KEY en las variables de entorno
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
     if (!apiKey) {
-      console.error("❌ ERROR: No hay API KEY configurada.");
-      return NextResponse.json({ error: "Falta la API KEY." }, { status: 500 });
+      console.error("❌ ERROR: API KEY no configurada.");
+      return NextResponse.json({ error: "Falta API KEY en el servidor." }, { status: 500 });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Configuramos el modelo con la instrucción de sistema de forma más explícita
+    // USAMOS LA VERSIÓN v1 PARA EVITAR EL ERROR 404
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: {
         role: "system",
         parts: [{ text: SYSTEM_PROMPT }]
       }
-    });
+    }, { apiVersion: 'v1' });
 
-    // Mapeamos el historial
+    // Preparamos el historial para Gemini
     let history = (body.messages || [])
       .filter((msg) => msg?.content?.trim())
       .map((msg) => ({
@@ -70,16 +75,16 @@ export async function POST(request: Request) {
         parts: [{ text: msg.content.trim() }],
       }));
 
-    // El historial debe empezar por 'user'
+    // El historial debe empezar siempre por un mensaje de usuario
     if (history.length > 0 && history[0].role === "model") {
       history.shift();
     }
 
-    // Iniciamos chat con historial limpio
+    // Limitamos a los últimos 10 mensajes
     const chat = model.startChat({
       history: history.slice(-10),
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.8,
         maxOutputTokens: 250,
       },
     });
@@ -87,18 +92,19 @@ export async function POST(request: Request) {
     const result = await chat.sendMessage(lastUserMessage);
     const textReply = result.response.text().trim();
 
+    // Devolvemos la respuesta de la IA + las sugerencias de navegación
     return NextResponse.json({
       reply: textReply || "¡Miau! No supe qué decir 🐾",
       suggestions: extractSuggestions(lastUserMessage),
     });
 
   } catch (error: any) {
-    console.error("--- 🚨 FALLO EN EL CHAT ---");
+    console.error("--- 🚨 FALLO DETECTADO ---");
     console.error(error);
     
     return NextResponse.json({ 
       error: "Error en el servidor", 
-      details: error.message 
+      message: error.message || "Error desconocido"
     }, { status: 500 });
   }
 }
