@@ -1,79 +1,170 @@
-import { NextResponse } from "next/server";
+"use client";
 
-type Role = "user" | "assistant";
-type ChatMessage = { role: Role; content: string; };
-type ChatPayload = { message?: string; messages?: ChatMessage[]; };
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y travieso. Responde corto y usa emojis 🐾.";
+type CatMood = "quieto" | "reposo" | "hablando";
 
-const SECTION_SUGGESTIONS = [
-  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda"] },
-  { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad"] },
-  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad"] },
-  { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos"] },
-  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario"] },
+type ChatMessage = {
+  role: "assistant" | "user";
+  text: string;
+};
+
+type SectionSuggestion = {
+  section: string;
+  href: string;
+};
+
+const WELCOME_MESSAGE = "¡Hola! Soy el asistente de GatoCan. ¿En qué puedo ayudarte, miau?";
+
+const QUICK_SUGGESTIONS = [
+  { label: "🐾 ¿Cómo donar?", trigger: "¿Cómo puedo donar a GatoCan?" },
+  { label: "🎮 Puntos Karma", trigger: "¿Cómo consigo puntos Karma en Runner?" },
+  { label: "🐱 Guía Bienestar", trigger: "¿Dónde veo la guía de bienestar animal?" },
 ];
 
-function normalize(text: string) {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-}
+const STATIC_SHORTCUTS: SectionSuggestion[] = [
+  { section: "Donaciones", href: "/donaciones" },
+  { section: "Foro", href: "/foro" },
+  { section: "Noticias", href: "/noticias" },
+];
 
-function extractSuggestions(text: string) {
-  const normalized = normalize(text);
-  return SECTION_SUGGESTIONS.filter((item) =>
-    item.keywords.some((keyword) => normalized.includes(normalize(keyword)))
-  ).map(({ section, href }) => ({ section, href }));
-}
+export default function GatoAsistente() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [catMood, setCatMood] = useState<CatMood>("quieto");
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", text: WELCOME_MESSAGE }]);
+  const [inputValue, setInputValue] = useState("");
+  const [isHappy, setIsHappy] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<SectionSuggestion[]>([]);
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json()) as ChatPayload;
-    const lastUserMessage = body.message?.trim();
-    const apiKey = process.env.GEMINI_API_KEY;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const happyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-    if (!lastUserMessage || !apiKey) {
-      return NextResponse.json({ error: "Faltan datos o API KEY" }, { status: 400 });
-    }
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/miau.mp3");
+    audioRef.current.preload = "auto";
 
-    // Construimos el historial para la API REST de Google
-    const contents = (body.messages || [])
-      .filter(msg => msg.content)
-      .map(msg => ({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }]
-      }));
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
+    };
+  }, []);
 
-    // Añadimos el mensaje actual
-    contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
-    // LLAMADA MANUAL AL ENDPOINT (Esto evita el error 404 de la librería)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: contents.slice(-11), // Últimos 10 + el nuevo
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
-      })
+  const playMiau = () => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {
+      // El audio puede bloquearse por autoplay/política del navegador.
     });
+  };
 
-    const data = await response.json();
+  const setTalkingState = () => {
+    setCatMood("hablando");
 
-    if (!response.ok) {
-      throw new Error(data.error?.message || "Error en la respuesta de Google");
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCatMood("reposo"), 3000);
+  };
+
+  const maybeHappyReaction = (text: string) => {
+    const normalized = text.toLowerCase();
+    const isPositive = ["gracias", "genial", "crack", "perfecto", "amor"].some((token) => normalized.includes(token));
+
+    if (isPositive) {
+      setIsHappy(true);
+      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
+      happyTimeoutRef.current = setTimeout(() => setIsHappy(false), 2500);
     }
+  };
 
-    const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
+  const handleToggle = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      setCatMood("reposo");
+      setMessages((prev) => (prev.length ? prev : [{ role: "assistant", text: WELCOME_MESSAGE }]));
+      playMiau();
+    } else {
+      setIsOpen(false);
+      setCatMood("quieto");
+    }
+  };
 
-    return NextResponse.json({
-      reply: textReply.trim(),
-      suggestions: extractSuggestions(lastUserMessage),
-    });
+  const askAI = async (text: string, nextHistory: ChatMessage[]) => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          messages: nextHistory.map((msg) => ({ role: msg.role, content: msg.text })),
+        }),
+      });
 
-  } catch (error: any) {
-    console.error("--- 🚨 FALLO EN EL CHAT ---", error);
-    return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
-  }
-}
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "No se pudo consultar la IA.");
+      }
+
+      const assistantText = (data?.reply as string)?.trim() || "Miau... me quedé sin palabras 😿";
+      const aiSuggestions = Array.isArray(data?.suggestions) ? (data.suggestions as SectionSuggestion[]) : [];
+
+      setDynamicSuggestions(aiSuggestions);
+      setMessages((prev) => [...prev, { role: "assistant", text: assistantText }]);
+      setTalkingState();
+      playMiau();
+      maybeHappyReaction(text);
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : "Error inesperado al hablar con la IA.";
+      setMessages((prev) => [...prev, { role: "assistant", text: `Ups, tuve un problema: ${fallback}` }]);
+      setTalkingState();
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleUserMessage = async (text: string) => {
+    const cleanedText = text.trim();
+    if (!cleanedText || isTyping) return;
+
+    const userMessage: ChatMessage = { role: "user", text: cleanedText };
+    const nextHistory = [...messages, userMessage];
+
+    setMessages(nextHistory);
+    setInputValue("");
+    setIsTyping(true);
+    setTalkingState();
+
+    await askAI(cleanedText, nextHistory);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleUserMessage(inputValue);
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        zIndex: 999999,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        pointerEvents: "none",
+      }}
+    >
+      {isOpen && (
+        <div
+          style={{
+            pointerEvents: "auto",
+            width: "300
+    
