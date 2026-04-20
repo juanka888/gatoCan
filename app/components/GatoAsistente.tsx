@@ -1,397 +1,79 @@
-"use client";
+import { NextResponse } from "next/server";
 
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+type Role = "user" | "assistant";
+type ChatMessage = { role: Role; content: string; };
+type ChatPayload = { message?: string; messages?: ChatMessage[]; };
 
-type CatMood = "quieto" | "reposo" | "hablando";
+const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y travieso. Responde corto y usa emojis 🐾.";
 
-type ChatMessage = {
-  role: "assistant" | "user";
-  text: string;
-};
-
-type SectionSuggestion = {
-  section: string;
-  href: string;
-};
-
-const WELCOME_MESSAGE = "¡Hola! Soy el asistente de GatoCan. ¿En qué puedo ayudarte, miau?";
-
-const QUICK_SUGGESTIONS = [
-  { label: "🐾 ¿Cómo donar?", trigger: "¿Cómo puedo donar a GatoCan?" },
-  { label: "🎮 Puntos Karma", trigger: "¿Cómo consigo puntos Karma en Runner?" },
-  { label: "🐱 Guía Bienestar", trigger: "¿Dónde veo la guía de bienestar animal?" },
+const SECTION_SUGGESTIONS = [
+  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda"] },
+  { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad"] },
+  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad"] },
+  { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos"] },
+  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario"] },
 ];
 
-const STATIC_SHORTCUTS: SectionSuggestion[] = [
-  { section: "Donaciones", href: "/donaciones" },
-  { section: "Foro", href: "/foro" },
-  { section: "Noticias", href: "/noticias" },
-];
+function normalize(text: string) {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
 
-export default function GatoAsistente() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [catMood, setCatMood] = useState<CatMood>("quieto");
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", text: WELCOME_MESSAGE }]);
-  const [inputValue, setInputValue] = useState("");
-  const [isHappy, setIsHappy] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [dynamicSuggestions, setDynamicSuggestions] = useState<SectionSuggestion[]>([]);
+function extractSuggestions(text: string) {
+  const normalized = normalize(text);
+  return SECTION_SUGGESTIONS.filter((item) =>
+    item.keywords.some((keyword) => normalized.includes(normalize(keyword)))
+  ).map(({ section, href }) => ({ section, href }));
+}
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const happyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as ChatPayload;
+    const lastUserMessage = body.message?.trim();
+    const apiKey = process.env.GEMINI_API_KEY;
 
-  useEffect(() => {
-    audioRef.current = new Audio("/sounds/miau.mp3");
-    audioRef.current.preload = "auto";
+    if (!lastUserMessage || !apiKey) {
+      return NextResponse.json({ error: "Faltan datos o API KEY" }, { status: 400 });
+    }
 
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
-    };
-  }, []);
+    // Construimos el historial para la API REST de Google
+    const contents = (body.messages || [])
+      .filter(msg => msg.content)
+      .map(msg => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }]
+      }));
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    // Añadimos el mensaje actual
+    contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
 
-  const playMiau = () => {
-    if (!audioRef.current) return;
-    audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(() => {
-      // El audio puede bloquearse por autoplay/política del navegador.
+    // LLAMADA MANUAL AL ENDPOINT (Esto evita el error 404 de la librería)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: contents.slice(-11), // Últimos 10 + el nuevo
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+      })
     });
-  };
 
-  const setTalkingState = () => {
-    setCatMood("hablando");
+    const data = await response.json();
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setCatMood("reposo"), 3000);
-  };
-
-  const maybeHappyReaction = (text: string) => {
-    const normalized = text.toLowerCase();
-    const isPositive = ["gracias", "genial", "crack", "perfecto", "amor"].some((token) => normalized.includes(token));
-
-    if (isPositive) {
-      setIsHappy(true);
-      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
-      happyTimeoutRef.current = setTimeout(() => setIsHappy(false), 2500);
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Error en la respuesta de Google");
     }
-  };
 
-  const handleToggle = () => {
-    if (!isOpen) {
-      setIsOpen(true);
-      setCatMood("reposo");
-      setMessages((prev) => (prev.length ? prev : [{ role: "assistant", text: WELCOME_MESSAGE }]));
-      playMiau();
-    } else {
-      setIsOpen(false);
-      setCatMood("quieto");
-    }
-  };
+    const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
 
-  const askAI = async (text: string, nextHistory: ChatMessage[]) => {
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          messages: nextHistory.map((msg) => ({ role: msg.role, content: msg.text })),
-        }),
-      });
+    return NextResponse.json({
+      reply: textReply.trim(),
+      suggestions: extractSuggestions(lastUserMessage),
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.error || "No se pudo consultar la IA.");
-      }
-
-      const assistantText = (data?.reply as string)?.trim() || "Miau... me quedé sin palabras 😿";
-      const aiSuggestions = Array.isArray(data?.suggestions) ? (data.suggestions as SectionSuggestion[]) : [];
-
-      setDynamicSuggestions(aiSuggestions);
-      setMessages((prev) => [...prev, { role: "assistant", text: assistantText }]);
-      setTalkingState();
-      playMiau();
-      maybeHappyReaction(text);
-    } catch (error) {
-      const fallback = error instanceof Error ? error.message : "Error inesperado al hablar con la IA.";
-      setMessages((prev) => [...prev, { role: "assistant", text: `Ups, tuve un problema: ${fallback}` }]);
-      setTalkingState();
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleUserMessage = async (text: string) => {
-    const cleanedText = text.trim();
-    if (!cleanedText || isTyping) return;
-
-    const userMessage: ChatMessage = { role: "user", text: cleanedText };
-    const nextHistory = [...messages, userMessage];
-
-    setMessages(nextHistory);
-    setInputValue("");
-    setIsTyping(true);
-    setTalkingState();
-
-    await askAI(cleanedText, nextHistory);
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handleUserMessage(inputValue);
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        zIndex: 999999,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
-        pointerEvents: "none",
-      }}
-    >
-      {isOpen && (
-        <div
-          style={{
-            pointerEvents: "auto",
-            width: "300px",
-            backgroundColor: "white",
-            borderRadius: "24px",
-            padding: "15px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
-            marginBottom: "10px",
-            position: "relative",
-            border: "1px solid #eee",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", gap: "10px" }}>
-            <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#333", lineHeight: 1.35 }}>Gatito asistente</p>
-            <button
-              onClick={handleToggle}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#ccc", lineHeight: 1 }}
-            >
-              ×
-            </button>
-          </div>
-
-          <div
-            style={{
-              maxHeight: "200px",
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              marginBottom: "10px",
-              paddingRight: "3px",
-            }}
-          >
-            {messages.map((msg, idx) => (
-              <div
-                key={`${msg.role}-${idx}`}
-                style={{
-                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "88%",
-                  padding: "8px 10px",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  lineHeight: 1.35,
-                  background: msg.role === "user" ? "#eef2ff" : "#f8f8f8",
-                  color: "#333",
-                }}
-              >
-                {msg.text}
-              </div>
-            ))}
-            {isTyping && (
-              <div
-                style={{
-                  alignSelf: "flex-start",
-                  maxWidth: "88%",
-                  padding: "8px 10px",
-                  borderRadius: "12px",
-                  fontSize: "12px",
-                  lineHeight: 1.35,
-                  background: "#f8f8f8",
-                  color: "#777",
-                  fontStyle: "italic",
-                }}
-              >
-                Escribiendo...
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-            {QUICK_SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion.label}
-                type="button"
-                onClick={() => handleUserMessage(suggestion.trigger)}
-                style={{
-                  border: "1px solid #e9e9e9",
-                  background: "#f8f8ff",
-                  color: "#333",
-                  borderRadius: "999px",
-                  fontSize: "11px",
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                }}
-              >
-                {suggestion.label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-            {[...STATIC_SHORTCUTS, ...dynamicSuggestions]
-              .filter((item, index, array) => array.findIndex((it) => it.href === item.href) === index)
-              .slice(0, 5)
-              .map((item) => (
-                <Link
-                  key={`${item.href}-${item.section}`}
-                  href={item.href}
-                  style={{
-                    border: "1px dashed #d9d9d9",
-                    background: "#fff",
-                    color: "#6b4ce6",
-                    borderRadius: "999px",
-                    fontSize: "11px",
-                    padding: "5px 10px",
-                    textDecoration: "none",
-                  }}
-                >
-                  Ir a {item.section}
-                </Link>
-              ))}
-          </div>
-
-          <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "5px" }}>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Escribe aquí..."
-              style={{
-                flex: 1,
-                padding: "8px",
-                borderRadius: "10px",
-                border: "1px solid #ddd",
-                fontSize: "12px",
-                outline: "none",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={isTyping}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "10px",
-                border: "none",
-                backgroundColor: isTyping ? "#f3f3f3" : "#eee",
-                cursor: isTyping ? "not-allowed" : "pointer",
-              }}
-            >
-              →
-            </button>
-          </form>
-        </div>
-      )}
-
-      <button
-        onClick={handleToggle}
-        style={{
-          pointerEvents: "auto",
-          width: "80px",
-          height: "80px",
-          borderRadius: "50%",
-          backgroundColor: "white",
-          border: "4px solid #f9f9f9",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-          cursor: "pointer",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 0,
-        }}
-      >
-        <div
-          style={{
-            width: "128px",
-            height: "128px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: "scale(0.85) translateY(5px)",
-          }}
-        >
-          <div
-            className={`gato-anim gato-${catMood} ${isHappy ? "gato-feliz" : ""}`}
-            style={{
-              width: "128px",
-              height: "128px",
-              backgroundImage: "url('/images/gato_asistente.png')",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "512px 512px",
-              imageRendering: "pixelated",
-            }}
-          />
-        </div>
-      </button>
-
-      <style jsx>{`
-        .gato-quieto {
-          background-position: 0px 0px;
-        }
-
-        .gato-reposo {
-          animation: reposo 1.2s steps(4) infinite;
-        }
-
-        @keyframes reposo {
-          from {
-            background-position: 0px 0px;
-          }
-          to {
-            background-position: -512px 0px;
-          }
-        }
-
-        .gato-hablando {
-          animation: hablando 0.4s steps(2) infinite;
-        }
-
-        @keyframes hablando {
-          from {
-            background-position: 0px -128px;
-          }
-          to {
-            background-position: -256px -128px;
-          }
-        }
-
-        .gato-feliz {
-          filter: drop-shadow(0 0 8px rgba(255, 214, 79, 0.95));
-        }
-
-        .gato-anim {
-          margin-left: -5px;
-          transition: filter 0.2s ease;
-        }
-      `}</style>
-    </div>
-  );
+  } catch (error: any) {
+    console.error("--- 🚨 FALLO EN EL CHAT ---", error);
+    return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
+  }
 }
