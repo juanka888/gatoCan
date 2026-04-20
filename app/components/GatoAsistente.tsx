@@ -166,5 +166,232 @@ export default function GatoAsistente() {
         <div
           style={{
             pointerEvents: "auto",
-            width: "300
-    
+            width: "300px",
+            backgroundColor: "white",
+            borderRadius: "24px",
+            padding: "15px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            marginBottom: "10px",
+            position: "relative",
+            border: "1px solid #eee",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", gap: "10px" }}>
+            <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#333", lineHeight: 1.35 }}>Gatito asistente</p>
+            <button
+              onClick={handleToggle}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#ccc", lineHeight: 1 }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginBottom: "10px",
+              paddingRight: "3px",
+            }}
+          >
+            {messages.map((msg, idx) => (
+              <div
+                key={`${msg.role}-${idx}`}
+                style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "88%",
+                  padding: "8px 10px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  lineHeight: 1.35,
+                  background: msg.role === "user" ? "#eef2ff" : "#f8f8f8",
+                  color: "#333",
+                }}
+              >
+                {msg.text}
+              </div>
+            ))}
+            {isTyping && (
+              <div
+                style={{
+                  alignSelf: "flex-start",
+                  maxWidth: "88%",
+                  padding: "8px 10px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  lineHeight: 1.35,
+                  background: "#f8f8f8",
+                  color: "#777",
+                  fontStyle: "italic",
+                }}
+              >
+                Escribiendo...
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+            {QUICK_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion.label}
+                type="button"
+                onClick={() => handleUserMessage(suggestion.trigger)}
+                style={{
+                  border: "1px solid #e9e9e9",
+                  background: "#f8f8ff",
+                  color: "#333",
+                  borderRadius: "999px",
+                  fontSize: "11px",
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                }}
+              >
+                {suggestion.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+            {[...STATIC_SHORTCUTS, ...dynamicSuggestions]
+              .filter((item, index, array) => array.findIndex((it) => it.href === item.href) === index)
+              .slice(0, 5)
+              .map((item) => (
+                <Link
+                  key={`${item.href}-${item.section}`}
+                  href={item.href}
+                  style={{
+                    border: "1px dashed #d9d9d9",
+                    background: "#fff",
+                    color: "#6b4ce6",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    padding: "5px 10px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Ir a {item.section}
+                </Link>
+              ))}
+          </div>
+
+          <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "5px" }}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Escribe aquí..."
+              style={{
+                flex: 1,
+                padding: "8px",
+                borderRadius: "10px",
+                border: "1px solid #ddd",
+                fontSize: "12px",
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isTyping}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: isTyping ? "#f3f3f3" : "#eee",
+                cursor: isTyping ? "not-allowed" : "pointer",
+              }}
+            >
+              →
+            </button>
+          </form>
+        </div>
+      )}
+
+      <button
+        onClick={handleToggle}
+        style={{
+          pointerEvents: "auto",
+          width: "80px",
+          height: "80px",
+          borderRadius: "50%",
+          backgroundColor: "white",
+          border: "4px solid #f9f9f9",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+          cursor: "pointer",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+        }}
+      >
+        <div
+          style={{
+            width: "128px",
+            height: "128px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: "scale(0.85) translateY(5px)",
+          }}
+        >
+          <div
+            className={`gato-anim gato-${catMood} ${isHappy ? "gato-feliz" : ""}`}
+            style={{
+              width: "128px",
+              height: "128px",
+              backgroundImage: "url('/images/gato_asistente.png')",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "512px 512px",
+              imageRendering: "pixelated",
+            }}
+          />
+        </div>
+      </button>
+
+      <style jsx>{`
+        .gato-quieto {
+          background-position: 0px 0px;
+        }
+
+        .gato-reposo {
+          animation: reposo 1.2s steps(4) infinite;
+        }
+
+        @keyframes reposo {
+          from {
+            background-position: 0px 0px;
+          }
+          to {
+            background-position: -512px 0px;
+          }
+        }
+
+        .gato-hablando {
+          animation: hablando 0.4s steps(2) infinite;
+        }
+
+        @keyframes hablando {
+          from {
+            background-position: 0px -128px;
+          }
+          to {
+            background-position: -256px -128px;
+          }
+        }
+
+        .gato-feliz {
+          filter: drop-shadow(0 0 8px rgba(255, 214, 79, 0.95));
+        }
+
+        .gato-anim {
+          margin-left: -5px;
+          transition: filter 0.2s ease;
+        }
+      `}</style>
+    </div>
+  );
+            }
