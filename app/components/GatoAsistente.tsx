@@ -4,76 +4,44 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type CatMood = "quieto" | "reposo" | "hablando";
-type ReplyKey = "welcome" | "saludo" | "donar" | "karma" | "bienestar" | "agradecimiento" | "no_entiendo";
 
-type ChatItem = {
+type ChatMessage = {
+  role: "assistant" | "user";
   text: string;
-  showDonationLink?: boolean;
-  showGuideButton?: boolean;
 };
 
-const CHAT_CONTENT: Record<Exclude<ReplyKey, "saludo">, ChatItem> = {
-  welcome: {
-    text: "¡Hola! Soy el asistente de Gatocan. ¿En qué puedo ayudarte, miau?",
-  },
-  donar: {
-    text: "Puedes donar por Bizum, PayPal o tarjeta en nuestra web oficial.",
-    showDonationLink: true,
-  },
-  karma: {
-    text: "El Karma son puntos que ganas jugando al Runner y ayudando en el foro.",
-  },
-  bienestar: {
-    text: "Aquí tienes la guía de bienestar animal para descargar.",
-    showGuideButton: true,
-  },
-  agradecimiento: {
-    text: "¡Miau! Gracias a ti por apoyar a Gatocan 💛",
-  },
-  no_entiendo: {
-    text: "Miau... no te he entendido bien. Prueba con palabras como 'donar', 'karma' o 'guía'.",
-  },
+type SectionSuggestion = {
+  section: string;
+  href: string;
 };
 
-const GREETINGS = [
-  "¡Miauu! Qué alegría verte por aquí 😺",
-  "¡Hola! Soy tu gatito asistente, listo para ayudarte.",
-  "¡Buenas! Cuéntame y te echo una patita 🐾",
-];
-
-const INTENT_KEYWORDS: Record<Exclude<ReplyKey, "welcome" | "saludo" | "no_entiendo">, string[]> = {
-  donar: ["donar", "donación", "donaciones", "dinero", "ayuda", "bizum", "paypal", "tarjeta"],
-  karma: ["karma", "puntos", "runner", "juego", "jugar"],
-  bienestar: ["guia", "guía", "bienestar", "cuidados", "cuidado", "animal"],
-  agradecimiento: ["gracias", "te quiero", "genial", "crack"],
-};
-
-const GREETING_KEYWORDS = ["hola", "buenas", "miau", "hey", "ey"];
+const WELCOME_MESSAGE = "¡Hola! Soy el asistente de GatoCan. ¿En qué puedo ayudarte, miau?";
 
 const QUICK_SUGGESTIONS = [
-  { label: "🐾 ¿Cómo donar?", trigger: "donar" },
-  { label: "🎮 Puntos Karma", trigger: "karma" },
-  { label: "🐱 Guía Bienestar", trigger: "guía" },
+  { label: "🐾 ¿Cómo donar?", trigger: "¿Cómo puedo donar a GatoCan?" },
+  { label: "🎮 Puntos Karma", trigger: "¿Cómo consigo puntos Karma en Runner?" },
+  { label: "🐱 Guía Bienestar", trigger: "¿Dónde veo la guía de bienestar animal?" },
 ];
 
-function normalize(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
+const STATIC_SHORTCUTS: SectionSuggestion[] = [
+  { section: "Donaciones", href: "/donaciones" },
+  { section: "Foro", href: "/foro" },
+  { section: "Noticias", href: "/noticias" },
+];
 
 export default function GatoAsistente() {
   const [isOpen, setIsOpen] = useState(false);
   const [catMood, setCatMood] = useState<CatMood>("quieto");
-  const [reply, setReply] = useState<ChatItem>(CHAT_CONTENT.welcome);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", text: WELCOME_MESSAGE }]);
   const [inputValue, setInputValue] = useState("");
   const [isHappy, setIsHappy] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<SectionSuggestion[]>([]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const happyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     audioRef.current = new Audio("/sounds/miau.mp3");
@@ -85,6 +53,10 @@ export default function GatoAsistente() {
     };
   }, []);
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
   const playMiau = () => {
     if (!audioRef.current) return;
     audioRef.current.currentTime = 0;
@@ -93,38 +65,18 @@ export default function GatoAsistente() {
     });
   };
 
-  const getIntentFromText = (rawText: string): ReplyKey => {
-    const text = normalize(rawText);
-
-    if (GREETING_KEYWORDS.some((keyword) => text.includes(keyword))) return "saludo";
-
-    for (const [intent, keywords] of Object.entries(INTENT_KEYWORDS) as Array<[
-      Exclude<ReplyKey, "welcome" | "saludo" | "no_entiendo">,
-      string[]
-    ]>) {
-      if (keywords.some((keyword) => text.includes(normalize(keyword)))) {
-        return intent;
-      }
-    }
-
-    return "no_entiendo";
-  };
-
-  const applyReply = (intent: ReplyKey) => {
-    if (intent === "saludo") {
-      const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
-      setReply({ text: greeting });
-    } else {
-      setReply(CHAT_CONTENT[intent]);
-    }
-
+  const setTalkingState = () => {
     setCatMood("hablando");
-    playMiau();
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => setCatMood("reposo"), 3000);
+  };
 
-    if (intent === "agradecimiento") {
+  const maybeHappyReaction = (text: string) => {
+    const normalized = text.toLowerCase();
+    const isPositive = ["gracias", "genial", "crack", "perfecto", "amor"].some((token) => normalized.includes(token));
+
+    if (isPositive) {
       setIsHappy(true);
       if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
       happyTimeoutRef.current = setTimeout(() => setIsHappy(false), 2500);
@@ -135,7 +87,7 @@ export default function GatoAsistente() {
     if (!isOpen) {
       setIsOpen(true);
       setCatMood("reposo");
-      setReply(CHAT_CONTENT.welcome);
+      setMessages((prev) => (prev.length ? prev : [{ role: "assistant", text: WELCOME_MESSAGE }]));
       playMiau();
     } else {
       setIsOpen(false);
@@ -143,18 +95,58 @@ export default function GatoAsistente() {
     }
   };
 
-  const handleUserMessage = (text: string) => {
-    const cleanedText = text.trim();
-    if (!cleanedText) return;
+  const askAI = async (text: string, nextHistory: ChatMessage[]) => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          messages: nextHistory.map((msg) => ({ role: msg.role, content: msg.text })),
+        }),
+      });
 
-    const intent = getIntentFromText(cleanedText);
-    applyReply(intent);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "No se pudo consultar la IA.");
+      }
+
+      const assistantText = (data?.reply as string)?.trim() || "Miau... me quedé sin palabras 😿";
+      const aiSuggestions = Array.isArray(data?.suggestions) ? (data.suggestions as SectionSuggestion[]) : [];
+
+      setDynamicSuggestions(aiSuggestions);
+      setMessages((prev) => [...prev, { role: "assistant", text: assistantText }]);
+      setTalkingState();
+      playMiau();
+      maybeHappyReaction(text);
+    } catch (error) {
+      const fallback = error instanceof Error ? error.message : "Error inesperado al hablar con la IA.";
+      setMessages((prev) => [...prev, { role: "assistant", text: `Ups, tuve un problema: ${fallback}` }]);
+      setTalkingState();
+    } finally {
+      setIsTyping(false);
+    }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleUserMessage(inputValue);
+  const handleUserMessage = async (text: string) => {
+    const cleanedText = text.trim();
+    if (!cleanedText || isTyping) return;
+
+    const userMessage: ChatMessage = { role: "user", text: cleanedText };
+    const nextHistory = [...messages, userMessage];
+
+    setMessages(nextHistory);
     setInputValue("");
+    setIsTyping(true);
+    setTalkingState();
+
+    await askAI(cleanedText, nextHistory);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleUserMessage(inputValue);
   };
 
   return (
@@ -185,7 +177,7 @@ export default function GatoAsistente() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", gap: "10px" }}>
-            <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#333", lineHeight: 1.35 }}>{reply.text}</p>
+            <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#333", lineHeight: 1.35 }}>Gatito asistente</p>
             <button
               onClick={handleToggle}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#ccc", lineHeight: 1 }}
@@ -194,28 +186,53 @@ export default function GatoAsistente() {
             </button>
           </div>
 
-          {reply.showDonationLink && (
-            <div style={{ marginBottom: "10px" }}>
-              <Link
-                href="/donaciones"
-                style={{ fontSize: "12px", color: "#6b4ce6", fontWeight: 600, textDecoration: "underline" }}
+          <div
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginBottom: "10px",
+              paddingRight: "3px",
+            }}
+          >
+            {messages.map((msg, idx) => (
+              <div
+                key={`${msg.role}-${idx}`}
+                style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "88%",
+                  padding: "8px 10px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  lineHeight: 1.35,
+                  background: msg.role === "user" ? "#eef2ff" : "#f8f8f8",
+                  color: "#333",
+                }}
               >
-                Ir a la página de donaciones
-              </Link>
-            </div>
-          )}
-
-          {reply.showGuideButton && (
-            <div style={{ marginBottom: "10px" }}>
-              <Link
-                href="/guia-bienestar.pdf"
-                target="_blank"
-                style={{ fontSize: "12px", color: "#6b4ce6", fontWeight: 600, textDecoration: "underline" }}
+                {msg.text}
+              </div>
+            ))}
+            {isTyping && (
+              <div
+                style={{
+                  alignSelf: "flex-start",
+                  maxWidth: "88%",
+                  padding: "8px 10px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  lineHeight: 1.35,
+                  background: "#f8f8f8",
+                  color: "#777",
+                  fontStyle: "italic",
+                }}
               >
-                Abrir guía de bienestar
-              </Link>
-            </div>
-          )}
+                Escribiendo...
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
 
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
             {QUICK_SUGGESTIONS.map((suggestion) => (
@@ -238,6 +255,29 @@ export default function GatoAsistente() {
             ))}
           </div>
 
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+            {[...STATIC_SHORTCUTS, ...dynamicSuggestions]
+              .filter((item, index, array) => array.findIndex((it) => it.href === item.href) === index)
+              .slice(0, 5)
+              .map((item) => (
+                <Link
+                  key={`${item.href}-${item.section}`}
+                  href={item.href}
+                  style={{
+                    border: "1px dashed #d9d9d9",
+                    background: "#fff",
+                    color: "#6b4ce6",
+                    borderRadius: "999px",
+                    fontSize: "11px",
+                    padding: "5px 10px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Ir a {item.section}
+                </Link>
+              ))}
+          </div>
+
           <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "5px" }}>
             <input
               type="text"
@@ -255,7 +295,14 @@ export default function GatoAsistente() {
             />
             <button
               type="submit"
-              style={{ padding: "8px 12px", borderRadius: "10px", border: "none", backgroundColor: "#eee", cursor: "pointer" }}
+              disabled={isTyping}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: isTyping ? "#f3f3f3" : "#eee",
+                cursor: isTyping ? "not-allowed" : "pointer",
+              }}
             >
               →
             </button>
