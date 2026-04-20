@@ -27,10 +27,10 @@ export default function HeaderPrincipal() {
   return (a 
     <header style={{ width: "100%", position: "relative", paddingTop: "10px" }}>
       {/* Logo con margen superior para no chocar con el botón de login del layout */}
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "5px 10px", marginTop: "30px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "5px 10px", marginTop: "10px" }}>
         <img src="/img/logo1.png" alt="Logo" style={{ height: "65px", width: "65px", borderRadius: "50%", backgroundColor: "#fff" }} />
         <div style={{ textAlign: "left" }}>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#fff", fontWeight: "700" }}>GatoCan Natura Rural</h1>
+          <h1 style={{ margin: 0, fontSize: "1.2rem", color: "#fff", fontWeight: "700" }}>GatoCan Natura Rural</h1>
           <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#ccc", textTransform: "uppercase", fontWeight: "600" }}>Asociación Protectora Animal</p>
         </div>
       </div>
@@ -65,7 +65,7 @@ export default function HeaderPrincipal() {
       </nav>
 
       <section style={{ padding: "5px 20px 20px 20px" }}>
-        <h2 style={{ fontSize: "1.3rem", color: "#fff", fontWeight: "700", marginBottom: "8px" }}>Compromiso y Conciencia Felina</h2>
+        <h2 style={{ fontSize: "1.1rem", color: "#fff", fontWeight: "700", marginBottom: "8px" }}>Compromiso y Conciencia Felina</h2>
         <p style={{ fontSize: "1rem", color: "#eee", marginBottom: "18px", maxWidth: "700px", lineHeight: "1.4" }}>
           Supervisamos, alimentamos y sensibilizamos sobre el bienestar animal. Unidos por el respeto a nuestras colonias rurales mediante el método CER.
         </p>
