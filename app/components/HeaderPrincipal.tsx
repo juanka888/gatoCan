@@ -65,7 +65,7 @@ export default function HeaderPrincipal() {
       </nav>
 
       <section style={{ padding: "5px 20px 20px 20px" }}>
-        <h2 style={{ fontSize: "2.1rem", color: "#fff", fontWeight: "900", marginBottom: "8px" }}>Compromiso y Conciencia Felina</h2>
+        <h2 style={{ fontSize: "1.3rem", color: "#fff", fontWeight: "700", marginBottom: "8px" }}>Compromiso y Conciencia Felina</h2>
         <p style={{ fontSize: "1rem", color: "#eee", marginBottom: "18px", maxWidth: "700px", lineHeight: "1.4" }}>
           Supervisamos, alimentamos y sensibilizamos sobre el bienestar animal. Unidos por el respeto a nuestras colonias rurales mediante el método CER.
         </p>
