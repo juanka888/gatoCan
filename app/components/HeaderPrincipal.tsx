@@ -24,7 +24,7 @@ export default function HeaderPrincipal() {
     { name: "✉️ Contacto", href: "#contacto" },
   ];
 
-  return (a 
+  return (
     <header style={{ width: "100%", position: "relative", paddingTop: "10px" }}>
       {/* Logo con margen superior para no chocar con el botón de login del layout */}
       <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "5px 10px", marginTop: "10px" }}>
