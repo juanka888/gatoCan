@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
 type Role = "user" | "assistant";
@@ -49,13 +50,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El mensaje es obligatorio." }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "Falta configurar GEMINI_API_KEY (o GOOGLE_API_KEY) en el servidor." },
+        { error: "Falta configurar GEMINI_API_KEY en el servidor." },
         { status: 500 }
       );
     }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: SYSTEM_PROMPT,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 220,
+      },
+    });
 
     const history = (body.messages || [])
       .filter((msg) => msg?.content?.trim())
@@ -65,36 +75,10 @@ export async function POST(request: Request) {
         parts: [{ text: msg.content.trim() }],
       }));
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            role: "system",
-            parts: [{ text: SYSTEM_PROMPT }],
-          },
-          contents: [...history, { role: "user", parts: [{ text: lastUserMessage }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 220,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json({ error: `Gemini API error: ${errorText}` }, { status: 502 });
-    }
-
-    const data = await response.json();
+    const chat = model.startChat({ history });
+    const result = await chat.sendMessage(lastUserMessage);
     const textReply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((part: { text?: string }) => part?.text || "")
-        .join("\n")
-        .trim() || "Miau... ahora mismo no tengo respuesta 😿";
+      result.response.text().trim() || "Miau... ahora mismo no tengo respuesta 😿";
 
     return NextResponse.json({
       reply: textReply,
