@@ -24,8 +24,8 @@ export default function RootLayout({
           {/* En tu layout.tsx */}
 <div style={{ 
   position: 'absolute', 
-  top: '10px', 
-  right: '10px', 
+  top: '1px', 
+  right: '1px', 
   zIndex: 1500 
 }}>
   <SessionHeader />
