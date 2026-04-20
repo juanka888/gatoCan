@@ -24,13 +24,13 @@ export default function HeaderPrincipal() {
     { name: "✉️ Contacto", href: "#contacto" },
   ];
 
-  return (
+  return (a 
     <header style={{ width: "100%", position: "relative", paddingTop: "10px" }}>
       {/* Logo con margen superior para no chocar con el botón de login del layout */}
-      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "10px 20px", marginTop: "40px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "15px", padding: "5px 10px", marginTop: "30px" }}>
         <img src="/img/logo1.png" alt="Logo" style={{ height: "65px", width: "65px", borderRadius: "50%", backgroundColor: "#fff" }} />
         <div style={{ textAlign: "left" }}>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#fff", fontWeight: "900" }}>GatoCan Natura Rural</h1>
+          <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#fff", fontWeight: "700" }}>GatoCan Natura Rural</h1>
           <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#ccc", textTransform: "uppercase", fontWeight: "600" }}>Asociación Protectora Animal</p>
         </div>
       </div>
