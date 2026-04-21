@@ -4,14 +4,12 @@ type Role = "user" | "assistant";
 type ChatMessage = { role: Role; content: string; };
 type ChatPayload = { message?: string; messages?: ChatMessage[]; };
 
-const SYSTEM_PROMPT = "Eres el asistente de GatoCan Natura Rural. Eres un gato sabio, amable y travieso. Responde corto y usa emojis 🐾.";
+const SYSTEM_PROMPT = "Eres el asistente de GatoCan. Eres un gato sabio y travieso. Responde corto y con emojis 🐾.";
 
 const SECTION_SUGGESTIONS = [
-  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal", "ayuda"] },
+  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal"] },
   { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad"] },
-  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades", "actualidad"] },
-  { section: "Rankings", href: "/rankings", keywords: ["ranking", "karma", "puntos"] },
-  { section: "Perfil", href: "/perfil", keywords: ["perfil", "cuenta", "usuario"] },
+  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades"] },
 ];
 
 function normalize(text: string) {
@@ -31,9 +29,7 @@ export async function POST(request: Request) {
     const lastUserMessage = body.message?.trim();
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (!lastUserMessage || !apiKey) {
-      return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
-    }
+    if (!lastUserMessage || !apiKey) return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
 
     const contents = (body.messages || [])
       .filter(msg => msg && msg.content)
@@ -44,15 +40,14 @@ export async function POST(request: Request) {
 
     contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
 
-    // CAMBIO CLAVE: Usamos la versión /v1/ en lugar de /v1beta/
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // CAMBIO A GEMINI-PRO (El modelo más compatible y estable)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: contents.slice(-11),
-        // En v1 estable, a veces el systemInstruction se pasa dentro de contents o se omite si da error
+        contents: contents.slice(-7), // Reducimos historial por si acaso
         generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
       })
     });
@@ -60,9 +55,8 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-      // Si falla la v1, intentamos una ruta desesperada que siempre funciona
-      console.error("Error en v1, intentando fallback:", data);
-      throw new Error(data.error?.message || "Error Google AI");
+      console.error("Fallo con Gemini Pro:", data);
+      throw new Error(data.error?.message || "Error en el servidor de Google");
     }
 
     const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
@@ -73,7 +67,7 @@ export async function POST(request: Request) {
     });
 
   } catch (error: any) {
-    console.error("--- 🚨 FALLO EN EL CHAT ---", error);
+    console.error("--- 🚨 FALLO CRÍTICO ---", error);
     return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
   }
 }
