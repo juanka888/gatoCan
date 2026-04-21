@@ -1,73 +1,44 @@
 import { NextResponse } from "next/server";
 
-type Role = "user" | "assistant";
-type ChatMessage = { role: Role; content: string; };
-type ChatPayload = { message?: string; messages?: ChatMessage[]; };
-
-const SYSTEM_PROMPT = "Eres el asistente de GatoCan. Eres un gato sabio y travieso. Responde corto y con emojis 🐾.";
-
-const SECTION_SUGGESTIONS = [
-  { section: "Donaciones", href: "/donaciones", keywords: ["donar", "donacion", "bizum", "paypal"] },
-  { section: "Foro", href: "/foro", keywords: ["foro", "pregunta", "comunidad"] },
-  { section: "Noticias", href: "/noticias", keywords: ["noticias", "novedades"] },
-];
-
-function normalize(text: string) {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-}
-
-function extractSuggestions(text: string) {
-  const normalized = normalize(text);
-  return SECTION_SUGGESTIONS.filter((item) =>
-    item.keywords.some((keyword) => normalized.includes(normalize(keyword)))
-  ).map(({ section, href }) => ({ section, href }));
-}
-
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as ChatPayload;
+    const body = await request.json();
     const lastUserMessage = body.message?.trim();
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Limpiamos la API KEY por si acaso tiene espacios invisibles
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
 
-    if (!lastUserMessage || !apiKey) return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+    if (!lastUserMessage || !apiKey) {
+      return NextResponse.json({ error: "Faltan datos clave" }, { status: 400 });
+    }
 
-    const contents = (body.messages || [])
-      .filter(msg => msg && msg.content)
-      .map(msg => ({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }]
-      }));
-
-    contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
-
-    // CAMBIO A GEMINI-PRO (El modelo más compatible y estable)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // URL TOTALMENTE GLOBAL Y ESTABLE
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: contents.slice(-7), // Reducimos historial por si acaso
-        generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+        contents: [{ role: "user", parts: [{ text: lastUserMessage }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Fallo con Gemini Pro:", data);
-      throw new Error(data.error?.message || "Error en el servidor de Google");
+      console.error("DETALLE DEL ERROR:", JSON.stringify(data));
+      return NextResponse.json({ error: data.error?.message || "Error en Google" }, { status: response.status });
     }
 
-    const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
+    const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! 🐾";
 
     return NextResponse.json({
       reply: textReply.trim(),
-      suggestions: extractSuggestions(lastUserMessage),
+      suggestions: [] // Simplificado para probar si conecta
     });
 
   } catch (error: any) {
-    console.error("--- 🚨 FALLO CRÍTICO ---", error);
-    return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
+    console.error("--- 🚨 FALLO TOTAL ---", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
