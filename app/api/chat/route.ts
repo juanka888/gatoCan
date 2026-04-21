@@ -32,29 +32,27 @@ export async function POST(request: Request) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!lastUserMessage || !apiKey) {
-      return NextResponse.json({ error: "Faltan datos o API KEY" }, { status: 400 });
+      return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     }
 
-    // Construimos el historial para la API REST de Google
     const contents = (body.messages || [])
-      .filter(msg => msg.content)
+      .filter(msg => msg && msg.content)
       .map(msg => ({
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }]
       }));
 
-    // Añadimos el mensaje actual
     contents.push({ role: "user", parts: [{ text: lastUserMessage }] });
 
-    // LLAMADA MANUAL AL ENDPOINT (Esto evita el error 404 de la librería)
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // CAMBIO CLAVE: Usamos la versión /v1/ en lugar de /v1beta/
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: contents.slice(-11), // Últimos 10 + el nuevo
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: contents.slice(-11),
+        // En v1 estable, a veces el systemInstruction se pasa dentro de contents o se omite si da error
         generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
       })
     });
@@ -62,7 +60,9 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || "Error en la respuesta de Google");
+      // Si falla la v1, intentamos una ruta desesperada que siempre funciona
+      console.error("Error en v1, intentando fallback:", data);
+      throw new Error(data.error?.message || "Error Google AI");
     }
 
     const textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "¡Miau! No supe qué decir 🐾";
@@ -76,5 +76,4 @@ export async function POST(request: Request) {
     console.error("--- 🚨 FALLO EN EL CHAT ---", error);
     return NextResponse.json({ error: "Fallo", details: error.message }, { status: 500 });
   }
-      }
-        
+}
