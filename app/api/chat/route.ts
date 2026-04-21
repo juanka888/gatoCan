@@ -1,58 +1,41 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+// Forzamos el runtime de Nodejs para que la librería de Google no dé problemas en Vercel
 export const runtime = "nodejs";
 
-const SYSTEM_INSTRUCTION =
-  "Eres el asistente de GatoCan. Eres un gato sabio y amable. Responde siempre muy corto y usa muchos emojis de gatos 🐾.";
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-const MODEL_FALLBACK_CHAIN = ["gemini-3.1-flash", "gemini-1.5-flash"];
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    const { message } = await req.json();
 
-    if (!apiKey) {
-      return NextResponse.json({ reply: "¡Miau! No detecto la llave. 🐾" });
+    // Según tu lista técnica, estos son los modelos que TIENES activos:
+    // Probamos con el 2.5 Flash que es el más rápido y estable según tu JSON
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      systemInstruction: "Eres el asistente de GatoCan. Eres un gato sabio. Responde corto y usa emojis 🐾.",
+    });
+
+    const result = await model.generateContent(message || "Hola");
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ reply: text });
+
+  } catch (error: any) {
+    console.error("Error GatoCan Detallado:", error);
+
+    // Si por lo que sea falla el 2.5, intentamos el 1.5 que es el que tenías antes
+    try {
+        const backupModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const backupResult = await backupModel.generateContent(message);
+        return NextResponse.json({ reply: backupResult.response.text() });
+    } catch (backupError) {
+        return NextResponse.json(
+            { reply: "¡Miau! Mis circuitos se han enredado con un ovillo. Inténtalo de nuevo. 🧶🐾" },
+            { status: 500 }
+        );
     }
-
-    const body = await request.json();
-    const message =
-      typeof body?.message === "string" && body.message.trim().length > 0
-        ? body.message.trim()
-        : "Hola";
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const modelErrors: string[] = [];
-
-    for (const modelName of MODEL_FALLBACK_CHAIN) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: SYSTEM_INSTRUCTION
-        });
-
-        const result = await model.generateContent(message);
-        const textReply = result.response.text()?.trim() || "¡Miau! 🐾";
-
-        return NextResponse.json({ reply: textReply });
-      } catch (modelError) {
-        const reason =
-          modelError instanceof Error ? modelError.message : String(modelError);
-        modelErrors.push(`${modelName}: ${reason}`);
-      }
-    }
-
-    console.error("Gemini fallback exhausted:", modelErrors.join(" | "));
-    return NextResponse.json(
-      { reply: "¡Miau! Ahora no pude responder. Intenta en un ratito 🐾" },
-      { status: 502 }
-    );
-  } catch (error) {
-    console.error("Chat API error:", error);
-    return NextResponse.json(
-      { reply: "Fallo de conexión en el servidor. 🧶" },
-      { status: 500 }
-    );
   }
 }
