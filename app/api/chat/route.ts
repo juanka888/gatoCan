@@ -4,38 +4,59 @@ import { NextResponse } from "next/server";
 // Forzamos el runtime de Nodejs para que la librería de Google no dé problemas en Vercel
 export const runtime = "nodejs";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const apiKey = process.env.GEMINI_API_KEY || "";
+const genAI = new GoogleGenerativeAI(apiKey);
+const SYSTEM_INSTRUCTION = `Eres el asistente experto de GatoCan. Tienes conocimientos sobre la Ley de Bienestar Animal 7/2023 de España, protocolos de adopción, colonias felinas y salud animal básica.
+REGLAS:
+- Responde siempre como un gato sabio y protector 🐾.
+- Sé muy breve y conciso (ideal para móviles).
+- Si el usuario pregunta por salud o leyes, da la base informativa pero aclara que debe consultar a un veterinario o profesional legal.
+- Recomienda visitar /donaciones, /foro o /noticias si el contexto lo permite.`;
+
+type IncomingMessage = {
+  role: "assistant" | "user";
+  content: string;
+};
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    if (!apiKey) {
+      return NextResponse.json({ error: "Falta configurar GEMINI_API_KEY en el servidor." }, { status: 500 });
+    }
 
-    // Según tu lista técnica, estos son los modelos que TIENES activos:
-    // Probamos con el 2.5 Flash que es el más rápido y estable según tu JSON
-    const model = genAI.getGenerativeModel({ 
+    const payload = await req.json();
+    const message = typeof payload?.message === "string" ? payload.message.trim() : "";
+    const incomingMessages: IncomingMessage[] = Array.isArray(payload?.messages) ? payload.messages.slice(-8) : [];
+
+    const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: "Eres el asistente de GatoCan. Eres un gato sabio. Responde corto y usa emojis 🐾.",
+      systemInstruction: SYSTEM_INSTRUCTION,
     });
 
-    const result = await model.generateContent(message || "Hola");
+    const mappedHistory = incomingMessages
+      .filter((msg) => msg && (msg.role === "assistant" || msg.role === "user") && typeof msg.content === "string")
+      .map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content.trim() }],
+      }))
+      .filter((msg) => msg.parts[0].text.length > 0);
+
+    const lastFromClient = mappedHistory[mappedHistory.length - 1];
+    const history = lastFromClient?.role === "user" ? mappedHistory.slice(0, -1) : mappedHistory;
+    const prompt =
+      message || (lastFromClient?.role === "user" ? lastFromClient.parts[0].text : "") || "Hola";
+
+    const chat = model.startChat({ history });
+    const result = await chat.sendMessage(prompt);
     const response = await result.response;
     const text = response.text();
 
     return NextResponse.json({ reply: text });
-
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error GatoCan Detallado:", error);
-
-    // Si por lo que sea falla el 2.5, intentamos el 1.5 que es el que tenías antes
-    try {
-        const backupModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const backupResult = await backupModel.generateContent(message);
-        return NextResponse.json({ reply: backupResult.response.text() });
-    } catch (backupError) {
-        return NextResponse.json(
-            { reply: "¡Miau! Mis circuitos se han enredado con un ovillo. Inténtalo de nuevo. 🧶🐾" },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json(
+      { error: "¡Miau! Mis circuitos se han enredado con un ovillo. Inténtalo de nuevo. 🧶🐾" },
+      { status: 500 },
+    );
   }
 }
