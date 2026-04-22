@@ -68,6 +68,7 @@ export default function GatoAsistente() {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const shouldKeepListeningRef = useRef(false);
+  const lastProcessedResultIndexRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = new Audio("/sounds/miau.mp3");
@@ -82,19 +83,25 @@ export default function GatoAsistente() {
       recognition.lang = "es-ES";
 
       recognition.onresult = (event) => {
-        let finalTranscript = "";
+        const startIndex = Math.max(event.resultIndex, lastProcessedResultIndexRef.current);
+        const finalChunks: string[] = [];
 
-        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        for (let i = startIndex; i < event.results.length; i += 1) {
           const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0]?.transcript ?? "";
+          lastProcessedResultIndexRef.current = i + 1;
+
+          if (result?.isFinal) {
+            const chunk = (result[0]?.transcript ?? "").trim();
+            if (chunk) {
+              finalChunks.push(chunk);
+            }
           }
         }
 
-        const cleanTranscript = finalTranscript.trim();
-        if (!cleanTranscript) return;
-
-        setInputValue((prev) => `${prev} ${cleanTranscript}`.trim());
+        const finalTranscript = finalChunks.join(" ").trim();
+        if (finalTranscript) {
+          setInputValue((prev) => (prev + " " + finalTranscript).trim());
+        }
       };
 
       recognition.onerror = () => {
@@ -178,18 +185,21 @@ export default function GatoAsistente() {
     }
 
     shouldKeepListeningRef.current = true;
+    lastProcessedResultIndexRef.current = 0;
     recognitionRef.current.start();
     setIsListening(true);
   };
 
   const askAI = async (text: string, nextHistory: ChatMessage[]) => {
+    const recentMessages = nextHistory.slice(-8);
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          messages: nextHistory.map((msg) => ({ role: msg.role, content: msg.text })),
+          messages: recentMessages.map((msg) => ({ role: msg.role, content: msg.text })),
         }),
       });
 
