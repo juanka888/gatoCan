@@ -26,7 +26,7 @@ export default function HeaderPrincipal() {
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "16px" }}>
           <Link href="/donaciones" style={{ padding: "10px 22px", background: "#f39c12", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>❤️ Donar</Link>
           <a href="#ayuda" style={{ padding: "10px 22px", border: "2px solid #fff", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>🤝 Voluntariado</a>
-          <a href="https://www.teaming.net/proyectogatonaturanrural" target="_blank" style={{ padding: "10px 22px", background: "#27ae60", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>🪙 Teaming 1€</a>
+          <a href="https://www.teaming.net/asociaciongatocannaturarural" target="_blank" style={{ padding: "10px 22px", background: "#27ae60", color: "#fff", borderRadius: "25px", textDecoration: "none", fontWeight: "bold", fontSize: "0.85rem" }}>🪙 Teaming 1€</a>
         </div>
       </section>
     </header>
