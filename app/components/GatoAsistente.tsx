@@ -7,7 +7,9 @@ type SpeechRecognitionInstance = {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onresult:
+    | ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean } & ArrayLike<{ transcript: string }> > }) => void)
+    | null;
   onerror: ((event: { error?: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -80,10 +82,19 @@ export default function GatoAsistente() {
       recognition.lang = "es-ES";
 
       recognition.onresult = (event) => {
-        const latestResult = event.results[event.results.length - 1];
-        const transcript = latestResult?.[0]?.transcript || "";
-        if (!transcript) return;
-        setInputValue((prev) => `${prev}${transcript}`);
+        let finalTranscript = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0]?.transcript ?? "";
+          }
+        }
+
+        const cleanTranscript = finalTranscript.trim();
+        if (!cleanTranscript) return;
+
+        setInputValue((prev) => `${prev} ${cleanTranscript}`.trim());
       };
 
       recognition.onerror = () => {
