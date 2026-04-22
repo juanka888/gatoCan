@@ -3,6 +3,26 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+type SpeechRecognitionInstance = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 type CatMood = "quieto" | "reposo" | "hablando";
 
 type ChatMessage = {
@@ -36,18 +56,56 @@ export default function GatoAsistente() {
   const [inputValue, setInputValue] = useState("");
   const [isHappy, setIsHappy] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const [dynamicSuggestions, setDynamicSuggestions] = useState<SectionSuggestion[]>([]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const happyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const shouldKeepListeningRef = useRef(false);
 
   useEffect(() => {
     audioRef.current = new Audio("/sounds/miau.mp3");
     audioRef.current.preload = "auto";
 
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognitionClass) {
+      const recognition = new SpeechRecognitionClass();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "es-ES";
+
+      recognition.onresult = (event) => {
+        const latestResult = event.results[event.results.length - 1];
+        const transcript = latestResult?.[0]?.transcript || "";
+        if (!transcript) return;
+        setInputValue((prev) => `${prev}${transcript}`);
+      };
+
+      recognition.onerror = () => {
+        shouldKeepListeningRef.current = false;
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        if (shouldKeepListeningRef.current) {
+          recognition.start();
+          return;
+        }
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      setIsSpeechSupported(true);
+    }
+
     return () => {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current?.stop();
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
     };
@@ -90,9 +148,27 @@ export default function GatoAsistente() {
       setMessages((prev) => (prev.length ? prev : [{ role: "assistant", text: WELCOME_MESSAGE }]));
       playMiau();
     } else {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current?.stop();
+      setIsListening(false);
       setIsOpen(false);
       setCatMood("quieto");
     }
+  };
+
+  const handleMicToggle = () => {
+    if (!recognitionRef.current || isTyping) return;
+
+    if (isListening) {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    shouldKeepListeningRef.current = true;
+    recognitionRef.current.start();
+    setIsListening(true);
   };
 
   const askAI = async (text: string, nextHistory: ChatMessage[]) => {
@@ -294,6 +370,24 @@ export default function GatoAsistente() {
               }}
             />
             <button
+              type="button"
+              onClick={handleMicToggle}
+              disabled={!isSpeechSupported || isTyping}
+              aria-label={isListening ? "Detener reconocimiento de voz" : "Iniciar reconocimiento de voz"}
+              title={isSpeechSupported ? "Micrófono" : "Reconocimiento de voz no disponible"}
+              className={isListening ? "animate-pulse" : ""}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "10px",
+                border: "none",
+                backgroundColor: !isSpeechSupported || isTyping ? "#f3f3f3" : isListening ? "#ff4d4f" : "#eee",
+                color: isListening ? "#fff" : "#333",
+                cursor: !isSpeechSupported || isTyping ? "not-allowed" : "pointer",
+              }}
+            >
+              {isListening ? "⏹️" : "🎤"}
+            </button>
+            <button
               type="submit"
               disabled={isTyping}
               style={{
@@ -394,4 +488,4 @@ export default function GatoAsistente() {
       `}</style>
     </div>
   );
-            }
+}
