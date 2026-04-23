@@ -460,7 +460,6 @@ export default function GatoAsistente() {
           </form>
         </div>
       )}
-
       <button
         onClick={handleToggle}
         style={{
@@ -468,9 +467,12 @@ export default function GatoAsistente() {
           width: "80px",
           height: "80px",
           borderRadius: "50%",
-          backgroundColor: "white",
-          border: "4px solid #f9f9f9",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+          // Verde suave con transparencia (0.6) y efecto cristal
+          backgroundColor: "rgba(232, 245, 233, 0.6)", 
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)", // Soporte para Safari
+          border: "2px solid rgba(255, 255, 255, 0.3)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           cursor: "pointer",
           overflow: "hidden",
           display: "flex",
