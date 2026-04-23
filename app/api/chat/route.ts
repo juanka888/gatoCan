@@ -12,16 +12,6 @@ const SYSTEM_INSTRUCTION = `Eres el asistente de GatoCan. Experto en protección
 - Recuerda lo que el usuario te ha dicho antes en esta misma sesión.
 - Habla con tono de gato sabio, protector y cercano.`;
 
-type IncomingMessage = {
-  role: "assistant" | "user";
-  content: string;
-};
-
-type GeminiHistoryMessage = {
-  role: "user" | "model";
-  parts: [{ text: string }];
-};
-
 export async function POST(req: Request) {
   try {
     if (!apiKey) {
@@ -30,7 +20,7 @@ export async function POST(req: Request) {
 
     const payload = await req.json();
     const userMessage = typeof payload?.message === "string" ? payload.message.trim() : "";
-    const incomingMessages: IncomingMessage[] = Array.isArray(payload?.messages) ? payload.messages.slice(-12) : [];
+    const incomingMessages = Array.isArray(payload?.messages) ? payload.messages.slice(-12) : [];
 
     if (!userMessage) {
       return NextResponse.json({ error: "El mensaje del usuario está vacío." }, { status: 400 });
@@ -41,20 +31,12 @@ export async function POST(req: Request) {
       systemInstruction: SYSTEM_INSTRUCTION,
     });
 
-    const mappedHistory: GeminiHistoryMessage[] = incomingMessages
-      .filter((msg) => msg && (msg.role === "assistant" || msg.role === "user") && typeof msg.content === "string")
-      .map((msg): GeminiHistoryMessage => ({
+    const history = incomingMessages
+      .map((msg: any) => ({
         role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content.trim() }],
+        parts: [{ text: msg.content || msg.text || "" }],
       }))
       .filter((msg) => msg.parts[0].text.length > 0);
-
-    const history = mappedHistory.filter((msg, index) => {
-      const isLast = index === mappedHistory.length - 1;
-      const isDuplicatedCurrentPrompt =
-        isLast && msg.role === "user" && msg.parts[0].text.toLowerCase() === userMessage.toLowerCase();
-      return !isDuplicatedCurrentPrompt;
-    });
 
     const chat = model.startChat({ history });
     const result = await chat.sendMessage(userMessage);
