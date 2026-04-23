@@ -99,6 +99,7 @@ export default function GatoAsistente() {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const shouldKeepListeningRef = useRef(false);
+  const lastTranscriptRef = useRef("");
 
   useEffect(() => {
     audioRef.current = new Audio("/sounds/miau.mp3");
@@ -128,6 +129,11 @@ export default function GatoAsistente() {
 
         const finalTranscript = finalChunks.join(" ").replace(/\s+/g, " ").trim();
         if (!finalTranscript) return;
+
+        if (lastTranscriptRef.current.toLowerCase() === finalTranscript.toLowerCase()) {
+          return;
+        }
+        lastTranscriptRef.current = finalTranscript;
 
         setInputValue((prev) => {
           return mergeWithoutDuplicateSuffix(prev, finalTranscript);
@@ -264,6 +270,7 @@ export default function GatoAsistente() {
 
     setMessages(nextHistory);
     setInputValue("");
+    lastTranscriptRef.current = "";
     setIsTyping(true);
     setTalkingState();
 
