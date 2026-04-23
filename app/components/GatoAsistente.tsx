@@ -51,6 +51,37 @@ const STATIC_SHORTCUTS: SectionSuggestion[] = [
   { section: "Noticias", href: "/noticias" },
 ];
 
+const mergeWithoutDuplicateSuffix = (currentText: string, newText: string) => {
+  const normalizedCurrent = currentText.replace(/\s+/g, " ").trim();
+  const normalizedNew = newText.replace(/\s+/g, " ").trim();
+
+  if (!normalizedCurrent) return normalizedNew;
+  if (!normalizedNew) return normalizedCurrent;
+  if (normalizedCurrent === normalizedNew || normalizedCurrent.endsWith(normalizedNew)) return normalizedCurrent;
+
+  const currentWords = normalizedCurrent.toLowerCase().split(" ");
+  const newWords = normalizedNew.split(" ");
+  const loweredNewWords = newWords.map((word) => word.toLowerCase());
+
+  let overlapSize = 0;
+  const maxOverlap = Math.min(currentWords.length, loweredNewWords.length);
+
+  for (let size = maxOverlap; size > 0; size -= 1) {
+    const currentSuffix = currentWords.slice(-size).join(" ");
+    const newPrefix = loweredNewWords.slice(0, size).join(" ");
+
+    if (currentSuffix === newPrefix) {
+      overlapSize = size;
+      break;
+    }
+  }
+
+  const uniqueWords = newWords.slice(overlapSize);
+  if (uniqueWords.length === 0) return normalizedCurrent;
+
+  return `${normalizedCurrent} ${uniqueWords.join(" ")}`.replace(/\s+/g, " ").trim();
+};
+
 export default function GatoAsistente() {
   const [isOpen, setIsOpen] = useState(false);
   const [catMood, setCatMood] = useState<CatMood>("quieto");
@@ -99,13 +130,7 @@ export default function GatoAsistente() {
         if (!finalTranscript) return;
 
         setInputValue((prev) => {
-          const normalizedPrev = prev.replace(/\s+/g, " ").trim();
-
-          if (!normalizedPrev) return finalTranscript;
-          if (normalizedPrev === finalTranscript) return normalizedPrev;
-          if (normalizedPrev.endsWith(finalTranscript)) return normalizedPrev;
-
-          return `${normalizedPrev} ${finalTranscript}`.replace(/\s+/g, " ").trim();
+          return mergeWithoutDuplicateSuffix(prev, finalTranscript);
         });
       };
 
