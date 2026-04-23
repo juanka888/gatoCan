@@ -6,16 +6,20 @@ export const runtime = "nodejs";
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
-const SYSTEM_INSTRUCTION = `Eres el asistente experto de GatoCan. Tienes conocimientos sobre la Ley de Bienestar Animal 7/2023 de España, protocolos de adopción, colonias felinas y salud animal básica.
-REGLAS:
-- Responde siempre como un gato sabio y protector 🐾.
-- Sé muy breve y conciso (ideal para móviles).
-- Si el usuario pregunta por salud o leyes, da la base informativa pero aclara que debe consultar a un veterinario o profesional legal.
-- Recomienda visitar /donaciones, /foro o /noticias si el contexto lo permite.`;
+const SYSTEM_INSTRUCTION = `Eres el asistente de GatoCan. Experto en protección animal y leyes de bienestar (Ley 7/2023 de España).
+- Responde siempre corto, amable y con emojis 🐾.
+- Si te preguntan por salud o leyes, da la base pero sugiere consultar a un veterinario o profesional.
+- Recuerda lo que el usuario te ha dicho antes en esta misma sesión.
+- Habla con tono de gato sabio, protector y cercano.`;
 
 type IncomingMessage = {
   role: "assistant" | "user";
   content: string;
+};
+
+type GeminiHistoryMessage = {
+  role: "user" | "model";
+  parts: [{ text: string }];
 };
 
 export async function POST(req: Request) {
@@ -25,29 +29,35 @@ export async function POST(req: Request) {
     }
 
     const payload = await req.json();
-    const message = typeof payload?.message === "string" ? payload.message.trim() : "";
-    const incomingMessages: IncomingMessage[] = Array.isArray(payload?.messages) ? payload.messages.slice(-8) : [];
+    const userMessage = typeof payload?.message === "string" ? payload.message.trim() : "";
+    const incomingMessages: IncomingMessage[] = Array.isArray(payload?.messages) ? payload.messages.slice(-12) : [];
+
+    if (!userMessage) {
+      return NextResponse.json({ error: "El mensaje del usuario está vacío." }, { status: 400 });
+    }
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION,
     });
 
-    const mappedHistory = incomingMessages
+    const mappedHistory: GeminiHistoryMessage[] = incomingMessages
       .filter((msg) => msg && (msg.role === "assistant" || msg.role === "user") && typeof msg.content === "string")
-      .map((msg) => ({
+      .map((msg): GeminiHistoryMessage => ({
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content.trim() }],
       }))
       .filter((msg) => msg.parts[0].text.length > 0);
 
-    const lastFromClient = mappedHistory[mappedHistory.length - 1];
-    const history = lastFromClient?.role === "user" ? mappedHistory.slice(0, -1) : mappedHistory;
-    const prompt =
-      message || (lastFromClient?.role === "user" ? lastFromClient.parts[0].text : "") || "Hola";
+    const history = mappedHistory.filter((msg, index) => {
+      const isLast = index === mappedHistory.length - 1;
+      const isDuplicatedCurrentPrompt =
+        isLast && msg.role === "user" && msg.parts[0].text.toLowerCase() === userMessage.toLowerCase();
+      return !isDuplicatedCurrentPrompt;
+    });
 
     const chat = model.startChat({ history });
-    const result = await chat.sendMessage(prompt);
+    const result = await chat.sendMessage(userMessage);
     const response = await result.response;
     const text = response.text();
 
