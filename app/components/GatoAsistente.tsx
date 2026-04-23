@@ -68,7 +68,6 @@ export default function GatoAsistente() {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const shouldKeepListeningRef = useRef(false);
-  const lastProcessedResultIndexRef = useRef(0);
 
   useEffect(() => {
     audioRef.current = new Audio("/sounds/miau.mp3");
@@ -83,12 +82,10 @@ export default function GatoAsistente() {
       recognition.lang = "es-ES";
 
       recognition.onresult = (event) => {
-        const startIndex = Math.max(event.resultIndex, lastProcessedResultIndexRef.current);
         const finalChunks: string[] = [];
 
-        for (let i = startIndex; i < event.results.length; i += 1) {
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
           const result = event.results[i];
-          lastProcessedResultIndexRef.current = i + 1;
 
           if (result?.isFinal) {
             const chunk = (result[0]?.transcript ?? "").trim();
@@ -98,10 +95,18 @@ export default function GatoAsistente() {
           }
         }
 
-        const finalTranscript = finalChunks.join(" ").trim();
-        if (finalTranscript) {
-          setInputValue((prev) => (prev + " " + finalTranscript).trim());
-        }
+        const finalTranscript = finalChunks.join(" ").replace(/\s+/g, " ").trim();
+        if (!finalTranscript) return;
+
+        setInputValue((prev) => {
+          const normalizedPrev = prev.replace(/\s+/g, " ").trim();
+
+          if (!normalizedPrev) return finalTranscript;
+          if (normalizedPrev === finalTranscript) return normalizedPrev;
+          if (normalizedPrev.endsWith(finalTranscript)) return normalizedPrev;
+
+          return `${normalizedPrev} ${finalTranscript}`.replace(/\s+/g, " ").trim();
+        });
       };
 
       recognition.onerror = () => {
@@ -185,7 +190,6 @@ export default function GatoAsistente() {
     }
 
     shouldKeepListeningRef.current = true;
-    lastProcessedResultIndexRef.current = 0;
     recognitionRef.current.start();
     setIsListening(true);
   };
