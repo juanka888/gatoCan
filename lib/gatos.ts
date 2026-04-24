@@ -34,7 +34,9 @@ export const gatosColonia: GatoColonia[] = [
   { id: 5, nombre: "Zeus", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Resfriado", tratamiento: "Antibiótico", edad: "5 años", desaparicion: "No", caracter: "Líder de grupo" } },
   { id: 6, nombre: "Oreo", colonia: "Mirador", imagen: "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "1 año", desaparicion: "No", caracter: "Muy juguetón" } },
   { id: 7, nombre: "Misu", colonia: "Río Norte", imagen: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Ninguna", tratamiento: "Ninguno", edad: "2 años", desaparicion: "No", caracter: "Esquivo" } },
-  { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años", desaparicion: "No", caracter: "Cariñoso" } }
+  { id: 8, nombre: "Bigotes", colonia: "Mirador", imagen: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?q=80&w=500&auto=format&fit=crop", detalles: { esterilizacion: "Pendiente ⏳", enfermedad: "Asma", tratamiento: "Inhalador", edad: "5 años", desaparicion: "No", caracter: "Cariñoso" } },
+  { id: 9, nombre: "Nube", colonia: "Río Norte", imagen: "https://images.pexels.com/photos/165775/pexels-photo-165775.jpeg", detalles: { esterilizacion: "Hecha ✅", enfermedad: "Gingivitis leve", tratamiento: "Antiinflamatorio", edad: "4 años", desaparicion: "No", caracter: "Miedoso pero dulce" } },
+
 ];
 
 // --- 3. DATOS DE GALERÍA ---
