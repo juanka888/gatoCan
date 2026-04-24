@@ -47,7 +47,8 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
   // --- ESTILOS CORREGIDOS ---
   const sectionStyle: React.CSSProperties = {
     textAlign: "center",
-    padding: isMobile ? "20px 10px" : "20px 0",
+    // Reducimos el padding vertical para quitar "aire" arriba y abajo
+    padding: isMobile ? "10px 10px" : "15px 0", 
     boxSizing: "border-box",
     width: "100%",
   };
@@ -56,9 +57,10 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: isMobile ? "10px" : "20px",
+    gap: isMobile ? "8px" : "20px",
     width: "100%",
-    maxWidth: "1000px",
+    // Aumentamos el ancho máximo para que las tarjetas respiren
+    maxWidth: isMobile ? "100%" : "1100px", 
     margin: "0 auto",
   };
 
@@ -67,24 +69,29 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
     gridTemplateColumns: `repeat(${numGatosVisible}, 1fr)`,
     gap: "15px",
     perspective: "1000px",
-    flex: "1", // Permite que la tarjeta crezca y ocupe el espacio central
+    flex: "1",
     minWidth: 0,
+    // En móvil, forzamos que no sea excesivamente ancha pero sí más que antes
+    width: isMobile ? "90%" : "auto", 
+    margin: "0 auto"
   };
 
   const flechaStyle: React.CSSProperties = {
-    background: "#f1f5f9",
+    background: "rgba(255, 255, 255, 0.8)",
     border: "1px solid #e2e8f0",
-    borderRadius: "50%",
-    width: "40px",
-    height: "40px",
+    borderRadius: "8px", // Flechas más modernas, menos circulares
+    width: "36px",
+    height: "50px", // Más altas para que sea fácil darles con el pulgar
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "1.2rem",
+    fontSize: "1rem",
     flexShrink: 0,
     transition: "all 0.2s",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    backdropFilter: "blur(4px)",
+    zIndex: 10
   };
 
   return (
@@ -97,7 +104,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
           disabled={indiceInicio === 0} 
           style={{ ...flechaStyle, opacity: indiceInicio === 0 ? 0.3 : 1 }}
         >
-          ⬅️
+          {isMobile ? "❮" : "⬅️"}
         </button>
 
         <div style={gridMobileSafeStyle}>
@@ -106,13 +113,15 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
               key={gato.id} 
               className={`flip-card ${flippedId === gato.id ? "is-flipped" : ""}`}
               onClick={() => handleCardClick(gato.id)}
-              style={{ height: "420px", cursor: "pointer", width: "100%" }}
+              // Reducimos la altura de 420px a 380px para que sea más cuadrada/rectangular
+              style={{ height: "380px", cursor: "pointer", width: "100%" }}
             >
               <div className="flip-card-inner">
                 
                 {/* CARA FRONTAL */}
                 <div className="flip-face flip-front" style={faceContentStyle}>
-                  <img src={gato.imagen} alt={gato.nombre} style={imgStyle} />
+                  {/* Reducimos un poco la imagen para dar espacio al texto en una carta más baja */}
+                  <img src={gato.imagen} alt={gato.nombre} style={{...imgStyle, height: "180px"}} />
                   <div style={infoWrapperStyle}>
                     <strong style={nombreStyle}>{gato.nombre}</strong>
                     <small style={coloniaStyle}>{gato.colonia}</small>
@@ -143,7 +152,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
                         e.stopPropagation();
                         onPay(`Ayuda médica para ${gato.nombre}`, 10);
                       }} 
-                      style={{ ...botonStyle, backgroundColor: "#2ed573", borderRadius: "0 0 12px 12px" }}
+                      style={{ ...botonStyle, backgroundColor: "#2ed573" }}
                     >
                       ❤️ Ayudar
                     </button>
@@ -160,7 +169,7 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
           disabled={indiceInicio + numGatosVisible >= gatosColonia.length} 
           style={{ ...flechaStyle, opacity: indiceInicio + numGatosVisible >= gatosColonia.length ? 0.3 : 1 }}
         >
-          ➡️
+          {isMobile ? "❯" : "➡️"}
         </button>
       </div>
     </div>
@@ -168,13 +177,74 @@ export default function GatoCards({ onPay }: GatoCardsProps) {
 }
 
 // --- ESTILOS ESTÁTICOS ---
-const tituloSeccion: React.CSSProperties = { fontSize: "1.6rem", color: "#2c3e50", marginBottom: "20px", fontWeight: "800" };
-const faceContentStyle: React.CSSProperties = { display: "flex", flexDirection: "column", height: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid #eee", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" };
-const imgStyle: React.CSSProperties = { width: "100%", height: "200px", objectFit: "cover", flexShrink: 0 };
-const infoWrapperStyle: React.CSSProperties = { flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "15px" };
-const nombreStyle: React.CSSProperties = { fontSize: "1.2rem", fontWeight: "bold", color: "#333" };
-const coloniaStyle: React.CSSProperties = { color: "#666", fontSize: "0.9rem" };
-const botonStyle: React.CSSProperties = { background: "#ff4757", color: "white", border: "none", padding: "14px", fontWeight: "bold", cursor: "pointer", width: "100%", marginTop: "auto" };
-const backTitle: React.CSSProperties = { fontSize: "1.1rem", margin: "0 0 12px 0", borderBottom: "1px solid #eee", paddingBottom: "8px", fontWeight: "bold" };
-const listStyle: React.CSSProperties = { textAlign: "left", fontSize: "0.85rem", padding: "0", listStyle: "none", lineHeight: "1.6", color: "#444", flexGrow: 1 };
-              
+const tituloSeccion: React.CSSProperties = { 
+  fontSize: "1.4rem", 
+  color: "#2c3e50", 
+  marginBottom: "10px", // Reducido de 20px a 10px para quitar aire
+  fontWeight: "800" 
+};
+
+const faceContentStyle: React.CSSProperties = { 
+  display: "flex", 
+  flexDirection: "column", 
+  height: "100%", 
+  backgroundColor: "white", 
+  borderRadius: "12px", 
+  border: "1px solid #eee", 
+  overflow: "hidden", 
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)" 
+};
+
+const imgStyle: React.CSSProperties = { 
+  width: "100%", 
+  objectFit: "cover", 
+  flexShrink: 0 
+};
+
+const infoWrapperStyle: React.CSSProperties = { 
+  flexGrow: 1, 
+  display: "flex", 
+  flexDirection: "column", 
+  justifyContent: "center", 
+  padding: "10px 15px" // Reducido ligeramente
+};
+
+const nombreStyle: React.CSSProperties = { 
+  fontSize: "1.1rem", 
+  fontWeight: "bold", 
+  color: "#333" 
+};
+
+const coloniaStyle: React.CSSProperties = { 
+  color: "#666", 
+  fontSize: "0.85rem" 
+};
+
+const botonStyle: React.CSSProperties = { 
+  background: "#ff4757", 
+  color: "white", 
+  border: "none", 
+  padding: "12px", // Reducido de 14px para ganar espacio
+  fontWeight: "bold", 
+  cursor: "pointer", 
+  width: "100%", 
+  marginTop: "auto" 
+};
+
+const backTitle: React.CSSProperties = { 
+  fontSize: "1rem", 
+  margin: "0 0 8px 0", 
+  borderBottom: "1px solid #eee", 
+  paddingBottom: "5px", 
+  fontWeight: "bold" 
+};
+
+const listStyle: React.CSSProperties = { 
+  textAlign: "left", 
+  fontSize: "0.8rem", 
+  padding: "0", 
+  listStyle: "none", 
+  lineHeight: "1.4", 
+  color: "#444", 
+  flexGrow: 1 
+};
