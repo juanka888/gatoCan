@@ -66,6 +66,9 @@ export default function PerfilPage() {
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [manualConcepto, setManualConcepto] = useState("");
+  const [manualCantidad, setManualCantidad] = useState("");
+  const [manualMessage, setManualMessage] = useState("");
 
   const avatar = useMemo(() => 
     session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || "G")}&background=0f4c5c&color=fff`,
@@ -135,6 +138,37 @@ export default function PerfilPage() {
     }
   };
 
+  const submitManualDonationValidation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualConcepto.trim() || !manualCantidad) {
+      setManualMessage("Completa el concepto y el importe para enviar la validación.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/manual-donations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          concepto: manualConcepto,
+          cantidad: Number(manualCantidad),
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        setManualMessage(body.error || "No se pudo enviar la validación manual.");
+        return;
+      }
+
+      setManualMessage("Solicitud enviada. Revisaremos el ingreso y actualizaremos tus puntos Karma.");
+      setManualConcepto("");
+      setManualCantidad("");
+    } catch (error) {
+      setManualMessage("No se pudo enviar la validación manual.");
+    }
+  };
+
   if (loading) return <main style={{ padding: "2rem", color: "white", textAlign: "center" }}>Cargando perfil...</main>;
 
   return (
@@ -165,6 +199,43 @@ export default function PerfilPage() {
           <div style={statBox}>Zarpa Karma: <br/><strong style={{color: '#FFD700'}}>{profile.karmaPoints}</strong></div>
           <div style={statBox}>Mejor Score: <br/><strong>{profile.runnerBestScore}</strong></div>
           <div style={statBox}>Distancia: <br/><strong>{profile.runnerBestDistanceM} m</strong></div>
+        </div>
+      </section>
+
+      <section style={{ ...glassCard, display: "grid", gap: 14 }}>
+        <h3 style={sectionTitle}>Mis Puntos Karma</h3>
+        <div style={manualBox}>
+          <h4 style={{ margin: 0, fontSize: "1.05rem" }}>Validar Donación Manual</h4>
+          <form onSubmit={submitManualDonationValidation} style={{ display: "grid", gap: 12, marginTop: 10 }}>
+            <div>
+              <label style={labelStyle}>Concepto utilizado en el pago</label>
+              <input
+                style={inputStyle}
+                value={manualConcepto}
+                onChange={(e) => setManualConcepto(e.target.value)}
+                placeholder="Ej: usuario@email.com o NombreUsuario"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Importe donado</label>
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                style={inputStyle}
+                value={manualCantidad}
+                onChange={(e) => setManualCantidad(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <button type="submit" style={{ ...btnPrimary, border: "none", width: "fit-content", background: "#2563eb" }}>
+              Enviar validación
+            </button>
+          </form>
+          <p style={manualNotice}>
+            Una vez enviado, revisaremos la cuenta y tus puntos se sumarán tras confirmar el ingreso
+          </p>
+          {manualMessage && <div style={successBanner}>{manualMessage}</div>}
         </div>
       </section>
 
@@ -266,7 +337,7 @@ const glassCard: CSSProperties = {
   backgroundColor: 'rgba(255, 255, 255, 0.12)',
   backdropFilter: 'blur(16px)',
   border: '1px solid rgba(255, 255, 255, 0.25)',
-  borderRadius: '24px',
+  borderRadius: '16px',
   padding: '1.5rem',
   color: '#FFFFFF',
   boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
@@ -304,6 +375,23 @@ const btnPrimary: CSSProperties = {
 
 const sectionTitle: CSSProperties = { marginTop: 0, borderBottom: "1px solid rgba(255,255,255,0.2)", paddingBottom: 10, fontSize: "1.2rem" };
 const labelStyle: CSSProperties = { fontWeight: "bold", fontSize: "0.85rem", display: "block", marginBottom: 5, opacity: 0.9 };
-const statBox: CSSProperties = { backgroundColor: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "12px", textAlign: "center" };
+const statBox: CSSProperties = { backgroundColor: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "16px", textAlign: "center", backdropFilter: "blur(16px)", boxShadow: "0 6px 20px rgba(0,0,0,0.15)" };
 const errorBanner: CSSProperties = { backgroundColor: 'rgba(220, 38, 38, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' };
 const successBanner: CSSProperties = { backgroundColor: 'rgba(22, 101, 52, 0.4)', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem', color: '#fff', fontWeight: 'bold' };
+const manualBox: CSSProperties = {
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.25)",
+  borderRadius: 16,
+  padding: "1rem",
+  backdropFilter: "blur(16px)",
+  boxShadow: "0 6px 24px rgba(15, 23, 42, 0.2)",
+};
+const manualNotice: CSSProperties = {
+  margin: "12px 0 0",
+  padding: "0.75rem 0.9rem",
+  borderRadius: 16,
+  border: "1px solid rgba(255,255,255,0.25)",
+  background: "rgba(30, 64, 175, 0.2)",
+  color: "#dbeafe",
+  fontWeight: 600,
+};

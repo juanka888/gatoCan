@@ -9,19 +9,21 @@ datasource db {
 }
 
 model User {
-  id                 String      @id @default(cuid())
-  email              String      @unique
+  id                 String           @id @default(cuid())
+  email              String           @unique
   password           String?
-  googleId           String?     @unique
+  googleId           String?          @unique
   name               String?
   image              String?
-  runnerBestScore    Int         @default(0)
-  runnerBestDistance Int         @default(0)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  runnerBestScore    Int              @default(0)
+  runnerBestDistance Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   profile            Profile?
   forumPosts         ForumPost[]
-  donations          Donation[]  // Relación con sus donaciones
+  forumComments      Comment[]
+  donations          Donation[] // Relación con sus donaciones
+  manualDonations    ManualDonation[]
 }
 
 model Profile {
@@ -50,29 +52,64 @@ model Profile {
 }
 
 model ForumPost {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   title     String
   content   String
+  category  String    @default("General")
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  createdAt DateTime  @default(now())
 
   @@index([createdAt])
+  @@index([category])
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  postId    Int
+  authorId  String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@index([postId, createdAt])
+  @@index([authorId])
 }
 
 // NUEVO MODELO PARA DONACIONES
 model Donation {
-  id          String   @id @default(cuid())
-  amount      Decimal  // Cantidad donada
-  animalName  String   // El gato al que ayudó (Zeus, Nube, etc.)
-  status      String   @default("succeeded") // Por si quieres trackear fallos
-  
+  id         String  @id @default(cuid())
+  amount     Decimal // Cantidad donada
+  animalName String // El gato al que ayudó (Zeus, Nube, etc.)
+  status     String  @default("succeeded") // Por si quieres trackear fallos
+
   // Relación Opcional: Si userId existe, es de usuario. Si no, es ANÓNIMA.
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  
-  createdAt   DateTime @default(now())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
+}
+
+enum ManualDonationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model ManualDonation {
+  id       String               @id @default(cuid())
+  userId   String
+  concepto String
+  cantidad Decimal
+  status   ManualDonationStatus @default(PENDING)
+  fecha    DateTime             @default(now())
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([fecha])
 }
