@@ -3,32 +3,17 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 
-/**
- * --- SECCIÓN DE DEFINICIÓN DE TIPOS ---
- * Mantenemos todas las interfaces de la Web Speech API de forma explícita
- * para asegurar la robustez del sistema de reconocimiento de voz.
- */
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  [key: number]: {
-    transcript: string;
-  };
-  length: number;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: {
-    [key: number]: SpeechRecognitionResult;
-    length: number;
-  };
-}
-
+// --- DEFINICIÓN DE TIPOS (ESTRICTAMENTE ORIGINALES) ---
 type SpeechRecognitionInstance = {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onresult:
+    | ((event: { 
+        resultIndex: number; 
+        results: ArrayLike<{ isFinal: boolean } & ArrayLike<{ transcript: string }> > 
+      }) => void)
+    | null;
   onerror: ((event: { error?: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -44,14 +29,7 @@ declare global {
   }
 }
 
-/**
- * --- ESTADOS DE ÁNIMO DEL GATO ---
- * quieto: Estado inicial.
- * reposo: Animación de respiración.
- * hablando: Animación de maullido.
- * dormido_quieto: El gato hecho un ovillo sin moverse.
- * dormido_mov: El gato moviéndose ligeramente mientras duerme.
- */
+// MEJORA: Añadimos estados de sueño manteniendo los originales
 type CatMood = "quieto" | "reposo" | "hablando" | "dormido_quieto" | "dormido_mov";
 
 type ChatMessage = {
@@ -64,7 +42,7 @@ type SectionSuggestion = {
   href: string;
 };
 
-// Mensajes y sugerencias predefinidas
+// --- CONSTANTES ---
 const WELCOME_MESSAGE = "¡Hola! Soy el asistente de GatoCan. ¿En qué puedo ayudarte, miau?";
 
 const QUICK_SUGGESTIONS = [
@@ -80,25 +58,17 @@ const STATIC_SHORTCUTS: SectionSuggestion[] = [
 ];
 
 /**
- * Función: mergeWithoutDuplicateSuffix
- * Lógica de comparación de palabras para evitar duplicados en el reconocimiento de voz.
- * Esta versión mantiene cada paso de validación y limpieza de espacios.
+ * Función original: mergeWithoutDuplicateSuffix
+ * Mantiene toda la lógica de comparación de palabras y sufijos
  */
-const mergeWithoutDuplicateSuffix = (currentText: string, newText: string): string => {
-  // Paso 1: Normalizar espacios y limpiar extremos
+const mergeWithoutDuplicateSuffix = (currentText: string, newText: string) => {
   const normalizedCurrent = currentText.replace(/\s+/g, " ").trim();
   const normalizedNew = newText.replace(/\s+/g, " ").trim();
 
-  // Paso 2: Validar si alguno de los textos está vacío
   if (!normalizedCurrent) return normalizedNew;
   if (!normalizedNew) return normalizedCurrent;
-  
-  // Paso 3: Comprobar si el texto nuevo ya está contenido al final
-  if (normalizedCurrent === normalizedNew || normalizedCurrent.endsWith(normalizedNew)) {
-    return normalizedCurrent;
-  }
+  if (normalizedCurrent === normalizedNew || normalizedCurrent.endsWith(normalizedNew)) return normalizedCurrent;
 
-  // Paso 4: Fragmentar en palabras para buscar solapamientos exactos
   const currentWords = normalizedCurrent.toLowerCase().split(" ");
   const newWords = normalizedNew.split(" ");
   const loweredNewWords = newWords.map((word) => word.toLowerCase());
@@ -106,7 +76,6 @@ const mergeWithoutDuplicateSuffix = (currentText: string, newText: string): stri
   let overlapSize = 0;
   const maxOverlap = Math.min(currentWords.length, loweredNewWords.length);
 
-  // Paso 5: Algoritmo de ventana deslizante para detectar el prefijo común
   for (let size = maxOverlap; size > 0; size -= 1) {
     const currentSuffix = currentWords.slice(-size).join(" ");
     const newPrefix = loweredNewWords.slice(0, size).join(" ");
@@ -117,20 +86,12 @@ const mergeWithoutDuplicateSuffix = (currentText: string, newText: string): stri
     }
   }
 
-  // Paso 6: Concatenar solo la parte única del nuevo texto
   const uniqueWords = newWords.slice(overlapSize);
-  
-  if (uniqueWords.length === 0) {
-    return normalizedCurrent;
-  }
+  if (uniqueWords.length === 0) return normalizedCurrent;
 
-  const result = `${normalizedCurrent} ${uniqueWords.join(" ")}`;
-  
-  // Paso 7: Limpieza final de seguridad
-  return result.replace(/\s+/g, " ").trim();
+  return `${normalizedCurrent} ${uniqueWords.join(" ")}`.replace(/\s+/g, " ").trim();
 };
 export default function GatoAsistente() {
-  // --- ESTADOS ---
   const [isOpen, setIsOpen] = useState(false);
   const [catMood, setCatMood] = useState<CatMood>("quieto");
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", text: WELCOME_MESSAGE }]);
@@ -141,9 +102,11 @@ export default function GatoAsistente() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const [dynamicSuggestions, setDynamicSuggestions] = useState<SectionSuggestion[]>([]);
 
-  // --- REFERENCIAS (CONTROL TOTAL) ---
+  // --- REFS DE CONTROL DE SUEÑO (AÑADIDAS) ---
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
   const sleepCycleRef = useRef<NodeJS.Timeout | null>(null);
+
+  // --- REFS ORIGINALES (MANTENIDAS) ---
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const happyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -152,47 +115,36 @@ export default function GatoAsistente() {
   const shouldKeepListeningRef = useRef(false);
   const lastTranscriptRef = useRef("");
 
-  // --- LÓGICA DE SUEÑO (8 SEGUNDOS) ---
+  // --- FUNCIONES DE GESTIÓN DE ESTADOS (NUEVAS) ---
   const startSleepTimer = useCallback(() => {
-    // Limpiamos intervalos existentes antes de iniciar uno nuevo
     if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
     if (sleepCycleRef.current) clearInterval(sleepCycleRef.current);
 
-    // El gato solo inicia el proceso de sueño si el chat está cerrado
     if (!isOpen) {
       sleepTimerRef.current = setTimeout(() => {
-        // Fase 1: Ovillo quieto
         setCatMood("dormido_quieto");
         
-        // Fase 2: Ciclo de movimiento profundo cada 10 segundos
+        // Ciclo de movimiento cada 8 segundos mientras duerme
         sleepCycleRef.current = setInterval(() => {
           setCatMood("dormido_mov");
-          
-          // El movimiento dura 3 segundos y vuelve a quietud
           setTimeout(() => {
-            setCatMood((prev) => {
-              if (prev === "dormido_mov") return "dormido_quieto";
-              return prev;
-            });
-          }, 3000); 
-        }, 10000);
-      }, 8000); 
+            setCatMood((prev) => (prev === "dormido_mov" ? "dormido_quieto" : prev));
+          }, 2000); // El movimiento dura 2 segundos
+        }, 8000);
+      }, 8000); // Se duerme tras 8 segundos de inactividad
     }
   }, [isOpen]);
 
   const wakeUp = useCallback(() => {
-    // Cancelar todos los procesos de sueño inmediatamente
     if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
     if (sleepCycleRef.current) clearInterval(sleepCycleRef.current);
-    
-    if (catMood === "dormido_quieto" || catMood === "dormido_mov") {
+    if (catMood.includes("dormido")) {
       setCatMood("quieto");
     }
   }, [catMood]);
 
-  // --- EFECTO DE INICIALIZACIÓN: VOZ Y AUDIO ---
+  // --- EFECTO DE INICIALIZACIÓN (AUDIO Y VOZ) ---
   useEffect(() => {
-    // Carga del audio miau
     audioRef.current = new Audio("/sounds/miau.mp3");
     audioRef.current.preload = "auto";
 
@@ -204,37 +156,41 @@ export default function GatoAsistente() {
       recognition.interimResults = true;
       recognition.lang = "es-ES";
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = "";
-        
-        // Procesamos los resultados finales acumulados
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+      recognition.onresult = (event) => {
+        const finalChunks: string[] = [];
+
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
           const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
+          if (result?.isFinal) {
+            const chunk = (result[0]?.transcript ?? "").trim();
+            if (chunk) finalChunks.push(chunk);
           }
         }
 
-        if (finalTranscript.trim()) {
-          setInputValue((prev) => {
-            const merged = mergeWithoutDuplicateSuffix(prev, finalTranscript);
-            return merged;
-          });
+        const finalTranscript = finalChunks.join(" ").replace(/\s+/g, " ").trim();
+        if (!finalTranscript) return;
+
+        if (lastTranscriptRef.current.toLowerCase() === finalTranscript.toLowerCase()) {
+          return;
         }
+        lastTranscriptRef.current = finalTranscript;
+
+        setInputValue((prev) => {
+          return mergeWithoutDuplicateSuffix(prev, finalTranscript);
+        });
       };
 
-      recognition.onerror = (err) => {
-        console.error("Error en Speech Recognition:", err);
+      recognition.onerror = () => {
+        shouldKeepListeningRef.current = false;
         setIsListening(false);
       };
 
       recognition.onend = () => {
-        // Reinicio automático si el micro sigue activado por el usuario
         if (shouldKeepListeningRef.current) {
           recognition.start();
-        } else {
-          setIsListening(false);
+          return;
         }
+        setIsListening(false);
       };
 
       recognitionRef.current = recognition;
@@ -244,23 +200,30 @@ export default function GatoAsistente() {
     startSleepTimer();
 
     return () => {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current?.stop();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
       if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
       if (sleepCycleRef.current) clearInterval(sleepCycleRef.current);
-      recognitionRef.current?.stop();
     };
   }, [startSleepTimer]);
 
-  // --- MANEJADORES DE ESTADO DEL GATO ---
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  // --- FUNCIONES DE INTERACCIÓN ---
   const playMiau = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play().catch(() => {});
   };
 
   const setTalkingState = () => {
     wakeUp();
     setCatMood("hablando");
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       setCatMood("reposo");
@@ -268,167 +231,328 @@ export default function GatoAsistente() {
     }, 3000);
   };
 
-  const handleToggleChat = () => {
+  const maybeHappyReaction = (text: string) => {
+    const normalized = text.toLowerCase();
+    const isPositive = ["gracias", "genial", "crack", "perfecto", "amor"].some((token) => normalized.includes(token));
+
+    if (isPositive) {
+      setIsHappy(true);
+      if (happyTimeoutRef.current) clearTimeout(happyTimeoutRef.current);
+      happyTimeoutRef.current = setTimeout(() => setIsHappy(false), 2500);
+    }
+  };
+    // --- GESTIÓN DE ENVÍO Y APERTURA ---
+  const handleToggle = () => {
     if (!isOpen) {
       wakeUp();
       setIsOpen(true);
       setCatMood("reposo");
+      // Mantiene el historial o pone el mensaje de bienvenida
+      setMessages((prev) => (prev.length ? prev : [{ role: "assistant", text: WELCOME_MESSAGE }]));
       playMiau();
     } else {
-      setIsOpen(false);
       shouldKeepListeningRef.current = false;
       recognitionRef.current?.stop();
       setIsListening(false);
+      setIsOpen(false);
+      setCatMood("quieto");
+      // Al cerrar, el gato empieza a contar para dormirse
       startSleepTimer();
     }
   };
-  const handleUserMessage = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isTyping) return;
 
-    const userMsg: ChatMessage = { role: "user", text: trimmed };
-    const newHistory = [...messages, userMsg];
+  const handleMicToggle = () => {
+    if (!recognitionRef.current || isTyping) return;
+    if (isListening) {
+      shouldKeepListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+    shouldKeepListeningRef.current = true;
+    recognitionRef.current.start();
+    setIsListening(true);
+  };
 
-    setMessages(newHistory);
-    setInputValue("");
-    setIsTyping(true);
-    setTalkingState();
-
+  const askAI = async (text: string, nextHistory: ChatMessage[]) => {
+    const recentMessages = nextHistory.slice(-8);
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: trimmed,
-          messages: newHistory.map(m => ({ role: m.role, content: m.text }))
+          message: text,
+          messages: recentMessages.map((msg) => ({
+            role: msg.role,
+            content: msg.text,
+          })),
         }),
       });
 
       const data = await response.json();
-      if (data.reply) {
-        setMessages(prev => [...prev, { role: "assistant", text: data.reply }]);
-        setDynamicSuggestions(data.suggestions || []);
-        playMiau();
-        setTalkingState();
+      if (!response.ok) {
+        throw new Error(data?.error || "No se pudo consultar la IA.");
       }
+
+      const assistantText = (data?.reply as string)?.trim() || "Miau... me quedé sin palabras 😿";
+      const aiSuggestions = Array.isArray(data?.suggestions) ? (data.suggestions as SectionSuggestion[]) : [];
+
+      setDynamicSuggestions(aiSuggestions);
+      setMessages((prev) => [...prev, { role: "assistant", text: assistantText }]);
+      
+      setTalkingState();
+      playMiau();
+      maybeHappyReaction(text);
     } catch (error) {
-      console.error("Error API Chat:", error);
+      const fallback = error instanceof Error ? error.message : "Error inesperado al hablar con la IA.";
+      setMessages((prev) => [...prev, { role: "assistant", text: `Ups, tuve un problema: ${fallback}` }]);
+      setTalkingState();
     } finally {
       setIsTyping(false);
     }
   };
 
+  const handleUserMessage = async (text: string) => {
+    const cleanedText = text.trim();
+    if (!cleanedText || isTyping) return;
+
+    const userMessage: ChatMessage = { role: "user", text: cleanedText };
+    const nextHistory = [...messages, userMessage];
+
+    setMessages(nextHistory);
+    setInputValue("");
+    lastTranscriptRef.current = "";
+    setIsTyping(true);
+    setTalkingState();
+
+    await askAI(cleanedText, nextHistory);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleUserMessage(inputValue);
+  };
+
+  // --- RENDERIZADO DEL COMPONENTE ---
   return (
-    <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 999999, display: "flex", flexDirection: "column", alignItems: "flex-end", pointerEvents: "none" }}>
-      
-      {/* CAJA DE CHAT: Recuperamos el diseño original con flechas internas */}
+    <div
+      style={{
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        zIndex: 999999,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        pointerEvents: "none",
+      }}
+    >
+      {/* VENTANA DE CHAT */}
       {isOpen && (
-        <div style={{ pointerEvents: "auto", width: "320px", backgroundColor: "white", borderRadius: "24px", padding: "18px", boxShadow: "0 15px 50px rgba(0,0,0,0.2)", marginBottom: "12px", border: "1px solid #f0f0f0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems: "center" }}>
-            <span style={{ fontWeight: "bold", color: "#333", fontSize: "14px" }}>Asistente GatoCan</span>
-            <button onClick={handleToggleChat} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "22px", color: "#ddd" }}>×</button>
+        <div
+          style={{
+            pointerEvents: "auto",
+            width: "300px",
+            backgroundColor: "white",
+            borderRadius: "24px",
+            padding: "15px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            marginBottom: "10px",
+            position: "relative",
+            border: "1px solid #eee",
+          }}
+        >
+          {/* Cabecera */}
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", gap: "10px" }}>
+            <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#333", lineHeight: 1.35 }}>
+              Gatito asistente
+            </p>
+            <button
+              onClick={handleToggle}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: "#ccc", lineHeight: 1 }}
+            >
+              ×
+            </button>
           </div>
 
-          <div style={{ maxHeight: "250px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", marginBottom: "15px", paddingRight: "5px" }}>
-            {messages.map((msg, i) => (
-              <div key={i} style={{ alignSelf: msg.role === "user" ? "flex-end" : "flex-start", maxWidth: "85%", padding: "10px 14px", borderRadius: "18px", fontSize: "13px", background: msg.role === "user" ? "#f7f7f7" : "#ffffff", border: msg.role === "assistant" ? "1px solid #eee" : "none", color: "#444" }}>
+          {/* Mensajes */}
+          <div
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginBottom: "10px",
+              paddingRight: "3px",
+            }}
+          >
+            {messages.map((msg, idx) => (
+              <div
+                key={`${msg.role}-${idx}`}
+                style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "88%",
+                  padding: "8px 10px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  lineHeight: 1.35,
+                  background: msg.role === "user" ? "#eef2ff" : "#f8f8f8",
+                  color: "#333",
+                }}
+              >
                 {msg.text}
               </div>
             ))}
+            {isTyping && (
+              <div style={{ alignSelf: "flex-start", maxWidth: "88%", padding: "8px 10px", borderRadius: "12px", fontSize: "12px", lineHeight: 1.35, background: "#f8f8f8", color: "#777", fontStyle: "italic" }}>
+                Escribiendo...
+              </div>
+            )}
             <div ref={chatEndRef} />
           </div>
 
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "15px" }}>
-            {QUICK_SUGGESTIONS.map((s) => (
-              <button key={s.label} onClick={() => handleUserMessage(s.trigger)} style={{ border: "1px solid #eee", background: "#fff", borderRadius: "10px", fontSize: "11px", padding: "5px 10px", cursor: "pointer" }}>{s.label}</button>
-            ))}
-            {STATIC_SHORTCUTS.map((link) => (
-              <Link key={link.href} href={link.href} style={{ border: "1px dashed #ddd", background: "#fafafa", borderRadius: "10px", fontSize: "11px", padding: "5px 10px", textDecoration: "none", color: "#555" }}>
-                {link.section} →
-              </Link>
+          {/* Sugerencias Rápidas */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+            {QUICK_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion.label}
+                type="button"
+                onClick={() => handleUserMessage(suggestion.trigger)}
+                style={{ border: "1px solid #e9e9e9", background: "#f8f8ff", color: "#333", borderRadius: "999px", fontSize: "11px", padding: "6px 10px", cursor: "pointer" }}
+              >
+                {suggestion.label}
+              </button>
             ))}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleUserMessage(inputValue); }} style={{ display: "flex", gap: "8px" }}>
-            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Miau..." style={{ flex: 1, padding: "10px", borderRadius: "12px", border: "1px solid #eee", fontSize: "13px", outline: "none" }} />
-            <button type="submit" style={{ padding: "10px 15px", borderRadius: "12px", border: "none", backgroundColor: "#f0f0f0", cursor: "pointer" }}>→</button>
+          {/* Accesos Directos */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+            {[...STATIC_SHORTCUTS, ...dynamicSuggestions]
+              .filter((item, index, array) => array.findIndex((it) => it.href === item.href) === index)
+              .slice(0, 5)
+              .map((item) => (
+                <Link
+                  key={`${item.href}-${item.section}`}
+                  href={item.href}
+                  style={{ border: "1px dashed #d9d9d9", background: "#fff", color: "#6b4ce6", borderRadius: "999px", fontSize: "11px", padding: "5px 10px", textDecoration: "none" }}
+                >
+                  Ir a {item.section}
+                </Link>
+              ))}
+          </div>
+
+          {/* Formulario */}
+          <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "5px" }}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Escribe aquí..."
+              style={{ flex: 1, padding: "8px", borderRadius: "10px", border: "1px solid #ddd", fontSize: "12px", outline: "none" }}
+            />
+            <button
+              type="button"
+              onClick={handleMicToggle}
+              disabled={!isSpeechSupported || isTyping}
+              style={{ padding: "8px 10px", borderRadius: "10px", border: "none", backgroundColor: !isSpeechSupported || isTyping ? "#f3f3f3" : isListening ? "#ff4d4f" : "#eee", color: isListening ? "#fff" : "#333", cursor: !isSpeechSupported || isTyping ? "not-allowed" : "pointer" }}
+            >
+              {isListening ? "⏹️" : "🎤"}
+            </button>
+            <button
+              type="submit"
+              disabled={isTyping}
+              style={{ padding: "8px 12px", borderRadius: "10px", border: "none", backgroundColor: isTyping ? "#f3f3f3" : "#eee", cursor: isTyping ? "not-allowed" : "pointer" }}
+            >
+              →
+            </button>
           </form>
         </div>
       )}
 
-      {/* BOTÓN DEL GATO: GLASSMORPHISM VERDOSO + ZOOM 15% */}
+      {/* BOTÓN DEL GATO (CON ZOOM Y ANIMACIONES) */}
       <button
-        onClick={handleToggleChat}
-        className="gato-button-trigger"
+        onClick={handleToggle}
+        className="gato-main-button"
         style={{
           pointerEvents: "auto",
-          width: "90px",
-          height: "90px",
+          width: "80px",
+          height: "80px",
           borderRadius: "50%",
-          backgroundColor: "rgba(232, 245, 233, 0.6)", // Tono verdoso transparente
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "2px solid rgba(255, 255, 255, 0.5)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+          backgroundColor: "rgba(232, 245, 233, 0.6)", 
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          border: "2px solid rgba(255, 255, 255, 0.3)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           cursor: "pointer",
           overflow: "hidden",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: 0,
-          position: "relative"
+          transition: "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         }}
       >
-        <div style={{ transform: "scale(0.9) translateY(4px)" }}>
+        <div style={{ width: "128px", height: "128px", display: "flex", alignItems: "center", justifyContent: "center", transform: "scale(0.85) translateY(5px)" }}>
           <div
-            className={`gato-sprite-sheet gato-state-${catMood} ${isHappy ? "gato-is-happy" : ""}`}
+            className={`gato-anim gato-${catMood} ${isHappy ? "gato-feliz" : ""}`}
             style={{
               width: "128px",
               height: "128px",
               backgroundImage: "url('/images/gato_asistente.png')",
+              backgroundRepeat: "no-repeat",
               backgroundSize: "512px 512px",
-              imageRendering: "pixelated"
+              imageRendering: "pixelated",
             }}
           />
         </div>
       </button>
 
       <style jsx>{`
-        /* EFECTO ZOOM 15% */
-        .gato-button-trigger {
-          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s ease;
+        /* CRECIMIENTO AL PULSAR/HOVER */
+        .gato-main-button:hover, .gato-main-button:active {
+          transform: scale(1.1); /* ~8px en PC */
         }
-        .gato-button-trigger:hover, .gato-button-trigger:active {
-          transform: scale(1.15);
-          background-color: rgba(232, 245, 233, 0.8);
+        @media (max-width: 768px) {
+          .gato-main-button:hover, .gato-main-button:active {
+            transform: scale(1.04); /* ~3px en móvil */
+          }
         }
 
-        /* ANIMACIONES */
-        .gato-state-quieto { background-position: 0px 0px; }
-        
-        .gato-state-reposo { animation: anim-reposo 1.2s steps(4) infinite; }
-        @keyframes anim-reposo {
+        /* ANIMACIONES ORIGINALES */
+        .gato-quieto { background-position: 0px 0px; }
+        .gato-reposo { animation: reposo 1.2s steps(4) infinite; }
+        @keyframes reposo {
           from { background-position: 0px 0px; }
           to { background-position: -512px 0px; }
         }
 
-        .gato-state-hablando { animation: anim-habla 0.4s steps(2) infinite; }
-        @keyframes anim-habla {
+        .gato-hablando { animation: hablando 0.4s steps(2) infinite; }
+        @keyframes hablando {
           from { background-position: 0px -128px; }
           to { background-position: -256px -128px; }
         }
 
-        /* SUEÑO: Fila 3. Ovillo quieto y movimiento profundo */
-        .gato-state-dormido_quieto { background-position: 0px -256px; }
-
-        .gato-state-dormido_mov { animation: anim-sueno 2.5s steps(4) infinite; }
-        @keyframes anim-sueno {
-          from { background-position: 0px -256px; }
-          to { background-position: -512px -256px; }
+        /* NUEVAS ANIMACIONES DE SUEÑO */
+        .gato-dormido_quieto {
+          background-position: -128px -256px;
         }
 
-        .gato-is-happy { filter: drop-shadow(0 0 12px rgba(255, 223, 0, 0.9)); }
+        .gato-dormido_mov {
+          animation: durmiendo_mov 2s steps(4) infinite;
+        }
+
+        @keyframes durmiendo_mov {
+          from { background-position: -256px -256px; }
+          to { background-position: 0px -384px; }
+        }
+
+        .gato-feliz { filter: drop-shadow(0 0 8px rgba(255, 214, 79, 0.95)); }
+        .gato-anim { margin-left: -5px; transition: filter 0.2s ease; }
       `}</style>
     </div>
   );
-}
+      }
+            
+  
+   
