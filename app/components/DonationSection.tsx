@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useMemo } from "react";
 import BotonesMetodosPago from "./BotonesMetodosPago";
 
@@ -9,7 +8,6 @@ interface Gato {
   nombre: string;
   imagen: string;
 }
-
 interface DonationOption {
   id: string;
   label: string;
@@ -24,7 +22,6 @@ interface DonationSectionProps {
   handlePayment: (title: string, amount: number) => void;
   cardStyle: React.CSSProperties;
 }
-
 // --- CONFIGURACIÓN DE OPCIONES (Karma 1:1) ---
 const donationOptions: DonationOption[] = [
   { id: "macho", label: "Esterilización macho", icon: "➕", iconClassName: "macho", price: 60, color: "#e3f2fd" },
@@ -39,8 +36,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
   const [openDonationCatId, setOpenDonationCatId] = useState<string | number | null>(null);
   const [donationSelections, setDonationSelections] = useState<Record<string, boolean>>({});
   const [showPicker, setShowPicker] = useState(false);
-
-
 
   const { donationTotal } = useMemo(() => {
     let total = 0;
@@ -59,7 +54,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
     setOpenDonationCatId(id); 
     setShowPicker(false);
   };
-
 
   return (
     <section id="donar" style={cardStyle} className="donation-card">
