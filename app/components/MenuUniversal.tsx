@@ -8,6 +8,7 @@ const links = [
   { name: "Donaciones", href: "/donaciones" },
   { name: "Rankings", href: "/rankings" },
   { name: "Foro", href: "/foro" },
+  { name: "Leyes y Normativa", href: "/legislacion" },
   { name: "Galería", href: "#galeria" },
   { name: "Noticias", href: "#noticias" },
   { name: "Contacto", href: "#contacto" },
