@@ -8,7 +8,7 @@ export default function BotonesMetodosPago() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const bizumNumber = "00000";
-  const ibanNumber = "ES12 3456 7890 1234 5678 9012";
+  const ibanNumber = "ES18 2100 2182 0502 0113 9524";
 
   const toggleManualMethod = (method: "bizum" | "bank") => {
     setOpenManualMethod((prev) => (prev === method ? null : method));
