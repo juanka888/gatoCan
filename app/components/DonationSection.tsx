@@ -65,6 +65,10 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
     setShowPicker(false);
   };
 
+  const toggleDonation = (key: string) => {
+    setDonationSelections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   return (
     <section id="donar" style={{ ...cardStyle, position: 'relative' }} className="donation-card">
       <h3 className="text-xl font-bold mb-1" style={{ color: '#333' }}>Haz tu aporte gatuno 🐾</h3>
@@ -93,25 +97,97 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
               <div className="p-3 flex flex-col gap-2" style={{ borderTop: '1px solid #f9f9f9', background: '#fdfdfd' }}>
                 {donationOptions.map((option) => {
                   const key = `${cat.id}-${option.id}`;
+                  const isChecked = Boolean(donationSelections[key]);
+                  
                   return (
-                    <label key={key} className="flex items-center gap-3 p-3 rounded-xl border border-gray-50 bg-white shadow-sm cursor-pointer transition-all active:scale-[0.98]">
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        style={{ accentColor: '#10b981', width: '20px', height: '20px', flexShrink: 0 }}
-                        checked={Boolean(donationSelections[key])}
-                        onChange={(e) => setDonationSelections(prev => ({ ...prev, [key]: e.target.checked }))}
-                      />
+                    <div
+                      key={key}
+                      onClick={() => toggleDonation(key)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '12px 14px',
+                        borderRadius: '14px',
+                        border: isChecked ? '2px solid #10b981' : '2px solid #e5e7eb',
+                        background: isChecked ? '#f0fdf4' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        boxShadow: isChecked ? '0 4px 12px rgba(16, 185, 129, 0.15)' : '0 2px 4px rgba(0,0,0,0.04)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isChecked) {
+                          (e.currentTarget as HTMLElement).style.borderColor = '#d1fae5';
+                          (e.currentTarget as HTMLElement).style.background = '#f9fffe';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isChecked) {
+                          (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb';
+                          (e.currentTarget as HTMLElement).style.background = '#ffffff';
+                        }
+                      }}
+                    >
+                      {/* Checkbox - Custom */}
+                      <div
+                        style={{
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '6px',
+                          border: isChecked ? 'none' : '2px solid #d1d5db',
+                          background: isChecked ? '#10b981' : '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          transition: 'all 0.2s ease-in-out',
+                        }}
+                      >
+                        {isChecked && (
+                          <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: 'bold', lineHeight: 1 }}>✓</span>
+                        )}
+                      </div>
+
                       {/* Icono Redondo */}
-                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: option.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.1rem' }}>
+                      <div
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: option.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          fontSize: '1.2rem',
+                          transition: 'transform 0.2s ease-in-out',
+                          transform: isChecked ? 'scale(1.1)' : 'scale(1)',
+                        }}
+                      >
                         {option.icon}
                       </div>
-                      {/* Texto y Precio en la misma línea */}
-                      <div className="flex flex-row justify-between items-center w-full overflow-hidden">
-                        <span className="text-sm font-medium text-gray-700 truncate mr-2">{option.label}</span>
-                        <span className="text-sm font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg flex-shrink-0">{option.price}€</span>
+
+                      {/* Texto y Precio */}
+                      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', minHeight: '24px' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#374151', whiteSpace: 'nowrap', marginRight: '8px' }}>
+                          {option.label}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            color: '#10b981',
+                            background: isChecked ? '#dcfce7' : '#ecfdf5',
+                            padding: '4px 10px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                            transition: 'all 0.2s ease-in-out',
+                          }}
+                        >
+                          {option.price}€
+                        </span>
                       </div>
-                    </label>
+                    </div>
                   );
                 })}
               </div>
@@ -126,7 +202,16 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
               background: '#10b981', color: 'white', border: 'none', borderRadius: '50%',
               width: '46px', height: '46px', fontSize: '1.2rem', cursor: 'pointer',
               boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
+              transition: 'all 0.2s ease-in-out',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.4)';
             }}
           >
             <span>+🐱</span>
@@ -136,7 +221,7 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
             <div 
               ref={pickerRef}
               style={{
-                position: 'absolute', top: '10px', right: '55px', // Justo al lado del botón
+                position: 'absolute', top: '10px', right: '55px',
                 width: '180px', background: 'white', borderRadius: '15px',
                 boxShadow: '0 8px 25px rgba(0,0,0,0.15)', border: '1px solid #f0f0f0',
                 padding: '8px', zIndex: 100, animation: 'fadeIn 0.15s ease-out'
@@ -174,7 +259,6 @@ export default function DonationSection({ gatosColonia, handlePayment, cardStyle
             style={{ 
               border: 'none', 
               fontSize: '1rem', textTransform: 'uppercase',
-              // VERDE CLARO SI NO HAY NADA, VERDE POTENTE SI HAY TOTAL
               background: donationTotal > 0 
                 ? 'linear-gradient(145deg, #10b981, #059669)' 
                 : 'linear-gradient(145deg, #dcfce7, #bbf7d0)', 
