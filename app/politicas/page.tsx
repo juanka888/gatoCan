@@ -11,7 +11,7 @@ export default function PoliticasPage() {
         </p>
         <p><strong>Responsable:</strong> ASOCIACIÓN GATOCAN NATURA RURAL</p>
         <p><strong>NIF:</strong> G21671193</p>
-        <p><strong>Domicilio Social:</strong> Lugar O Outeiro, 12. 32779 San Xoán de Río (Ourense).</p>
+        <p><strong>Ubicación:</strong> San Xoán de Río (Ourense), España</p>
         <p>
           <strong>Finalidad:</strong> Gestión de socios, donantes, adopciones y envío de información sobre las
           actividades y rescates de la protectora.
